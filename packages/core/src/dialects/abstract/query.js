@@ -9,6 +9,22 @@ const Dot = require('dottie');
 const deprecations = require('../../utils/deprecations');
 const crypto = require('node:crypto');
 
+const IN_DEVELOPMENT = process.env.NODE_ENV.toLowerCase() === 'development';
+
+function identity(result) {
+  return result;
+}
+const processRawRequeryResult = IN_DEVELOPMENT ? processRawRequeryResultInDevelopment : identity;
+
+function processRawRequeryResultInDevelopment(result) {
+  return Object.freeze(Object.assign({}, result));
+}
+
+function processRawRequeryResultWithTransforms(result) {
+  return Dot.transform(processRawRequeryResult(result));
+}
+
+
 export class AbstractQuery {
 
   constructor(connection, sequelize, options) {
@@ -231,21 +247,11 @@ export class AbstractQuery {
 
     // Raw queries
     if (this.options.raw) {
-      result = results.map(result => {
-        let o = {};
-
-        for (const key in result) {
-          if (Object.hasOwn(result, key)) {
-            o[key] = result[key];
-          }
-        }
-
-        if (this.options.nest) {
-          o = Dot.transform(o);
-        }
-
-        return o;
-      });
+      const cb = this.options.nest ? processRawRequeryResultWithTransforms : processRawRequeryResult;
+      result = [];
+      for (let i = 0; i < results.length; i++) {
+        result.push(cb(results[i]));
+      }
     // Queries with include
     } else if (this.options.hasJoin === true) {
       results = AbstractQuery._groupJoinData(results, {

@@ -76,7 +76,7 @@
     "@types/pg": "8.10.2",
     "@types/semver": "7.5.8",
     "@types/sinon": "10.0.20",
-    "@types/sinon-chai": "3.2.9",
+    "@types/sinon-chai": "3.2.12",
     "@types/snowflake-sdk": "1.6.13",
     "@types/tedious": "4.0.9",
     "@types/uuid": "9.0.2",

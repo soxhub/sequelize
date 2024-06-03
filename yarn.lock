@@ -1463,7 +1463,7 @@ __metadata:
   dependencies:
     "@types/chai": 4.3.5
     "@types/chai-as-promised": 7.1.5
-    "@types/chai-datetime": 0.0.37
+    "@types/chai-datetime": 0.0.39
     "@types/debug": ^4.1.7
     "@types/ibm_db": 2.0.12
     "@types/lodash": 4.14.195
@@ -1734,12 +1734,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/chai-datetime@npm:0.0.37":
-  version: 0.0.37
-  resolution: "@types/chai-datetime@npm:0.0.37"
+"@types/chai-datetime@npm:0.0.39":
+  version: 0.0.39
+  resolution: "@types/chai-datetime@npm:0.0.39"
   dependencies:
     "@types/chai": "*"
-  checksum: c55cb13f7359f670849d0f313517d4c3f1f5ff4e82851b9643a0aeda426666e40a43b99518c02c877bc533c6180196f68fc48e077f37487e8b71f3a4b1855272
+  checksum: fc5266f839f7005b34d04d4e3f67b232ec86eb50291cf4769f4875bc81a21afd8c9a51547da71f7903e2124379019b83bfc400a1b6315c719888dedb678c760b
   languageName: node
   linkType: hard
 

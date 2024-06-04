@@ -1462,7 +1462,7 @@ __metadata:
   resolution: "@sequelize/core@workspace:packages/core"
   dependencies:
     "@types/chai": 4.3.5
-    "@types/chai-as-promised": 7.1.5
+    "@types/chai-as-promised": 7.1.8
     "@types/chai-datetime": 0.0.39
     "@types/debug": ^4.1.7
     "@types/ibm_db": 2.0.16
@@ -1478,7 +1478,7 @@ __metadata:
     "@types/validator": ^13.7.5
     bnf-parser: 3.1.6
     chai: 4.3.7
-    chai-as-promised: 7.1.1
+    chai-as-promised: 7.1.2
     chai-datetime: 1.8.0
     dayjs: ^1.11.5
     debug: ^4.3.4
@@ -1576,9 +1576,9 @@ __metadata:
   dependencies:
     "@sequelize/core": "workspace:*"
     "@types/chai": 4.3.5
-    "@types/chai-as-promised": 7.1.5
+    "@types/chai-as-promised": 7.1.8
     chai: 4.3.7
-    chai-as-promised: 7.1.1
+    chai-as-promised: 7.1.2
     lodash: ^4.17.21
     mocha: 10.2.0
   languageName: unknown
@@ -1725,12 +1725,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/chai-as-promised@npm:7.1.5":
-  version: 7.1.5
-  resolution: "@types/chai-as-promised@npm:7.1.5"
+"@types/chai-as-promised@npm:7.1.8":
+  version: 7.1.8
+  resolution: "@types/chai-as-promised@npm:7.1.8"
   dependencies:
     "@types/chai": "*"
-  checksum: 7c1345c6e32513d52d8e562ec173c23161648d6b792046525f18803a9932d7b3ad3dca8f0181e3c529ec42b106099f174e34edeb184d61dc93e32c98b5132fd4
+  checksum: f0e5eab451b91bc1e289ed89519faf6591932e8a28d2ec9bbe95826eb73d28fe43713633e0c18706f3baa560a7d97e7c7c20dc53ce639e5d75bac46b2a50bf21
   languageName: node
   linkType: hard
 
@@ -3095,14 +3095,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chai-as-promised@npm:7.1.1":
-  version: 7.1.1
-  resolution: "chai-as-promised@npm:7.1.1"
+"chai-as-promised@npm:7.1.2":
+  version: 7.1.2
+  resolution: "chai-as-promised@npm:7.1.2"
   dependencies:
     check-error: ^1.0.2
   peerDependencies:
-    chai: ">= 2.1.2 < 5"
-  checksum: 7262868a5b51a12af4e432838ddf97a893109266a505808e1868ba63a12de7ee1166e9d43b5c501a190c377c1b11ecb9ff8e093c89f097ad96c397e8ec0f8d6a
+    chai: ">= 2.1.2 < 6"
+  checksum: 671ee980054eb23a523875c1d22929a2ac05d89b5428e1fd12800f54fc69baf41014667b87e2368e2355ee2a3140d3e3d7d5a1f8638b07cfefd7fe38a149e3f6
   languageName: node
   linkType: hard
 

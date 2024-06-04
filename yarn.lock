@@ -1487,7 +1487,7 @@ __metadata:
     expect-type: 0.13.0
     fast-glob: ^3.2.12
     fs-jetpack: 5.1.0
-    ibm_db: 3.2.1
+    ibm_db: 3.2.4
     inflection: ^2.0.0
     lcov-result-merger: 4.1.0
     lodash: ^4.17.21
@@ -2637,15 +2637,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^0.26.1":
-  version: 0.26.1
-  resolution: "axios@npm:0.26.1"
-  dependencies:
-    follow-redirects: ^1.14.8
-  checksum: d9eb58ff4bc0b36a04783fc9ff760e9245c829a5a1052ee7ca6013410d427036b1d10d04e7380c02f3508c5eaf3485b1ae67bd2adbfec3683704745c8d7a6e1a
-  languageName: node
-  linkType: hard
-
 "axios@npm:^0.27.2":
   version: 0.27.2
   resolution: "axios@npm:0.27.2"
@@ -2664,6 +2655,17 @@ __metadata:
     form-data: ^4.0.0
     proxy-from-env: ^1.1.0
   checksum: 7fb6a4313bae7f45e89d62c70a800913c303df653f19eafec88e56cea2e3821066b8409bc68be1930ecca80e861c52aa787659df0ffec6ad4d451c7816b9386b
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.6.2":
+  version: 1.7.2
+  resolution: "axios@npm:1.7.2"
+  dependencies:
+    follow-redirects: ^1.15.6
+    form-data: ^4.0.0
+    proxy-from-env: ^1.1.0
+  checksum: e457e2b0ab748504621f6fa6609074ac08c824bf0881592209dfa15098ece7e88495300e02cd22ba50b3468fd712fe687e629dcb03d6a3f6a51989727405aedf
   languageName: node
   linkType: hard
 
@@ -5340,13 +5342,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"follow-redirects@npm:^1.14.8, follow-redirects@npm:^1.14.9, follow-redirects@npm:^1.15.0":
+"follow-redirects@npm:^1.14.9, follow-redirects@npm:^1.15.0":
   version: 1.15.2
   resolution: "follow-redirects@npm:1.15.2"
   peerDependenciesMeta:
     debug:
       optional: true
   checksum: faa66059b66358ba65c234c2f2a37fcec029dc22775f35d9ad6abac56003268baf41e55f9ee645957b32c7d9f62baf1f0b906e68267276f54ec4b4c597c2b190
+  languageName: node
+  linkType: hard
+
+"follow-redirects@npm:^1.15.6":
+  version: 1.15.6
+  resolution: "follow-redirects@npm:1.15.6"
+  peerDependenciesMeta:
+    debug:
+      optional: true
+  checksum: a62c378dfc8c00f60b9c80cab158ba54e99ba0239a5dd7c81245e5a5b39d10f0c35e249c3379eae719ff0285fff88c365dd446fab19dee771f1d76252df1bbf5
   languageName: node
   linkType: hard
 
@@ -6285,20 +6297,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ibm_db@npm:3.2.1":
-  version: 3.2.1
-  resolution: "ibm_db@npm:3.2.1"
+"ibm_db@npm:3.2.4":
+  version: 3.2.4
+  resolution: "ibm_db@npm:3.2.4"
   dependencies:
     adm-zip: ^0.5.10
-    axios: ^0.26.1
+    axios: ^1.6.2
     big-integer: ^1.6.51
     bindings: ^1.5.0
-    fs-extra: ^8.1.0
+    fs-extra: ^11.1.1
     lodash: ^4.17.21
-    nan: ^2.17.0
+    nan: ^2.18.0
     q: ^1.5.1
     targz: ^1.0.1
-  checksum: ebc121b51a079e61bb60e86a7f12c1025806aadb09256997d2aed4959690c0b29b6639d26e34fc2fafbbb15ef0bceaeb164957661516fc6844bb276a1ce92695
+  checksum: be578e97844680f9ce11ad2c958c300506198cbcdbe5b21ee078fd5d776145b5141a78dc2026713f8b5747d6111223e33117f20aa914571c8815dfa7aa3a81b7
   languageName: node
   linkType: hard
 
@@ -8422,12 +8434,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nan@npm:^2.17.0":
-  version: 2.17.0
-  resolution: "nan@npm:2.17.0"
+"nan@npm:^2.18.0":
+  version: 2.19.0
+  resolution: "nan@npm:2.19.0"
   dependencies:
     node-gyp: latest
-  checksum: ec609aeaf7e68b76592a3ba96b372aa7f5df5b056c1e37410b0f1deefbab5a57a922061e2c5b369bae9c7c6b5e6eecf4ad2dac8833a1a7d3a751e0a7c7f849ed
+  checksum: 29a894a003c1954c250d690768c30e69cd91017e2e5eb21b294380f7cace425559508f5ffe3e329a751307140b0bd02f83af040740fa4def1a3869be6af39600
   languageName: node
   linkType: hard
 

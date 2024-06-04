@@ -103,7 +103,7 @@
     "sinon": "15.2.0",
     "sinon-chai": "3.7.0",
     "snowflake-sdk": "1.6.23",
-    "sqlite3": "5.1.6",
+    "sqlite3": "5.1.7",
     "tedious": "16.1.0"
   },
   "peerDependenciesMeta": {

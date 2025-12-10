@@ -1,17 +1,27 @@
 {
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  // Do not configure 'config:recommended' or 'minimumReleaseAge' - these are included in github>soxhub/renovate-config. See: https://github.com/soxhub/renovate-config
   "extends": [
-    "config:base",
+    "github>soxhub/renovate-config",
     ":maintainLockFilesWeekly",
     ":semanticCommitTypeAll(meta)",
     ":semanticCommitScopeDisabled"
   ],
   "automergeStrategy": "squash",
   "semanticCommitType": "meta",
-  "ignorePaths": ["dev/**/oldest/docker-compose.yml"],
+  "ignorePaths": [
+    "dev/**/oldest/docker-compose.yml"
+  ],
   "platformAutomerge": true,
   "packageRules": [
     {
-      "matchUpdateTypes": ["minor", "patch", "pin", "digest", "lockFileMaintenance"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest",
+        "lockFileMaintenance"
+      ],
       "automerge": true
     }
   ]

@@ -6765,6 +6765,15 @@ declare namespace sequelize {
         json: jsonStatic;
         where: whereStatic;
 
+        Fn: fnStatic;
+        Col: colStatic;
+        Cast: castStatic;
+        Literal: literalStatic;
+        And: andStatic;
+        Or: orStatic;
+        Json: jsonStatic;
+        Where: whereStatic;
+
         validateParameter(value: Object, expectation: Object, options?: Object): boolean;
         formatReferences(obj: Object): Object;
         Promise: typeof Promise;

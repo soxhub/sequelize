@@ -1,5 +1,5 @@
 export default function (sequelize, DataTypes) {
-  return sequelize.define('Project' + parseInt(Math.random() * 999999999999999), {
+  return sequelize.define('Project' + parseInt(Math.random() * 999999999999999, 10), {
     name: DataTypes.STRING
   });
 }

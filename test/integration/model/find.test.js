@@ -272,6 +272,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
               return self.Task.create({ title: 'homework' }).then((task) => {
                 self.worker = worker;
                 self.task = task;
+                // oxlint-disable-next-line promise/no-callback-in-promise -- legacy fixture helper; the result is returned, so rejections still propagate
                 return callback();
               });
             });

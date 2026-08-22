@@ -21,11 +21,11 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
 
         this.findAll = sinon.stub(this.User, 'findAll').callsFake(() => {
-          return Promise.reject(new Error());
+          return Promise.reject(new Error('findAll failed'));
         });
 
         this.count = sinon.stub(this.User, 'count').callsFake(() => {
-          return Promise.reject(new Error());
+          return Promise.reject(new Error('count failed'));
         });
       });
 
@@ -38,7 +38,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       it('with errors in count and findAll both', function () {
         return this.User.findAndCount({})
           .then(() => {
-            throw new Error();
+            throw new Error('findAndCount should have rejected');
           })
           .catch(() => {
             expect(this.stub.callCount).to.eql(0);

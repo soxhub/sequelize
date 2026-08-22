@@ -279,14 +279,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           const now = moment().milliseconds(0).toDate();
           const before = moment().milliseconds(0).subtract(1, 'day').toDate();
           const after = moment().milliseconds(0).add(1, 'day').toDate();
-          return Promise.all([
-            this.Event.create({
-              json: {
-                user: 'Homer',
-                lastLogin: now
-              }
-            })
-          ])
+          return this.Event.create({
+            json: {
+              user: 'Homer',
+              lastLogin: now
+            }
+          })
             .then(() => {
               return this.Event.findAll({
                 where: {
@@ -324,14 +322,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
 
         it('should be possible to query a boolean with array operators', function () {
-          return Promise.all([
-            this.Event.create({
-              json: {
-                user: 'Homer',
-                active: true
-              }
-            })
-          ])
+          return this.Event.create({
+            json: {
+              user: 'Homer',
+              active: true
+            }
+          })
             .then(() => {
               return this.Event.findAll({
                 where: {

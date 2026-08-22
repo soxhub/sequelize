@@ -91,7 +91,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           })
         )
         .then((result) => {
-          expect(parseInt(result[0].count)).to.be.eql(2);
+          expect(parseInt(result[0].count, 10)).to.be.eql(2);
           return this.User.count({
             where: { username: 'fire' }
           });
@@ -124,14 +124,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           })
         )
         .then((count) => {
-          expect(parseInt(count)).to.be.eql(3);
+          expect(parseInt(count, 10)).to.be.eql(3);
           return this.User.count({
             col: 'age',
             distinct: true
           });
         })
         .then((count) => {
-          expect(parseInt(count)).to.be.eql(2);
+          expect(parseInt(count, 10)).to.be.eql(2);
         });
     });
 
@@ -145,12 +145,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       };
       return this.User.count(queryObject)
         .then((count) => {
-          expect(parseInt(count)).to.be.eql(1);
+          expect(parseInt(count, 10)).to.be.eql(1);
           queryObject.where['$Projects.name$'] = 'project2';
           return this.User.count(queryObject);
         })
         .then((count) => {
-          expect(parseInt(count)).to.be.eql(0);
+          expect(parseInt(count, 10)).to.be.eql(0);
         });
     });
 
@@ -172,14 +172,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           })
         )
         .then((count) => {
-          expect(parseInt(count)).to.be.eql(3);
+          expect(parseInt(count, 10)).to.be.eql(3);
           return this.User.count({
             col: 'age',
             distinct: true,
             include: [this.Project]
           });
         })
-        .then((count) => expect(parseInt(count)).to.be.eql(2));
+        .then((count) => expect(parseInt(count, 10)).to.be.eql(2));
     });
   });
 });

@@ -295,9 +295,9 @@ describe(Support.getTestDialectTeaser('Utils'), () => {
             ]
           ]
         }).then(([airplane]) => {
-          expect(parseInt(airplane.get('count'))).to.equal(3);
-          expect(parseInt(airplane.get('count-engines'))).to.equal(1);
-          expect(parseInt(airplane.get('count-engines-wings'))).to.equal(2);
+          expect(parseInt(airplane.get('count'), 10)).to.equal(3);
+          expect(parseInt(airplane.get('count-engines'), 10)).to.equal(1);
+          expect(parseInt(airplane.get('count-engines-wings'), 10)).to.equal(2);
         });
       });
     }
@@ -326,9 +326,9 @@ describe(Support.getTestDialectTeaser('Utils'), () => {
             ]
           ]
         }).then(([airplane]) => {
-          expect(parseInt(airplane.get('count'))).to.equal(3);
-          expect(parseInt(airplane.get('count-engines'))).to.equal(1);
-          expect(parseInt(airplane.get('count-engines-wings'))).to.equal(2);
+          expect(parseInt(airplane.get('count'), 10)).to.equal(3);
+          expect(parseInt(airplane.get('count-engines'), 10)).to.equal(1);
+          expect(parseInt(airplane.get('count-engines-wings'), 10)).to.equal(2);
         });
       });
     }

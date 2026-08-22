@@ -180,7 +180,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
     it('should return false when changed from null to null', function () {
       const attributes = {};
-      for (const attr in this.User.rawAttributes) {
+      for (const attr of Object.keys(this.User.rawAttributes)) {
         attributes[attr] = null;
       }
 
@@ -189,11 +189,11 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
         raw: true
       });
 
-      for (const attr in this.User.rawAttributes) {
+      for (const attr of Object.keys(this.User.rawAttributes)) {
         user.set(attr, null);
       }
 
-      for (const attr in this.User.rawAttributes) {
+      for (const attr of Object.keys(this.User.rawAttributes)) {
         expect(user.changed(attr), `${attr} is not changed`).to.equal(false);
       }
     });

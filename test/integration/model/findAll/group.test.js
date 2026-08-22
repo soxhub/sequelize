@@ -48,8 +48,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             });
           })
           .then((posts) => {
-            expect(parseInt(posts[0].get('comment_count'))).to.be.equal(3);
-            expect(parseInt(posts[1].get('comment_count'))).to.be.equal(2);
+            expect(parseInt(posts[0].get('comment_count'), 10)).to.be.equal(3);
+            expect(parseInt(posts[1].get('comment_count'), 10)).to.be.equal(2);
           });
       });
 
@@ -92,8 +92,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           .then((posts) => {
             expect(Object.hasOwn(posts[0].get(), 'id')).to.equal(false);
             expect(Object.hasOwn(posts[1].get(), 'id')).to.equal(false);
-            expect(parseInt(posts[0].get('comment_count'))).to.be.equal(3);
-            expect(parseInt(posts[1].get('comment_count'))).to.be.equal(2);
+            expect(parseInt(posts[0].get('comment_count'), 10)).to.be.equal(3);
+            expect(parseInt(posts[1].get('comment_count'), 10)).to.be.equal(2);
           });
       });
     });

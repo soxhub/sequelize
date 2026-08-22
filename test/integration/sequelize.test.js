@@ -83,12 +83,14 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
     it('should work with connection strings (postgres protocol)', () => {
       const connectionUri = getConnectionUri(_.extend(config[dialect], { protocol: 'postgres' }));
       // postgres://...
-      const sequelize = new Sequelize(connectionUri); // eslint-disable-line
+      // oxlint-disable-next-line no-unused-vars -- the assertion is that constructing does not throw
+      const sequelize = new Sequelize(connectionUri);
     });
     it('should work with connection strings (postgresql protocol)', () => {
       const connectionUri = getConnectionUri(_.extend(config[dialect], { protocol: 'postgresql' }));
       // postgresql://...
-      const sequelize = new Sequelize(connectionUri); // eslint-disable-line
+      // oxlint-disable-next-line no-unused-vars -- the assertion is that constructing does not throw
+      const sequelize = new Sequelize(connectionUri);
     });
   });
 
@@ -1289,7 +1291,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
 
     it('imports a dao definition from a function', function () {
       const Project = this.sequelize.import('Project', (sequelize, dataTypes) => {
-        return sequelize.define('Project' + parseInt(Math.random() * 999999999999999), {
+        return sequelize.define('Project' + parseInt(Math.random() * 999999999999999, 10), {
           name: dataTypes.STRING
         });
       });

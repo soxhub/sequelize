@@ -102,7 +102,7 @@ describe('model', () => {
             });
           })
           .then((user) => {
-            expect(parseInt(user.getDataValue('firstEmergencyNumber'))).to.equal(42);
+            expect(parseInt(user.getDataValue('firstEmergencyNumber'), 10)).to.equal(42);
           });
       });
 
@@ -118,7 +118,7 @@ describe('model', () => {
             });
           })
           .then((user) => {
-            expect(parseInt(user.getDataValue('katesNumber'))).to.equal(1337);
+            expect(parseInt(user.getDataValue('katesNumber'), 10)).to.equal(1337);
           });
       });
 
@@ -143,7 +143,7 @@ describe('model', () => {
             });
           })
           .then((user) => {
-            expect(parseInt(user.getDataValue('katesFirstPhone'))).to.equal(42);
+            expect(parseInt(user.getDataValue('katesFirstPhone'), 10)).to.equal(42);
           });
       });
 

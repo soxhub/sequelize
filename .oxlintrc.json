@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": [],
+  "plugins": ["unicorn", "oxc", "promise", "node", "import"],
   "categories": {
     "correctness": "error"
   },
@@ -64,7 +64,26 @@
     "object-shorthand": "error",
     "no-shadow": "warn",
     "prefer-object-has-own": "error",
-    "no-prototype-builtins": "error"
+    "no-prototype-builtins": "error",
+    // Computed access into a namespace import is intentional in a few places
+    // (iterating the error exports); the rule cannot validate those.
+    "import/namespace": ["error", { "allowComputed": true }],
+    "no-promise-executor-return": "error",
+    "prefer-promise-reject-errors": "error",
+    "preserve-caught-error": "error",
+    "no-fallthrough": "error",
+    "no-eq-null": "error",
+    "no-case-declarations": "error",
+    "no-new-func": "error",
+    "no-useless-call": "error",
+    "no-object-constructor": "error",
+    "guard-for-in": "error",
+    "require-await": "warn",
+    "radix": "error",
+    "unicorn/no-array-method-this-argument": "error",
+    "unicorn/no-useless-promise-resolve-reject": "error",
+    "unicorn/error-message": "error",
+    "unicorn/no-abusive-eslint-disable": "error"
   },
   "overrides": [
     {

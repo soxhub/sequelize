@@ -76,7 +76,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       const createdAt = new Date(2012, 10, 10, 10, 10, 10);
       const updatedAt = new Date(2011, 11, 11, 11, 11, 11);
-      const values = _.map(new Array(10), () => {
+      const values = Array.from({ length: 10 }, () => {
         return {
           createdAt,
           updatedAt

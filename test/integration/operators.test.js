@@ -4,7 +4,6 @@ import Support from '../support.js';
 import DataTypes from '../../lib/data-types.js';
 
 const Op = Sequelize.Op;
-const Promise = Sequelize.Promise;
 const expect = chai.expect;
 
 describe(Support.getTestDialectTeaser('Operators'), () => {
@@ -31,19 +30,17 @@ describe(Support.getTestDialectTeaser('Operators'), () => {
         }
       );
 
-      return Promise.all([
-        this.sequelize.getQueryInterface().createTable('users', {
-          userId: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            primaryKey: true,
-            autoIncrement: true
-          },
-          full_name: {
-            type: DataTypes.STRING
-          }
-        })
-      ]);
+      return this.sequelize.getQueryInterface().createTable('users', {
+        userId: {
+          type: DataTypes.INTEGER,
+          allowNull: false,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        full_name: {
+          type: DataTypes.STRING
+        }
+      });
     });
 
     describe('case sensitive', () => {

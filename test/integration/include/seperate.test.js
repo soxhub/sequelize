@@ -230,23 +230,19 @@ if (current.dialect.supports.groupedLimit) {
         Task.Project = Task.belongsTo(Project, { as: 'project' });
 
         return this.sequelize.sync({ force: true }).then(() => {
-          return Promise.all([
-            Company.create(
-              {
-                id: 1,
-                users: [
-                  {
-                    tasks: [{ project: {} }, { project: {} }, { project: {} }]
-                  }
-                ]
-              },
-              {
-                include: [
-                  { association: Company.Users, include: [{ association: User.Tasks, include: [Task.Project] }] }
-                ]
-              }
-            )
-          ])
+          return Company.create(
+            {
+              id: 1,
+              users: [
+                {
+                  tasks: [{ project: {} }, { project: {} }, { project: {} }]
+                }
+              ]
+            },
+            {
+              include: [{ association: Company.Users, include: [{ association: User.Tasks, include: [Task.Project] }] }]
+            }
+          )
             .then(() => {
               return Company.findAll({
                 include: [

@@ -1,4 +1,4 @@
-# Companion to test-postgres.yml. That job installs from the committed lockfile
+# Companion to test.yml. That job installs from the committed lockfile
 # so PR failures always mean "your change broke it". This one deliberately
 # ignores the lockfile and resolves every dependency range fresh, so upstream
 # releases that break us surface here on a schedule instead of in a consumer.

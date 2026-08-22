@@ -186,7 +186,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
             '" for the validation "' +
             validator +
             '"',
-          function () {
+          async function () {
             const validations = {},
               message = validator + '(' + failingValue + ')';
 
@@ -202,10 +202,9 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
 
             const failingUser = UserFail.build({ name: failingValue });
 
-            return expect(failingUser.validate()).to.be.rejected.then((_errors) => {
-              expect(_errors.get('name')[0].message).to.equal(message);
-              expect(_errors.get('name')[0].value).to.equal(failingValue);
-            });
+            const _errors = await expect(failingUser.validate()).to.be.rejected;
+            expect(_errors.get('name')[0].message).to.equal(message);
+            expect(_errors.get('name')[0].value).to.equal(failingValue);
           }
         );
       },

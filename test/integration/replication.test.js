@@ -9,7 +9,7 @@ describe(Support.getTestDialectTeaser('Replication'), function () {
   let sandbox;
   let readSpy, writeSpy;
 
-  beforeEach(function () {
+  beforeEach(async function () {
     sandbox = sinon.createSandbox();
 
     this.sequelize = Support.getSequelizeInstance(null, null, null, {
@@ -29,10 +29,10 @@ describe(Support.getTestDialectTeaser('Replication'), function () {
       }
     });
 
-    return this.User.sync({ force: true }).then(() => {
-      readSpy = sandbox.spy(this.sequelize.connectionManager.pool.read, 'acquire');
-      writeSpy = sandbox.spy(this.sequelize.connectionManager.pool.write, 'acquire');
-    });
+    await this.User.sync({ force: true });
+
+    readSpy = sandbox.spy(this.sequelize.connectionManager.pool.read, 'acquire');
+    writeSpy = sandbox.spy(this.sequelize.connectionManager.pool.write, 'acquire');
   });
 
   afterEach(() => {
@@ -49,29 +49,32 @@ describe(Support.getTestDialectTeaser('Replication'), function () {
     chai.expect(readSpy.notCalled).eql(true);
   }
 
-  it('should be able to make a write', function () {
-    return this.User.create({
+  it('should be able to make a write', async function () {
+    await this.User.create({
       firstName: Math.random().toString()
-    }).then(expectWriteCalls);
+    });
+
+    expectWriteCalls();
   });
 
-  it('should be able to make a read', function () {
-    return this.User.findAll().then(expectReadCalls);
+  it('should be able to make a read', async function () {
+    await this.User.findAll();
+    expectReadCalls();
   });
 
-  it('should run read-only transactions on the replica', function () {
-    return this.sequelize
-      .transaction({ readOnly: true }, (transaction) => {
-        return this.User.findAll({ transaction });
-      })
-      .then(expectReadCalls);
+  it('should run read-only transactions on the replica', async function () {
+    await this.sequelize.transaction({ readOnly: true }, (transaction) => {
+      return this.User.findAll({ transaction });
+    });
+
+    expectReadCalls();
   });
 
-  it('should run non-read-only transactions on the primary', function () {
-    return this.sequelize
-      .transaction((transaction) => {
-        return this.User.findAll({ transaction });
-      })
-      .then(expectWriteCalls);
+  it('should run non-read-only transactions on the primary', async function () {
+    await this.sequelize.transaction((transaction) => {
+      return this.User.findAll({ transaction });
+    });
+
+    expectWriteCalls();
   });
 });

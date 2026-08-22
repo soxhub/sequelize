@@ -7,7 +7,7 @@ const expect = chai.expect;
 chai.should();
 
 describe(Support.getTestDialectTeaser('Vectors'), () => {
-  it('should not allow insert backslash', function () {
+  it('should not allow insert backslash', async function () {
     const Student = this.sequelize.define(
       'student',
       {
@@ -18,17 +18,14 @@ describe(Support.getTestDialectTeaser('Vectors'), () => {
       }
     );
 
-    return Student.sync({ force: true }).then(() => {
-      return Student.create({
-        name: 'Robert\\\'); DROP TABLE "students"; --'
-      })
-        .then((result) => {
-          expect(result.get('name')).to.equal('Robert\\\'); DROP TABLE "students"; --');
-          return Student.findAll();
-        })
-        .then((result) => {
-          expect(result[0].name).to.equal('Robert\\\'); DROP TABLE "students"; --');
-        });
+    await Student.sync({ force: true });
+
+    const created = await Student.create({
+      name: 'Robert\\\'); DROP TABLE "students"; --'
     });
+    expect(created.get('name')).to.equal('Robert\\\'); DROP TABLE "students"; --');
+
+    const found = await Student.findAll();
+    expect(found[0].name).to.equal('Robert\\\'); DROP TABLE "students"; --');
   });
 });

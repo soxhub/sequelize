@@ -22,173 +22,156 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
   });
 
   describe('changeColumn', () => {
-    it('should support schemas', function () {
-      return this.sequelize.createSchema('archive').then(() => {
-        return this.queryInterface
-          .createTable(
-            {
-              tableName: 'users',
-              schema: 'archive'
-            },
-            {
-              id: {
-                type: DataTypes.INTEGER,
-                primaryKey: true,
-                autoIncrement: true
-              },
-              currency: DataTypes.INTEGER
-            }
-          )
-          .then(() => {
-            return this.queryInterface.changeColumn(
-              {
-                tableName: 'users',
-                schema: 'archive'
-              },
-              'currency',
-              {
-                type: DataTypes.FLOAT
-              }
-            );
-          })
-          .then(() => {
-            return this.queryInterface.describeTable({
-              tableName: 'users',
-              schema: 'archive'
-            });
-          })
-          .then((table) => {
-            expect(table.currency.type).to.equal('DOUBLE PRECISION');
-          });
+    it('should support schemas', async function () {
+      await this.sequelize.createSchema('archive');
+
+      await this.queryInterface.createTable(
+        {
+          tableName: 'users',
+          schema: 'archive'
+        },
+        {
+          id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+          },
+          currency: DataTypes.INTEGER
+        }
+      );
+
+      await this.queryInterface.changeColumn(
+        {
+          tableName: 'users',
+          schema: 'archive'
+        },
+        'currency',
+        {
+          type: DataTypes.FLOAT
+        }
+      );
+
+      const table = await this.queryInterface.describeTable({
+        tableName: 'users',
+        schema: 'archive'
       });
+
+      expect(table.currency.type).to.equal('DOUBLE PRECISION');
     });
 
-    it('should change columns', function () {
-      return this.queryInterface
-        .createTable(
-          {
-            tableName: 'users'
+    it('should change columns', async function () {
+      await this.queryInterface.createTable(
+        {
+          tableName: 'users'
+        },
+        {
+          id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
           },
-          {
-            id: {
-              type: DataTypes.INTEGER,
-              primaryKey: true,
-              autoIncrement: true
-            },
-            currency: DataTypes.INTEGER
-          }
-        )
-        .then(() => {
-          return this.queryInterface.changeColumn('users', 'currency', {
-            type: DataTypes.FLOAT,
-            allowNull: true
-          });
-        })
-        .then(() => {
-          return this.queryInterface.describeTable({
-            tableName: 'users'
-          });
-        })
-        .then((table) => {
-          expect(table.currency.type).to.equal('DOUBLE PRECISION');
-        });
+          currency: DataTypes.INTEGER
+        }
+      );
+
+      await this.queryInterface.changeColumn('users', 'currency', {
+        type: DataTypes.FLOAT,
+        allowNull: true
+      });
+
+      const table = await this.queryInterface.describeTable({
+        tableName: 'users'
+      });
+
+      expect(table.currency.type).to.equal('DOUBLE PRECISION');
     });
 
     // MSSQL doesn't support using a modified column in a check constraint.
     // https://docs.microsoft.com/en-us/sql/t-sql/statements/alter-table-transact-sql
 
-    it('should work with enums', function () {
-      return this.queryInterface
-        .createTable(
-          {
-            tableName: 'users'
-          },
-          {
-            firstName: DataTypes.STRING
-          }
-        )
-        .then(() => {
-          return this.queryInterface.changeColumn('users', 'firstName', {
-            type: DataTypes.ENUM(['value1', 'value2', 'value3'])
-          });
-        });
+    it('should work with enums', async function () {
+      await this.queryInterface.createTable(
+        {
+          tableName: 'users'
+        },
+        {
+          firstName: DataTypes.STRING
+        }
+      );
+
+      await this.queryInterface.changeColumn('users', 'firstName', {
+        type: DataTypes.ENUM(['value1', 'value2', 'value3'])
+      });
     });
 
-    it('should work with enums with schemas', function () {
-      return this.sequelize
-        .createSchema('archive')
-        .then(() => {
-          return this.queryInterface.createTable(
-            {
-              tableName: 'users',
-              schema: 'archive'
-            },
-            {
-              firstName: DataTypes.STRING
-            }
-          );
-        })
-        .then(() => {
-          return this.queryInterface.changeColumn(
-            {
-              tableName: 'users',
-              schema: 'archive'
-            },
-            'firstName',
-            {
-              type: DataTypes.ENUM(['value1', 'value2', 'value3'])
-            }
-          );
-        });
+    it('should work with enums with schemas', async function () {
+      await this.sequelize.createSchema('archive');
+
+      await this.queryInterface.createTable(
+        {
+          tableName: 'users',
+          schema: 'archive'
+        },
+        {
+          firstName: DataTypes.STRING
+        }
+      );
+
+      await this.queryInterface.changeColumn(
+        {
+          tableName: 'users',
+          schema: 'archive'
+        },
+        'firstName',
+        {
+          type: DataTypes.ENUM(['value1', 'value2', 'value3'])
+        }
+      );
     });
 
     //SQlite navitely doesnt support ALTER Foreign key
 
     describe('should support foreign keys', () => {
-      beforeEach(function () {
-        return this.queryInterface
-          .createTable('users', {
-            id: {
-              type: DataTypes.INTEGER,
-              primaryKey: true,
-              autoIncrement: true
-            },
-            level_id: {
-              type: DataTypes.INTEGER,
-              allowNull: false
-            }
-          })
-          .then(() => {
-            return this.queryInterface.createTable('level', {
-              id: {
-                type: DataTypes.INTEGER,
-                primaryKey: true,
-                autoIncrement: true
-              }
-            });
-          });
+      beforeEach(async function () {
+        await this.queryInterface.createTable('users', {
+          id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+          },
+          level_id: {
+            type: DataTypes.INTEGER,
+            allowNull: false
+          }
+        });
+
+        await this.queryInterface.createTable('level', {
+          id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+          }
+        });
       });
 
-      it('able to change column to foreign key', function () {
-        return this.queryInterface
-          .changeColumn(
-            'users',
-            'level_id',
-            {
-              type: DataTypes.INTEGER,
-              references: {
-                model: 'level',
-                key: 'id'
-              },
-              onUpdate: 'cascade',
-              onDelete: 'cascade'
+      it('able to change column to foreign key', async function () {
+        await this.queryInterface.changeColumn(
+          'users',
+          'level_id',
+          {
+            type: DataTypes.INTEGER,
+            references: {
+              model: 'level',
+              key: 'id'
             },
-            { logging: log }
-          )
-          .then(() => {
-            expect(count).to.be.equal(1);
-            count = 0;
-          });
+            onUpdate: 'cascade',
+            onDelete: 'cascade'
+          },
+          { logging: log }
+        );
+
+        expect(count).to.be.equal(1);
+        count = 0;
       });
     });
   });

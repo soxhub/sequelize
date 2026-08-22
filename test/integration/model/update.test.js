@@ -22,128 +22,124 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       return this.Account.sync({ force: true });
     });
 
-    it('should only update the passed fields', function () {
-      return this.Account.create({ ownerId: 2 }).then((account) =>
-        this.Account.update(
-          {
-            name: Math.random().toString()
-          },
-          {
-            where: {
-              id: account.get('id')
-            }
+    it('should only update the passed fields', async function () {
+      const account = await this.Account.create({ ownerId: 2 });
+
+      await this.Account.update(
+        {
+          name: Math.random().toString()
+        },
+        {
+          where: {
+            id: account.get('id')
           }
-        )
+        }
       );
     });
 
     if (_.get(current.dialect.supports, 'returnValues.returning')) {
-      it('should return the updated record', function () {
-        return this.Account.create({ ownerId: 2 }).then((account) => {
-          return this.Account.update(
-            { name: 'FooBar' },
-            {
-              where: {
-                id: account.get('id')
-              },
-              returning: true
-            }
-          ).then(([, accounts]) => {
-            const firstAcc = accounts[0];
-            expect(firstAcc.ownerId).to.be.equal(2);
-            expect(firstAcc.name).to.be.equal('FooBar');
-          });
-        });
+      it('should return the updated record', async function () {
+        const account = await this.Account.create({ ownerId: 2 });
+
+        const [, accounts] = await this.Account.update(
+          { name: 'FooBar' },
+          {
+            where: {
+              id: account.get('id')
+            },
+            returning: true
+          }
+        );
+
+        const firstAcc = accounts[0];
+        expect(firstAcc.ownerId).to.be.equal(2);
+        expect(firstAcc.name).to.be.equal('FooBar');
       });
 
-      it('should return only the requested attributes', function () {
-        return this.Account.create({ ownerId: 2 }).then((account) => {
-          return this.Account.update(
-            { name: 'FooBar' },
-            {
-              where: {
-                id: account.get('id')
-              },
-              returning: ['name']
-            }
-          ).then(([, accounts]) => {
-            const firstAcc = accounts[0];
-            expect(firstAcc.name).to.be.equal('FooBar');
-            expect(firstAcc.ownerId).to.be.equal(undefined);
-          });
-        });
+      it('should return only the requested attributes', async function () {
+        const account = await this.Account.create({ ownerId: 2 });
+
+        const [, accounts] = await this.Account.update(
+          { name: 'FooBar' },
+          {
+            where: {
+              id: account.get('id')
+            },
+            returning: ['name']
+          }
+        );
+
+        const firstAcc = accounts[0];
+        expect(firstAcc.name).to.be.equal('FooBar');
+        expect(firstAcc.ownerId).to.be.equal(undefined);
       });
 
-      it('should accept attribute names whose column differs', function () {
-        return this.Account.create({ ownerId: 2 }).then((account) => {
-          return this.Account.update(
-            { name: 'FooBar' },
-            {
-              where: {
-                id: account.get('id')
-              },
-              // `ownerId` is stored as `owner_id`, so the name has to be mapped to the column
-              returning: ['ownerId']
-            }
-          ).then(([, accounts]) => {
-            const firstAcc = accounts[0];
-            expect(firstAcc.ownerId).to.be.equal(2);
-            expect(firstAcc.name).to.be.equal(undefined);
-          });
-        });
+      it('should accept attribute names whose column differs', async function () {
+        const account = await this.Account.create({ ownerId: 2 });
+
+        const [, accounts] = await this.Account.update(
+          { name: 'FooBar' },
+          {
+            where: {
+              id: account.get('id')
+            },
+            // `ownerId` is stored as `owner_id`, so the name has to be mapped to the column
+            returning: ['ownerId']
+          }
+        );
+
+        const firstAcc = accounts[0];
+        expect(firstAcc.ownerId).to.be.equal(2);
+        expect(firstAcc.name).to.be.equal(undefined);
       });
 
-      it('should return plain objects with raw', function () {
-        return this.Account.create({ ownerId: 2 }).then((account) => {
-          return this.Account.update(
-            { name: 'FooBar' },
-            {
-              where: {
-                id: account.get('id')
-              },
-              returning: ['ownerId'],
-              raw: true
-            }
-          ).then(([, accounts]) => {
-            const firstAcc = accounts[0];
-            expect(firstAcc).to.not.be.an.instanceOf(this.Account);
-            expect(Object.keys(firstAcc)).to.deep.equal(['ownerId']);
-            expect(firstAcc.ownerId).to.be.equal(2);
-          });
-        });
+      it('should return plain objects with raw', async function () {
+        const account = await this.Account.create({ ownerId: 2 });
+
+        const [, accounts] = await this.Account.update(
+          { name: 'FooBar' },
+          {
+            where: {
+              id: account.get('id')
+            },
+            returning: ['ownerId'],
+            raw: true
+          }
+        );
+
+        const firstAcc = accounts[0];
+        expect(firstAcc).to.not.be.an.instanceOf(this.Account);
+        expect(Object.keys(firstAcc)).to.deep.equal(['ownerId']);
+        expect(firstAcc.ownerId).to.be.equal(2);
       });
     }
 
     if (current.dialect.supports['LIMIT ON UPDATE']) {
-      it('should only update one row', function () {
-        return this.Account.create({
+      it('should only update one row', async function () {
+        await this.Account.create({
           ownerId: 2,
           name: 'Account Name 1'
-        })
-          .then(() => {
-            return this.Account.create({
-              ownerId: 2,
-              name: 'Account Name 2'
-            });
-          })
-          .then(() => {
-            return this.Account.create({
-              ownerId: 2,
-              name: 'Account Name 3'
-            });
-          })
-          .then(() => {
-            const options = {
-              where: {
-                ownerId: 2
-              },
-              limit: 1
-            };
-            return this.Account.update({ name: 'New Name' }, options);
-          })
-          .then((account) => {
-            expect(account[0]).to.equal(1);
-          });
+        });
+
+        await this.Account.create({
+          ownerId: 2,
+          name: 'Account Name 2'
+        });
+
+        await this.Account.create({
+          ownerId: 2,
+          name: 'Account Name 3'
+        });
+
+        const options = {
+          where: {
+            ownerId: 2
+          },
+          limit: 1
+        };
+
+        const account = await this.Account.update({ name: 'New Name' }, options);
+        expect(account[0]).to.equal(1);
       });
     }
   });

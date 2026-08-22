@@ -21,17 +21,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
   });
 
   describe('count', () => {
-    beforeEach(function () {
-      const self = this;
-      return this.User.bulkCreate([{ username: 'boo' }, { username: 'boo2' }])
-        .then(() => {
-          return self.User.findOne();
-        })
-        .then((user) => {
-          return user.createProject({
-            name: 'project1'
-          });
-        });
+    beforeEach(async function () {
+      await this.User.bulkCreate([{ username: 'boo' }, { username: 'boo2' }]);
+
+      const user = await this.User.findOne();
+      await user.createProject({
+        name: 'project1'
+      });
     });
 
     it('should count rows', function () {
@@ -53,89 +49,74 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       ).to.eventually.equal(1);
     });
 
-    it('should return attributes', function () {
-      return this.User.create({
+    it('should return attributes', async function () {
+      await this.User.create({
         username: 'valak',
         createdAt: new Date().setFullYear(2015)
-      })
-        .then(() =>
-          this.User.count({
-            attributes: ['createdAt'],
-            group: ['createdAt']
-          })
-        )
-        .then((users) => {
-          expect(users.length).to.be.eql(2);
+      });
 
-          // have attributes
-          expect(users[0].createdAt).to.exist;
-          expect(users[1].createdAt).to.exist;
-        });
+      const users = await this.User.count({
+        attributes: ['createdAt'],
+        group: ['createdAt']
+      });
+
+      expect(users.length).to.be.eql(2);
+
+      // have attributes
+      expect(users[0].createdAt).to.exist;
+      expect(users[1].createdAt).to.exist;
     });
 
-    it('should not return NaN', function () {
-      return this.sequelize
-        .sync({ force: true })
-        .then(() =>
-          this.User.bulkCreate([
-            { username: 'valak', age: 10 },
-            { username: 'conjuring', age: 20 },
-            { username: 'scary', age: 10 }
-          ])
-        )
-        .then(() =>
-          this.User.count({
-            where: { age: 10 },
-            group: ['age'],
-            order: ['age']
-          })
-        )
-        .then((result) => {
-          expect(parseInt(result[0].count, 10)).to.be.eql(2);
-          return this.User.count({
-            where: { username: 'fire' }
-          });
-        })
-        .then((count) => {
-          expect(count).to.be.eql(0);
-          return this.User.count({
-            where: { username: 'fire' },
-            group: 'age'
-          });
-        })
-        .then((count) => {
-          expect(count).to.be.eql([]);
-        });
+    it('should not return NaN', async function () {
+      await this.sequelize.sync({ force: true });
+
+      await this.User.bulkCreate([
+        { username: 'valak', age: 10 },
+        { username: 'conjuring', age: 20 },
+        { username: 'scary', age: 10 }
+      ]);
+
+      const result = await this.User.count({
+        where: { age: 10 },
+        group: ['age'],
+        order: ['age']
+      });
+      expect(parseInt(result[0].count, 10)).to.be.eql(2);
+
+      const missing = await this.User.count({
+        where: { username: 'fire' }
+      });
+      expect(missing).to.be.eql(0);
+
+      const grouped = await this.User.count({
+        where: { username: 'fire' },
+        group: 'age'
+      });
+      expect(grouped).to.be.eql([]);
     });
 
-    it('should be able to specify column for COUNT()', function () {
-      return this.sequelize
-        .sync({ force: true })
-        .then(() =>
-          this.User.bulkCreate([
-            { username: 'ember', age: 10 },
-            { username: 'angular', age: 20 },
-            { username: 'mithril', age: 10 }
-          ])
-        )
-        .then(() =>
-          this.User.count({
-            col: 'username'
-          })
-        )
-        .then((count) => {
-          expect(parseInt(count, 10)).to.be.eql(3);
-          return this.User.count({
-            col: 'age',
-            distinct: true
-          });
-        })
-        .then((count) => {
-          expect(parseInt(count, 10)).to.be.eql(2);
-        });
+    it('should be able to specify column for COUNT()', async function () {
+      await this.sequelize.sync({ force: true });
+
+      await this.User.bulkCreate([
+        { username: 'ember', age: 10 },
+        { username: 'angular', age: 20 },
+        { username: 'mithril', age: 10 }
+      ]);
+
+      const byUsername = await this.User.count({
+        col: 'username'
+      });
+      expect(parseInt(byUsername, 10)).to.be.eql(3);
+
+      const distinctAges = await this.User.count({
+        col: 'age',
+        distinct: true
+      });
+      expect(parseInt(distinctAges, 10)).to.be.eql(2);
     });
 
-    it('should be able to use where clause on included models', function () {
+    it('should be able to use where clause on included models', async function () {
       const queryObject = {
         col: 'username',
         include: [this.Project],
@@ -143,43 +124,38 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           '$Projects.name$': 'project1'
         }
       };
-      return this.User.count(queryObject)
-        .then((count) => {
-          expect(parseInt(count, 10)).to.be.eql(1);
-          queryObject.where['$Projects.name$'] = 'project2';
-          return this.User.count(queryObject);
-        })
-        .then((count) => {
-          expect(parseInt(count, 10)).to.be.eql(0);
-        });
+
+      const matching = await this.User.count(queryObject);
+      expect(parseInt(matching, 10)).to.be.eql(1);
+
+      queryObject.where['$Projects.name$'] = 'project2';
+
+      const missing = await this.User.count(queryObject);
+      expect(parseInt(missing, 10)).to.be.eql(0);
     });
 
-    it('should be able to specify column for COUNT() with includes', function () {
-      return this.sequelize
-        .sync({ force: true })
-        .then(() =>
-          this.User.bulkCreate([
-            { username: 'ember', age: 10 },
-            { username: 'angular', age: 20 },
-            { username: 'mithril', age: 10 }
-          ])
-        )
-        .then(() =>
-          this.User.count({
-            col: 'username',
-            distinct: true,
-            include: [this.Project]
-          })
-        )
-        .then((count) => {
-          expect(parseInt(count, 10)).to.be.eql(3);
-          return this.User.count({
-            col: 'age',
-            distinct: true,
-            include: [this.Project]
-          });
-        })
-        .then((count) => expect(parseInt(count, 10)).to.be.eql(2));
+    it('should be able to specify column for COUNT() with includes', async function () {
+      await this.sequelize.sync({ force: true });
+
+      await this.User.bulkCreate([
+        { username: 'ember', age: 10 },
+        { username: 'angular', age: 20 },
+        { username: 'mithril', age: 10 }
+      ]);
+
+      const byUsername = await this.User.count({
+        col: 'username',
+        distinct: true,
+        include: [this.Project]
+      });
+      expect(parseInt(byUsername, 10)).to.be.eql(3);
+
+      const distinctAges = await this.User.count({
+        col: 'age',
+        distinct: true,
+        include: [this.Project]
+      });
+      expect(parseInt(distinctAges, 10)).to.be.eql(2);
     });
   });
 });

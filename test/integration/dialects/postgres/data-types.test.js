@@ -10,13 +10,13 @@ const dialect = Support.getTestDialect();
 describe('[POSTGRES Specific] Data Types', () => {
   // Reads the server's clock. Assertions about values the database generated (NOW() defaults) have
   // to be bounded by the server's own time rather than the client's, because the two clocks drift.
-  function dbNow() {
-    return Support.sequelize
-      .query('SELECT NOW() AS now', {
-        type: Support.sequelize.QueryTypes.SELECT,
-        plain: true
-      })
-      .then((row) => row.now);
+  async function dbNow() {
+    const row = await Support.sequelize.query('SELECT NOW() AS now', {
+      type: Support.sequelize.QueryTypes.SELECT,
+      plain: true
+    });
+
+    return row.now;
   }
 
   describe('DATE/DATEONLY Validate and Stringify', () => {
@@ -84,7 +84,7 @@ describe('[POSTGRES Specific] Data Types', () => {
 
   describe('DATE SQL', () => {
     // create dummy user
-    it('should be able to create and update records with Infinity/-Infinity', function () {
+    it('should be able to create and update records with Infinity/-Infinity', async function () {
       this.sequelize.options.typeValidation = true;
 
       const date = new Date();
@@ -120,95 +120,80 @@ describe('[POSTGRES Specific] Data Types', () => {
       // perfectly good server timestamp.
       let windowStart;
 
-      return User.sync({
+      await User.sync({
         force: true
-      })
-        .then(() => dbNow())
-        .then((now) => {
-          windowStart = now;
+      });
 
-          return User.create(
-            {
-              username: 'bob',
-              anotherTime: Infinity
-            },
-            {
-              validate: true
-            }
-          );
-        })
-        .then((user) => dbNow().then((windowEnd) => ({ user, windowEnd })))
-        .then(({ user, windowEnd }) => {
-          expect(user.username).to.equal('bob');
-          expect(user.beforeTime).to.equal(-Infinity);
-          expect(user.sometime).to.be.withinTime(windowStart, windowEnd);
-          expect(user.anotherTime).to.equal(Infinity);
-          expect(user.afterTime).to.equal(Infinity);
+      windowStart = await dbNow();
 
-          return user.update(
-            {
-              sometime: Infinity
-            },
-            {
-              returning: true
-            }
-          );
-        })
-        .then((user) => {
-          expect(user.sometime).to.equal(Infinity);
+      const created = await User.create(
+        {
+          username: 'bob',
+          anotherTime: Infinity
+        },
+        {
+          validate: true
+        }
+      );
 
-          return user.update({
-            sometime: Infinity
-          });
-        })
-        .then((user) => {
-          expect(user.sometime).to.equal(Infinity);
+      let windowEnd = await dbNow();
 
-          return dbNow().then((now) => {
-            windowStart = now;
+      expect(created.username).to.equal('bob');
+      expect(created.beforeTime).to.equal(-Infinity);
+      expect(created.sometime).to.be.withinTime(windowStart, windowEnd);
+      expect(created.anotherTime).to.equal(Infinity);
+      expect(created.afterTime).to.equal(Infinity);
 
-            return user.update(
-              {
-                sometime: this.sequelize.fn('NOW')
-              },
-              {
-                returning: true
-              }
-            );
-          });
-        })
-        .then((user) => dbNow().then((windowEnd) => ({ user, windowEnd })))
-        .then(({ user, windowEnd }) => {
-          expect(user.sometime).to.be.withinTime(windowStart, windowEnd);
+      const returned = await created.update(
+        {
+          sometime: Infinity
+        },
+        {
+          returning: true
+        }
+      );
+      expect(returned.sometime).to.equal(Infinity);
 
-          // find
-          return User.findAll();
-        })
-        .then((users) => {
-          expect(users[0].beforeTime).to.equal(-Infinity);
-          expect(users[0].sometime).to.not.equal(Infinity);
-          expect(users[0].afterTime).to.equal(Infinity);
+      const reapplied = await returned.update({
+        sometime: Infinity
+      });
+      expect(reapplied.sometime).to.equal(Infinity);
 
-          return users[0].update({
-            sometime: date
-          });
-        })
-        .then((user) => {
-          expect(user.sometime).to.equalTime(date);
+      windowStart = await dbNow();
 
-          return user.update({
-            sometime: date
-          });
-        })
-        .then((user) => {
-          expect(user.sometime).to.equalTime(date);
-        });
+      const nowed = await reapplied.update(
+        {
+          sometime: this.sequelize.fn('NOW')
+        },
+        {
+          returning: true
+        }
+      );
+
+      windowEnd = await dbNow();
+      expect(nowed.sometime).to.be.withinTime(windowStart, windowEnd);
+
+      // find
+      const users = await User.findAll();
+      expect(users[0].beforeTime).to.equal(-Infinity);
+      expect(users[0].sometime).to.not.equal(Infinity);
+      expect(users[0].afterTime).to.equal(Infinity);
+
+      const dated = await users[0].update({
+        sometime: date
+      });
+      expect(dated.sometime).to.equalTime(date);
+
+      const redated = await dated.update({
+        sometime: date
+      });
+      expect(redated.sometime).to.equalTime(date);
     });
   });
 
   describe('DATEONLY SQL', () => {
     // create dummy user
-    it('should be able to create and update records with Infinity/-Infinity', function () {
+    it('should be able to create and update records with Infinity/-Infinity', async function () {
       this.sequelize.options.typeValidation = true;
 
       const date = new Date();
@@ -237,85 +222,72 @@ describe('[POSTGRES Specific] Data Types', () => {
         }
       );
 
-      return User.sync({
+      await User.sync({
         force: true
-      })
-        .then(() => {
-          return User.create(
-            {
-              username: 'bob',
-              anotherTime: Infinity
-            },
-            {
-              validate: true
-            }
-          );
-        })
-        .then((user) => {
-          expect(user.username).to.equal('bob');
-          expect(user.beforeTime).to.equal(-Infinity);
-          // `sometime` is populated by the DB's NOW() under the connection timezone (UTC by default),
-          // so compare against the UTC day to avoid flakiness across the midnight-UTC boundary.
-          expect(user.sometime).to.equal(moment.utc(date).format('YYYY-MM-DD'));
-          expect(user.anotherTime).to.equal(Infinity);
-          expect(user.afterTime).to.equal(Infinity);
+      });
 
-          return user.update(
-            {
-              sometime: Infinity
-            },
-            {
-              returning: true
-            }
-          );
-        })
-        .then((user) => {
-          expect(user.sometime).to.equal(Infinity);
+      const created = await User.create(
+        {
+          username: 'bob',
+          anotherTime: Infinity
+        },
+        {
+          validate: true
+        }
+      );
 
-          return user.update({
-            sometime: Infinity
-          });
-        })
-        .then((user) => {
-          expect(user.sometime).to.equal(Infinity);
+      expect(created.username).to.equal('bob');
+      expect(created.beforeTime).to.equal(-Infinity);
+      // `sometime` is populated by the DB's NOW() under the connection timezone (UTC by default),
+      // so compare against the UTC day to avoid flakiness across the midnight-UTC boundary.
+      expect(created.sometime).to.equal(moment.utc(date).format('YYYY-MM-DD'));
+      expect(created.anotherTime).to.equal(Infinity);
+      expect(created.afterTime).to.equal(Infinity);
 
-          return user.update(
-            {
-              sometime: this.sequelize.fn('NOW')
-            },
-            {
-              returning: true
-            }
-          );
-        })
-        .then((user) => {
-          expect(user.sometime).to.not.equal(Infinity);
-          // `sometime` is populated by the DB's NOW() under the connection timezone (UTC by default),
-          // so compare against the UTC day to avoid flakiness across the midnight-UTC boundary.
-          expect(user.sometime).to.equal(moment.utc(date).format('YYYY-MM-DD'));
+      const returned = await created.update(
+        {
+          sometime: Infinity
+        },
+        {
+          returning: true
+        }
+      );
+      expect(returned.sometime).to.equal(Infinity);
 
-          // find
-          return User.findAll();
-        })
-        .then((users) => {
-          expect(users[0].beforeTime).to.equal(-Infinity);
-          expect(users[0].sometime).to.not.equal(Infinity);
-          expect(users[0].afterTime).to.equal(Infinity);
+      const reapplied = await returned.update({
+        sometime: Infinity
+      });
+      expect(reapplied.sometime).to.equal(Infinity);
 
-          return users[0].update({
-            sometime: '1969-07-20'
-          });
-        })
-        .then((user) => {
-          expect(user.sometime).to.equal('1969-07-20');
+      const nowed = await reapplied.update(
+        {
+          sometime: this.sequelize.fn('NOW')
+        },
+        {
+          returning: true
+        }
+      );
 
-          return user.update({
-            sometime: '1969-07-20'
-          });
-        })
-        .then((user) => {
-          expect(user.sometime).to.equal('1969-07-20');
-        });
+      expect(nowed.sometime).to.not.equal(Infinity);
+      // `sometime` is populated by the DB's NOW() under the connection timezone (UTC by default),
+      // so compare against the UTC day to avoid flakiness across the midnight-UTC boundary.
+      expect(nowed.sometime).to.equal(moment.utc(date).format('YYYY-MM-DD'));
+
+      // find
+      const users = await User.findAll();
+      expect(users[0].beforeTime).to.equal(-Infinity);
+      expect(users[0].sometime).to.not.equal(Infinity);
+      expect(users[0].afterTime).to.equal(Infinity);
+
+      const dated = await users[0].update({
+        sometime: '1969-07-20'
+      });
+      expect(dated.sometime).to.equal('1969-07-20');
+
+      const redated = await dated.update({
+        sometime: '1969-07-20'
+      });
+      expect(redated.sometime).to.equal('1969-07-20');
     });
   });
 });

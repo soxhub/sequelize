@@ -39,10 +39,8 @@ describe('[POSTGRES Specific] associations', () => {
 
   describe('HasMany', () => {
     describe('addDAO / getModel', () => {
-      beforeEach(function () {
-        const self = this;
-
-        //prevent periods from occurring in the table name since they are used to delimit (table.column)
+      beforeEach(async function () {
+        // prevent periods from occurring in the table name since they are used to delimit (table.column)
         this.User = this.sequelize.define('User' + config.rand(), { name: DataTypes.STRING });
         this.Task = this.sequelize.define('Task' + config.rand(), { name: DataTypes.STRING });
         this.users = null;
@@ -62,41 +60,34 @@ describe('[POSTGRES Specific] associations', () => {
           tasks[tasks.length] = { name: 'Task' + Math.random() };
         }
 
-        return this.sequelize.sync({ force: true }).then(() => {
-          return self.User.bulkCreate(users).then(() => {
-            return self.Task.bulkCreate(tasks).then(() => {
-              return self.User.findAll().then((_users) => {
-                return self.Task.findAll().then((_tasks) => {
-                  self.user = _users[0];
-                  self.task = _tasks[0];
-                });
-              });
-            });
-          });
-        });
+        await this.sequelize.sync({ force: true });
+        await this.User.bulkCreate(users);
+        await this.Task.bulkCreate(tasks);
+
+        const _users = await this.User.findAll();
+        const _tasks = await this.Task.findAll();
+
+        this.user = _users[0];
+        this.task = _tasks[0];
       });
 
-      it('should correctly add an association to the dao', function () {
-        const self = this;
+      it('should correctly add an association to the dao', async function () {
+        const _tasks = await this.user.getTasks();
+        expect(_tasks).to.have.length(0);
 
-        return self.user.getTasks().then((_tasks) => {
-          expect(_tasks).to.have.length(0);
-          return self.user.addTask(self.task).then(() => {
-            return self.user.getTasks().then((addedTasks) => {
-              expect(addedTasks).to.have.length(1);
-            });
-          });
-        });
+        await this.user.addTask(this.task);
+
+        const addedTasks = await this.user.getTasks();
+        expect(addedTasks).to.have.length(1);
       });
     });
 
     describe('removeDAO', () => {
-      it('should correctly remove associated objects', function () {
-        const self = this,
-          users = [],
+      it('should correctly remove associated objects', async function () {
+        const users = [],
           tasks = [];
 
-        //prevent periods from occurring in the table name since they are used to delimit (table.column)
+        // prevent periods from occurring in the table name since they are used to delimit (table.column)
         this.User = this.sequelize.define('User' + config.rand(), { name: DataTypes.STRING });
         this.Task = this.sequelize.define('Task' + config.rand(), { name: DataTypes.STRING });
         this.users = null;
@@ -113,39 +104,28 @@ describe('[POSTGRES Specific] associations', () => {
           tasks[tasks.length] = { id: x + 1, name: 'Task' + Math.random() };
         }
 
-        return this.sequelize.sync({ force: true }).then(() => {
-          return self.User.bulkCreate(users).then(() => {
-            return self.Task.bulkCreate(tasks).then(() => {
-              return self.User.findAll().then((_users) => {
-                return self.Task.findAll().then((_tasks) => {
-                  self.user = _users[0];
-                  self.task = _tasks[0];
-                  self.users = _users;
-                  self.tasks = _tasks;
+        await this.sequelize.sync({ force: true });
+        await this.User.bulkCreate(users);
+        await this.Task.bulkCreate(tasks);
 
-                  return self.user.getTasks().then((__tasks) => {
-                    expect(__tasks).to.have.length(0);
-                    return self.user.setTasks(self.tasks).then(() => {
-                      return self.user.getTasks().then((setTasks) => {
-                        expect(setTasks).to.have.length(self.tasks.length);
-                        return self.user.removeTask(self.tasks[0]).then(() => {
-                          return self.user.getTasks().then((tasksAfterRemove) => {
-                            expect(tasksAfterRemove).to.have.length(self.tasks.length - 1);
-                            return self.user.removeTasks([self.tasks[1], self.tasks[2]]).then(() => {
-                              return self.user.getTasks().then((tasksAfterRemoveMany) => {
-                                expect(tasksAfterRemoveMany).to.have.length(self.tasks.length - 3);
-                              });
-                            });
-                          });
-                        });
-                      });
-                    });
-                  });
-                });
-              });
-            });
-          });
-        });
+        const _users = await this.User.findAll();
+        const _tasks = await this.Task.findAll();
+
+        this.user = _users[0];
+        this.task = _tasks[0];
+        this.users = _users;
+        this.tasks = _tasks;
+
+        expect(await this.user.getTasks()).to.have.length(0);
+
+        await this.user.setTasks(this.tasks);
+        expect(await this.user.getTasks()).to.have.length(this.tasks.length);
+
+        await this.user.removeTask(this.tasks[0]);
+        expect(await this.user.getTasks()).to.have.length(this.tasks.length - 1);
+
+        await this.user.removeTasks([this.tasks[1], this.tasks[2]]);
+        expect(await this.user.getTasks()).to.have.length(this.tasks.length - 3);
       });
     });
   });

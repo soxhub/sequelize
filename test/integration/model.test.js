@@ -229,11 +229,11 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           expect(user.false).not.to.exist; //  because, you know we might accidentally add a field named 'false'
 
           user.name = 'heho';
-          return user.save().then((user) => {
-            expect(user.updatedAt).not.to.exist;
-            return user.destroy().then(() => {
-              return user.reload({ paranoid: false }).then(() => {
-                expect(user.deletedAtThisTime).to.exist;
+          return user.save().then((savedUser) => {
+            expect(savedUser.updatedAt).not.to.exist;
+            return savedUser.destroy().then(() => {
+              return savedUser.reload({ paranoid: false }).then(() => {
+                expect(savedUser.deletedAtThisTime).to.exist;
               });
             });
           });
@@ -1593,8 +1593,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           return User.bulkCreate([{ username: 'Toni' }, { username: 'Tobi' }, { username: 'Max' }]).then(() => {
             return User.findById(1).then((user) => {
               return user.destroy().then(() => {
-                return User.findById(1).then((user) => {
-                  expect(user).to.be.null;
+                return User.findById(1).then((deletedUser) => {
+                  expect(deletedUser).to.be.null;
                   return User.count().then((cnt) => {
                     expect(cnt).to.equal(2);
                     return User.findAll().then((users) => {
@@ -1697,9 +1697,9 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             })
           ]);
         })
-        .then(([user, userWithDeletedPets]) => {
-          expect(user).to.exist;
-          expect(user.Pets).to.have.length(1);
+        .then(([userWithPets, userWithDeletedPets]) => {
+          expect(userWithPets).to.exist;
+          expect(userWithPets.Pets).to.have.length(1);
           expect(userWithDeletedPets).to.exist;
           expect(userWithDeletedPets.Pets).to.have.length(2);
         });
@@ -2461,8 +2461,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
                     schema: 'special',
                     logging() {}
                   })
-                  .then((table) => {
-                    expect(table.id.defaultValue).to.contain('special');
+                  .then((specialTable) => {
+                    expect(specialTable.id.defaultValue).to.contain('special');
                     count++;
                   });
               })
@@ -2673,9 +2673,9 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         return this.BlobUser.create({
           data: new Buffer('Sequelize')
         }).then((user) => {
-          return self.BlobUser.findById(user.id).then((user) => {
-            expect(user.data).to.be.an.instanceOf(Buffer);
-            expect(user.data.toString()).to.have.string('Sequelize');
+          return self.BlobUser.findById(user.id).then((foundUser) => {
+            expect(foundUser.data).to.be.an.instanceOf(Buffer);
+            expect(foundUser.data.toString()).to.have.string('Sequelize');
           });
         });
       });
@@ -2685,8 +2685,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         return this.BlobUser.create({
           // create a null column
         }).then((user) => {
-          return self.BlobUser.findById(user.id).then((user) => {
-            expect(user.data).to.be.null;
+          return self.BlobUser.findById(user.id).then((foundUser) => {
+            expect(foundUser.data).to.be.null;
           });
         });
       });
@@ -2711,9 +2711,9 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         return this.BlobUser.create({
           data: 'Sequelize'
         }).then((user) => {
-          return self.BlobUser.findById(user.id).then((user) => {
-            expect(user.data).to.be.an.instanceOf(Buffer);
-            expect(user.data.toString()).to.have.string('Sequelize');
+          return self.BlobUser.findById(user.id).then((foundUser) => {
+            expect(foundUser.data).to.be.an.instanceOf(Buffer);
+            expect(foundUser.data.toString()).to.have.string('Sequelize');
           });
         });
       });

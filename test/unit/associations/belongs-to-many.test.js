@@ -142,16 +142,16 @@ describe(Support.getTestDialectTeaser('belongsToMany'), () => {
     });
 
     it('follows the global timestamps false option', () => {
-      const current = Support.createSequelizeInstance({
+      const noTimestamps = Support.createSequelizeInstance({
         timestamps: false
       });
 
-      const User = current.define('User', {}),
-        Task = current.define('Task', {});
+      const User = noTimestamps.define('User', {}),
+        Task = noTimestamps.define('Task', {});
 
       User.belongsToMany(Task, { through: 'user_task3' });
 
-      expect(current.models.user_task3.rawAttributes).not.to.have.all.keys(['createdAt', 'updatedAt']);
+      expect(noTimestamps.models.user_task3.rawAttributes).not.to.have.all.keys(['createdAt', 'updatedAt']);
     });
   });
 

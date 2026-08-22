@@ -10,7 +10,42 @@
     "es2023": true
   },
   "rules": {
-    "new-cap": ["warn", { "capIsNewExceptionPattern": "^BigInt", "properties": false }],
+    "new-cap": [
+      "warn",
+      {
+        "capIsNewExceptions": [
+          "ARRAY",
+          "BigInt",
+          "BIGINT",
+          "BLOB",
+          "BOOLEAN",
+          "CHAR",
+          "DATE",
+          "DATEONLY",
+          "DECIMAL",
+          "DOUBLE",
+          "ENUM",
+          "FLOAT",
+          "GEOGRAPHY",
+          "GEOMETRY",
+          "HSTORE",
+          "INTEGER",
+          "MEDIUMINT",
+          "NOW",
+          "NUMERIC",
+          "RANGE",
+          "REAL",
+          "SET_DEFERRED",
+          "SMALLINT",
+          "STRING",
+          "TEXT",
+          "TINYINT",
+          "UUID",
+          "UUIDV1",
+          "UUIDV4"
+        ]
+      }
+    ],
     "no-extra-boolean-cast": "warn",
     "no-var": "error",
     "prefer-const": "error",

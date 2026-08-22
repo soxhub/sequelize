@@ -82,8 +82,8 @@ describe('[POSTGRES Specific] associations', () => {
         return self.user.getTasks().then((_tasks) => {
           expect(_tasks).to.have.length(0);
           return self.user.addTask(self.task).then(() => {
-            return self.user.getTasks().then((_tasks) => {
-              expect(_tasks).to.have.length(1);
+            return self.user.getTasks().then((addedTasks) => {
+              expect(addedTasks).to.have.length(1);
             });
           });
         });
@@ -126,14 +126,14 @@ describe('[POSTGRES Specific] associations', () => {
                   return self.user.getTasks().then((__tasks) => {
                     expect(__tasks).to.have.length(0);
                     return self.user.setTasks(self.tasks).then(() => {
-                      return self.user.getTasks().then((_tasks) => {
-                        expect(_tasks).to.have.length(self.tasks.length);
+                      return self.user.getTasks().then((setTasks) => {
+                        expect(setTasks).to.have.length(self.tasks.length);
                         return self.user.removeTask(self.tasks[0]).then(() => {
-                          return self.user.getTasks().then((_tasks) => {
-                            expect(_tasks).to.have.length(self.tasks.length - 1);
+                          return self.user.getTasks().then((tasksAfterRemove) => {
+                            expect(tasksAfterRemove).to.have.length(self.tasks.length - 1);
                             return self.user.removeTasks([self.tasks[1], self.tasks[2]]).then(() => {
-                              return self.user.getTasks().then((_tasks) => {
-                                expect(_tasks).to.have.length(self.tasks.length - 3);
+                              return self.user.getTasks().then((tasksAfterRemoveMany) => {
+                                expect(tasksAfterRemoveMany).to.have.length(self.tasks.length - 3);
                               });
                             });
                           });

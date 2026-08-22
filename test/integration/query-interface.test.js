@@ -43,14 +43,12 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
           tableNames = filterMSSQLDefault(tableNames);
           expect(tableNames).to.be.empty;
           return self.queryInterface.createTable('table', { name: DataTypes.STRING }).then(() => {
-            return self.queryInterface.showAllTables().then((tableNames) => {
-              tableNames = filterMSSQLDefault(tableNames);
-              expect(tableNames).to.have.length(1);
+            return self.queryInterface.showAllTables().then((tableNamesAfterCreate) => {
+              expect(filterMSSQLDefault(tableNamesAfterCreate)).to.have.length(1);
               return self.queryInterface.dropAllTables().then(() => {
-                return self.queryInterface.showAllTables().then((tableNames) => {
+                return self.queryInterface.showAllTables().then((tableNamesAfterDrop) => {
                   // MSSQL include spt_values table which is system defined, hence cant be dropped
-                  tableNames = filterMSSQLDefault(tableNames);
-                  expect(tableNames).to.be.empty;
+                  expect(filterMSSQLDefault(tableNamesAfterDrop)).to.be.empty;
                 });
               });
             });
@@ -98,9 +96,9 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
           );
           expect(indexColumns).to.include('group_username_is_admin');
           return self.queryInterface.removeIndex('Group', ['username', 'isAdmin']).then(() => {
-            return self.queryInterface.showIndex('Group').then((indexes) => {
+            return self.queryInterface.showIndex('Group').then((remainingIndexes) => {
               indexColumns = _.uniq(
-                indexes.map((index) => {
+                remainingIndexes.map((index) => {
                   return index.name;
                 })
               );

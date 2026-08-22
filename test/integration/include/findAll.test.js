@@ -125,9 +125,9 @@ describe(Support.getTestDialectTeaser('Include'), () => {
                 ]).then(() => {
                   return Product.findAll();
                 })
-              }).then((results) => {
-                const user = results.user,
-                  products = results.products,
+              }).then((userResults) => {
+                const user = userResults.user,
+                  products = userResults.products,
                   groupMembers = [
                     { AccUserId: user.id, GroupId: groups[0].id, RankId: ranks[0].id },
                     { AccUserId: user.id, GroupId: groups[1].id, RankId: ranks[2].id }
@@ -1448,9 +1448,9 @@ describe(Support.getTestDialectTeaser('Include'), () => {
                   model: Album
                 }
               ]
-            }).then((members) => {
-              expect(members.length).to.equal(20);
-              members.forEach((member) => {
+            }).then((foundMembers) => {
+              expect(foundMembers.length).to.equal(20);
+              foundMembers.forEach((member) => {
                 expect(member.get('id')).not.to.be.ok;
                 expect(member.Albums.length).to.equal(1);
               });

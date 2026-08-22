@@ -1288,9 +1288,9 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
     });
 
     it('imports a dao definition from a function', function () {
-      const Project = this.sequelize.import('Project', (sequelize, DataTypes) => {
+      const Project = this.sequelize.import('Project', (sequelize, dataTypes) => {
         return sequelize.define('Project' + parseInt(Math.random() * 999999999999999), {
-          name: DataTypes.STRING
+          name: dataTypes.STRING
         });
       });
 
@@ -1720,10 +1720,10 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
               username: 'user1'
             }
           })
-            .then((user) => {
-              expect(user).to.exist;
-              expect(Number(user.deletedAt)).to.equal(epoch);
-              return user.destroy();
+            .then((foundUser) => {
+              expect(foundUser).to.exist;
+              expect(Number(foundUser.deletedAt)).to.equal(epoch);
+              return foundUser.destroy();
             })
             .then((destroyedUser) => {
               expect(destroyedUser.deletedAt).to.exist;

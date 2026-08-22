@@ -77,7 +77,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
   describe('.scope', () => {
     describe('attribute exclude / include', () => {
-      const User = current.define(
+      const ScopedUser = current.define(
         'user',
         {
           password: DataTypes.STRING,
@@ -100,11 +100,11 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       );
 
       it('should be able to exclude in defaultScope #4735', () => {
-        expect(User._scope.attributes).to.deep.equal(['id', 'name', 'createdAt', 'updatedAt']);
+        expect(ScopedUser._scope.attributes).to.deep.equal(['id', 'name', 'createdAt', 'updatedAt']);
       });
 
       it('should be able to exclude in a scope #4925', () => {
-        expect(User.scope('aScope')._scope.attributes).to.deep.equal(['id', 'name', 'createdAt', 'updatedAt']);
+        expect(ScopedUser.scope('aScope')._scope.attributes).to.deep.equal(['id', 'name', 'createdAt', 'updatedAt']);
       });
     });
 

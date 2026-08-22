@@ -240,9 +240,9 @@ describe(Support.getTestDialectTeaser('Multiple Level Filters'), () => {
           return User.findById(1).then((user) => {
             return Project.findById(1).then((project) => {
               return user.setProjects([project]).then(() => {
-                return User.findById(2).then((user) => {
-                  return Project.findById(2).then((project) => {
-                    return user.setProjects([project]).then(() => {
+                return User.findById(2).then((secondUser) => {
+                  return Project.findById(2).then((secondProject) => {
+                    return secondUser.setProjects([secondProject]).then(() => {
                       return User.findAll({
                         include: [{ model: Project, where: { title: 'republic' } }]
                       }).then((users) => {

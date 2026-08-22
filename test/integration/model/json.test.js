@@ -48,8 +48,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
               return this.Event.count().then((count) => {
                 expect(count).to.equal(0);
                 return transaction.commit().then(() => {
-                  return this.Event.count().then((count) => {
-                    expect(count).to.equal(1);
+                  return this.Event.count().then((committedCount) => {
+                    expect(committedCount).to.equal(1);
                   });
                 });
               });

@@ -34,12 +34,12 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         this.User.afterSave(afterSave);
 
         return this.User.create({ username: 'Toni', mood: 'happy' }).then((user) => {
-          return user.updateAttributes({ username: 'Chong' }).then((user) => {
+          return user.updateAttributes({ username: 'Chong' }).then((updatedUser) => {
             expect(beforeHook.calledOnce).to.be.true;
             expect(afterHook.calledOnce).to.be.true;
             expect(beforeSave.calledTwice).to.be.true;
             expect(afterSave.calledTwice).to.be.true;
-            expect(user.username).to.equal('Chong');
+            expect(updatedUser.username).to.equal('Chong');
           });
         });
       });

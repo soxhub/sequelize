@@ -136,8 +136,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
         return UserWithBoolean.sync({ force: true }).then(() => {
           return UserWithBoolean.create({ active: true }).then((user) => {
-            return UserWithBoolean.findOne({ where: { id: user.id }, attributes: ['id'] }).then((user) => {
-              expect(user.active).not.to.exist;
+            return UserWithBoolean.findOne({ where: { id: user.id }, attributes: ['id'] }).then((foundUser) => {
+              expect(foundUser.active).not.to.exist;
             });
           });
         });
@@ -652,10 +652,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
                       username: 'someone'
                     },
                     include: [self.Group]
-                  }).then((someUser) => {
-                    expect(someUser).to.exist;
-                    expect(someUser.username).to.equal('someone');
-                    expect(someUser.GroupPKeagerones[0].name).to.equal('people');
+                  }).then((foundUser) => {
+                    expect(foundUser).to.exist;
+                    expect(foundUser.username).to.equal('someone');
+                    expect(foundUser.GroupPKeagerones[0].name).to.equal('people');
                   });
                 });
               });
@@ -772,8 +772,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
                       expect(tag).to.exist;
                       expect(tag.products.length).to.equal(2);
                     }),
-                    tags[1].getProducts().then((products) => {
-                      expect(products.length).to.equal(3);
+                    tags[1].getProducts().then((tagProducts) => {
+                      expect(tagProducts.length).to.equal(3);
                     }),
                     self.Product.findOne({
                       where: {
@@ -784,8 +784,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
                       expect(product).to.exist;
                       expect(product.tags.length).to.equal(2);
                     }),
-                    products[1].getTags().then((tags) => {
-                      expect(tags.length).to.equal(1);
+                    products[1].getTags().then((productTags) => {
+                      expect(productTags.length).to.equal(1);
                     })
                   ]);
                 });

@@ -85,11 +85,11 @@ describe(Support.getTestDialectTeaser('HasOne'), () => {
                       return Group.all().then((groups) => {
                         return groups[0].getUser().then((associatedUser) => {
                           expect(associatedUser).to.be.null;
-                          return Group.all({ transaction: t }).then((groups) => {
-                            return groups[0].getUser({ transaction: t }).then((associatedUser) => {
-                              expect(associatedUser).not.to.be.null;
-                              expect(associatedUser.id).to.equal(user.id);
-                              expect(associatedUser.id).not.to.equal(fakeUser.id);
+                          return Group.all({ transaction: t }).then((transactionGroups) => {
+                            return transactionGroups[0].getUser({ transaction: t }).then((transactionUser) => {
+                              expect(transactionUser).not.to.be.null;
+                              expect(transactionUser.id).to.equal(user.id);
+                              expect(transactionUser.id).not.to.equal(fakeUser.id);
                               return t.rollback();
                             });
                           });
@@ -116,8 +116,8 @@ describe(Support.getTestDialectTeaser('HasOne'), () => {
           return User.create({ username: 'foo' }).then((user) => {
             return Task.create({ title: 'task', status: 'inactive' }).then((task) => {
               return user.setTaskXYZ(task).then(() => {
-                return user.getTaskXYZ({ where: { status: 'active' } }).then((task) => {
-                  expect(task).to.be.null;
+                return user.getTaskXYZ({ where: { status: 'active' } }).then((activeTask) => {
+                  expect(activeTask).to.be.null;
                 });
               });
             });
@@ -217,8 +217,8 @@ describe(Support.getTestDialectTeaser('HasOne'), () => {
           return User.create({ userCoolIdTag: 1, username: 'foo' }).then((user) => {
             return Task.create({ taskOrSomething: 1, title: 'bar' }).then((task) => {
               return user.setTaskXYZZ(task).then(() => {
-                return user.getTaskXYZZ().then((task) => {
-                  expect(task).not.to.be.null;
+                return user.getTaskXYZZ().then((associatedTask) => {
+                  expect(associatedTask).not.to.be.null;
 
                   return user.setTaskXYZZ(null).then(() => {
                     return user.getTaskXYZZ().then((_task) => {
@@ -244,12 +244,12 @@ describe(Support.getTestDialectTeaser('HasOne'), () => {
           return User.create({ username: 'foo' }).then((user) => {
             return Task.create({ title: 'task' }).then((task) => {
               return user.setTaskXYZ(task).then(() => {
-                return user.getTaskXYZ().then((task) => {
-                  expect(task).not.to.equal(null);
+                return user.getTaskXYZ().then((associatedTask) => {
+                  expect(associatedTask).not.to.equal(null);
 
                   return user.setTaskXYZ(null).then(() => {
-                    return user.getTaskXYZ().then((task) => {
-                      expect(task).to.equal(null);
+                    return user.getTaskXYZ().then((clearedTask) => {
+                      expect(clearedTask).to.equal(null);
                     });
                   });
                 });
@@ -291,8 +291,8 @@ describe(Support.getTestDialectTeaser('HasOne'), () => {
         return User.create({}).then((user) => {
           return Task.create({ id: 19, title: 'task it!' }).then((task) => {
             return user.setTaskXYZ(task.id).then(() => {
-              return user.getTaskXYZ().then((task) => {
-                expect(task.title).to.equal('task it!');
+              return user.getTaskXYZ().then((associatedTask) => {
+                expect(associatedTask.title).to.equal('task it!');
               });
             });
           });
@@ -315,8 +315,8 @@ describe(Support.getTestDialectTeaser('HasOne'), () => {
           return user
             .setTaskXYZ(task.id)
             .then(() => user.getTaskXYZ())
-            .then((task) => {
-              expect(task).not.to.be.null;
+            .then((associatedTask) => {
+              expect(associatedTask).not.to.be.null;
               return Promise.all([user, Task.create({ id: 2, title: 'bar2' })]);
             });
         })
@@ -390,9 +390,9 @@ describe(Support.getTestDialectTeaser('HasOne'), () => {
                   return User.all().then((users) => {
                     return users[0].getGroup().then((group) => {
                       expect(group).to.be.null;
-                      return User.all({ transaction: t }).then((users) => {
-                        return users[0].getGroup({ transaction: t }).then((group) => {
-                          expect(group).to.be.not.null;
+                      return User.all({ transaction: t }).then((transactionUsers) => {
+                        return transactionUsers[0].getGroup({ transaction: t }).then((transactionGroup) => {
+                          expect(transactionGroup).to.be.not.null;
                           return t.rollback();
                         });
                       });

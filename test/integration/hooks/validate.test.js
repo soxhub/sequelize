@@ -22,7 +22,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
 
   describe('#validate', () => {
     describe('#create', () => {
-      it('should return the user', function () {
+      it('should return the user', async function () {
         this.User.beforeValidate((user) => {
           user.username = 'Bob';
           user.mood = 'happy';
@@ -32,17 +32,15 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           user.username = 'Toni';
         });
 
-        return this.User.create({ mood: 'ecstatic' }).then((user) => {
-          expect(user.mood).to.equal('happy');
-          expect(user.username).to.equal('Toni');
-        });
+        const user = await this.User.create({ mood: 'ecstatic' });
+
+        expect(user.mood).to.equal('happy');
+        expect(user.username).to.equal('Toni');
       });
     });
 
     describe('#3534, hooks modifications', () => {
-      it('fields modified in hooks are saved', function () {
-        const self = this;
-
+      it('fields modified in hooks are saved', async function () {
         this.User.afterValidate((user) => {
           //if username is defined and has more than 5 char
           user.username = user.username ? (user.username.length < 5 ? null : user.username) : null;
@@ -53,60 +51,48 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           user.mood = user.mood || 'neutral';
         });
 
-        return this.User.create({ username: 'T', mood: 'neutral' })
-          .then((user) => {
-            expect(user.mood).to.equal('neutral');
-            expect(user.username).to.equal('Samorost 3');
+        const user = await this.User.create({ username: 'T', mood: 'neutral' });
+        expect(user.mood).to.equal('neutral');
+        expect(user.username).to.equal('Samorost 3');
 
-            //change attributes
-            user.mood = 'sad';
-            user.username = 'Samorost Good One';
+        // change attributes
+        user.mood = 'sad';
+        user.username = 'Samorost Good One';
 
-            return user.save();
-          })
-          .then((uSaved) => {
-            expect(uSaved.mood).to.equal('sad');
-            expect(uSaved.username).to.equal('Samorost Good One');
+        const saved = await user.save();
+        expect(saved.mood).to.equal('sad');
+        expect(saved.username).to.equal('Samorost Good One');
 
-            //change attributes, expect to be replaced by hooks
-            uSaved.username = 'One';
+        // change attributes, expect to be replaced by hooks
+        saved.username = 'One';
 
-            return uSaved.save();
-          })
-          .then((uSaved) => {
-            //attributes were replaced by hooks ?
-            expect(uSaved.mood).to.equal('sad');
-            expect(uSaved.username).to.equal('Samorost 3');
-            return self.User.findById(uSaved.id);
-          })
-          .then((uFetched) => {
-            expect(uFetched.mood).to.equal('sad');
-            expect(uFetched.username).to.equal('Samorost 3');
+        const resaved = await saved.save();
+        // attributes were replaced by hooks ?
+        expect(resaved.mood).to.equal('sad');
+        expect(resaved.username).to.equal('Samorost 3');
 
-            uFetched.mood = null;
-            uFetched.username = 'New Game is Needed';
+        const fetched = await this.User.findById(resaved.id);
+        expect(fetched.mood).to.equal('sad');
+        expect(fetched.username).to.equal('Samorost 3');
 
-            return uFetched.save();
-          })
-          .then((uFetchedSaved) => {
-            expect(uFetchedSaved.mood).to.equal('neutral');
-            expect(uFetchedSaved.username).to.equal('New Game is Needed');
+        fetched.mood = null;
+        fetched.username = 'New Game is Needed';
 
-            return self.User.findById(uFetchedSaved.id);
-          })
-          .then((uFetched) => {
-            expect(uFetched.mood).to.equal('neutral');
-            expect(uFetched.username).to.equal('New Game is Needed');
+        const fetchedSaved = await fetched.save();
+        expect(fetchedSaved.mood).to.equal('neutral');
+        expect(fetchedSaved.username).to.equal('New Game is Needed');
 
-            //expect to be replaced by hooks
-            uFetched.username = 'New';
-            uFetched.mood = 'happy';
-            return uFetched.save();
-          })
-          .then((uFetchedSaved) => {
-            expect(uFetchedSaved.mood).to.equal('happy');
-            expect(uFetchedSaved.username).to.equal('Samorost 3');
-          });
+        const refetched = await this.User.findById(fetchedSaved.id);
+        expect(refetched.mood).to.equal('neutral');
+        expect(refetched.username).to.equal('New Game is Needed');
+
+        // expect to be replaced by hooks
+        refetched.username = 'New';
+        refetched.mood = 'happy';
+
+        const refetchedSaved = await refetched.save();
+        expect(refetchedSaved.mood).to.equal('happy');
+        expect(refetchedSaved.username).to.equal('Samorost 3');
       });
     });
 
@@ -122,34 +108,31 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         );
       });
 
-      it('should call validationFailed hook', function () {
+      it('should call validationFailed hook', async function () {
         const validationFailedHook = sinon.spy();
 
         this.User.validationFailed(validationFailedHook);
 
-        return expect(this.User.create({ mood: 'happy' })).to.be.rejected.then(() => {
-          expect(validationFailedHook.calledOnce).to.be.true;
-        });
+        await expect(this.User.create({ mood: 'happy' })).to.be.rejected;
+        expect(validationFailedHook.calledOnce).to.be.true;
       });
 
-      it('should not replace the validation error in validationFailed hook by default', function () {
+      it('should not replace the validation error in validationFailed hook by default', async function () {
         const validationFailedHook = sinon.stub();
 
         this.User.validationFailed(validationFailedHook);
 
-        return expect(this.User.create({ mood: 'happy' })).to.be.rejected.then((err) => {
-          expect(err.name).to.equal('SequelizeValidationError');
-        });
+        const err = await expect(this.User.create({ mood: 'happy' })).to.be.rejected;
+        expect(err.name).to.equal('SequelizeValidationError');
       });
 
-      it('should replace the validation error if validationFailed hook creates a new error', function () {
+      it('should replace the validation error if validationFailed hook creates a new error', async function () {
         const validationFailedHook = sinon.stub().throws(new Error('Whoops!'));
 
         this.User.validationFailed(validationFailedHook);
 
-        return expect(this.User.create({ mood: 'happy' })).to.be.rejected.then((err) => {
-          expect(err.message).to.equal('Whoops!');
-        });
+        const err = await expect(this.User.create({ mood: 'happy' })).to.be.rejected;
+        expect(err.message).to.equal('Whoops!');
       });
     });
   });

@@ -6,7 +6,6 @@ import DataTypes from '../../../lib/data-types.js';
 import lodash from 'lodash';
 import assert from 'node:assert';
 
-const Promise = Sequelize.Promise;
 const expect = chai.expect;
 
 const current = Support.sequelize;
@@ -487,17 +486,17 @@ describe(Support.getTestDialectTeaser('Model'), () => {
               no: 1
             }
           });
-          const timeout = new Promise((_, reject) =>
-            setTimeout(() => reject(new TimeoutError('operation timed out')), 1000)
-          );
-          return Promise.race([findOrCreate, timeout]).catch((e) => {
-            if (e instanceof TimeoutError) {
-              throw new Error(e);
+          const timeout = new Promise((_, reject) => {
+            setTimeout(() => reject(new TimeoutError('operation timed out')), 1000);
+          });
+          return Promise.race([findOrCreate, timeout]).catch((err) => {
+            if (err instanceof TimeoutError) {
+              throw new Error(err);
             }
-            if (e instanceof Sequelize.ValidationError) {
+            if (err instanceof Sequelize.ValidationError) {
               return test(times + 1);
             }
-            throw e;
+            throw err;
           });
         };
 

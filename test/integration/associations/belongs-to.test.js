@@ -6,7 +6,6 @@ import Sequelize from '../../../index.js';
 
 const expect = chai.expect;
 
-const Promise = Sequelize.Promise;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser('BelongsTo'), () => {

@@ -4,7 +4,6 @@ import Sequelize from '../../../../index.js';
 import Support from '../../support.js';
 import DataTypes from '../../../../lib/data-types.js';
 
-const Promise = Sequelize.Promise;
 const expect = chai.expect;
 
 describe(Support.getTestDialectTeaser('Model'), () => {

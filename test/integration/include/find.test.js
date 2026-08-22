@@ -5,8 +5,6 @@ import DataTypes from '../../../lib/data-types.js';
 
 const expect = chai.expect;
 
-const Promise = Sequelize.Promise;
-
 describe(Support.getTestDialectTeaser('Include'), () => {
   describe('find', () => {
     it('should include a non required model, with conditions and two includes N:M 1:M', function () {

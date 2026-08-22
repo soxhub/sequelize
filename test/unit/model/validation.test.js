@@ -7,7 +7,6 @@ import config from '../../config/config.js';
 const expect = chai.expect;
 
 const current = Support.sequelize;
-const Promise = current.Promise;
 
 describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
   describe('validations', () => {

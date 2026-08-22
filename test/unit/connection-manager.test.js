@@ -1,12 +1,9 @@
 import * as chai from 'chai';
 import sinon from 'sinon';
 import Support from './support.js';
-import Sequelize from '../../index.js';
 import ConnectionManager from '../../lib/dialects/postgres/base/connection-manager.js';
 
 const expect = chai.expect;
-
-const Promise = Sequelize.Promise;
 
 describe('connection manager', () => {
   describe('_connect', () => {

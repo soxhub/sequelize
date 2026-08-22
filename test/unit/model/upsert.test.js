@@ -7,8 +7,6 @@ const expect = chai.expect;
 
 const current = Support.sequelize;
 
-const Promise = current.Promise;
-
 describe(Support.getTestDialectTeaser('Model'), () => {
   if (current.dialect.supports.upserts) {
     describe('method upsert', () => {

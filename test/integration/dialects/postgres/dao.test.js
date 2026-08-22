@@ -1,12 +1,8 @@
 import * as chai from 'chai';
-import Support from '../../support.js';
 import DataTypes from '../../../../lib/data-types.js';
 import sequelize from '../../../../lib/sequelize.js';
 
 const expect = chai.expect;
-
-const Sequelize = Support.Sequelize;
-const Promise = Sequelize.Promise;
 
 describe('[POSTGRES Specific] DAO', () => {
   beforeEach(function () {

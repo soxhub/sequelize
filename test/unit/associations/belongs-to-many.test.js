@@ -12,7 +12,6 @@ const expect = chai.expect;
 const stub = sinon.stub;
 
 const current = Support.sequelize;
-const Promise = current.Promise;
 
 describe(Support.getTestDialectTeaser('belongsToMany'), () => {
   it('should not inherit scopes from parent to join table', () => {

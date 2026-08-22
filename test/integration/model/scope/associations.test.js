@@ -3,7 +3,6 @@ import Sequelize from '../../../../index.js';
 import Support from '../../support.js';
 
 const expect = chai.expect;
-const Promise = Sequelize.Promise;
 
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('scope', () => {

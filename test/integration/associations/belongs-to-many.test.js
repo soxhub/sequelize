@@ -7,7 +7,6 @@ import sinon from 'sinon';
 
 const expect = chai.expect;
 
-const Promise = Sequelize.Promise;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser('BelongsToMany'), () => {

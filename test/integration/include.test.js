@@ -5,7 +5,6 @@ import Support from './support.js';
 import DataTypes from '../../lib/data-types.js';
 import _ from 'lodash';
 
-const Promise = Sequelize.Promise;
 const expect = chai.expect;
 
 const sortById = function (a, b) {

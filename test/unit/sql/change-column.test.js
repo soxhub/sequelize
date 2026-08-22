@@ -5,7 +5,6 @@ import sinon from 'sinon';
 const expectsql = Support.expectsql;
 
 const current = Support.sequelize;
-const Promise = current.Promise;
 
 describe(Support.getTestDialectTeaser('SQL'), () => {
   describe('changeColumn', () => {

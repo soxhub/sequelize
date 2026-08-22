@@ -1,14 +1,12 @@
 import * as chai from 'chai';
 import sinon from 'sinon';
 import Support from '../support.js';
-import Sequelize from '../../../index.js';
 import DataTypes from '../../../lib/data-types.js';
 import _ from 'lodash';
 
 const expect = chai.expect;
 
 const current = Support.sequelize;
-const Promise = Sequelize.Promise;
 
 if (current.dialect.supports.groupedLimit) {
   describe(Support.getTestDialectTeaser('Include'), () => {

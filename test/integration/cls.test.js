@@ -32,36 +32,32 @@ for (const [implementation, createNamespace] of implementations) {
       delete Sequelize._cls;
     });
 
-    beforeEach(function () {
-      return Support.prepareTransactionTest(this.sequelize).then((sequelize) => {
-        this.sequelize = sequelize;
+    beforeEach(async function () {
+      this.sequelize = await Support.prepareTransactionTest(this.sequelize);
 
-        this.ns = ns;
+      this.ns = ns;
 
-        this.User = this.sequelize.define('user', {
-          name: Sequelize.STRING
-        });
-        return this.sequelize.sync({ force: true });
+      this.User = this.sequelize.define('user', {
+        name: Sequelize.STRING
       });
+
+      await this.sequelize.sync({ force: true });
     });
 
     describe('context', () => {
-      it('does not use continuation storage on manually managed transactions', function () {
-        const self = this;
-
-        return Sequelize._clsRun(() => {
-          return this.sequelize.transaction().then((transaction) => {
-            expect(self.ns.get('transaction')).to.be.undefined;
-            return transaction.rollback();
-          });
+      it('does not use continuation storage on manually managed transactions', async function () {
+        await Sequelize._clsRun(async () => {
+          const transaction = await this.sequelize.transaction();
+          expect(this.ns.get('transaction')).to.be.undefined;
+          return transaction.rollback();
         });
       });
 
-      it('supports several concurrent transactions', function () {
+      it('supports several concurrent transactions', async function () {
         let t1id, t2id;
         const self = this;
 
-        return Promise.all([
+        await Promise.all([
           this.sequelize.transaction(() => {
             t1id = self.ns.get('transaction').id;
 
@@ -72,45 +68,40 @@ for (const [implementation, createNamespace] of implementations) {
 
             return Promise.resolve();
           })
-        ]).then(() => {
-          expect(t1id).to.be.ok;
-          expect(t2id).to.be.ok;
-          expect(t1id).not.to.equal(t2id);
+        ]);
+
+        expect(t1id).to.be.ok;
+        expect(t2id).to.be.ok;
+        expect(t1id).not.to.equal(t2id);
+      });
+
+      it('supports nested promise chains', async function () {
+        await this.sequelize.transaction(async () => {
+          const tid = this.ns.get('transaction').id;
+
+          await this.User.findAll();
+          expect(this.ns.get('transaction').id).to.be.ok;
+          expect(this.ns.get('transaction').id).to.equal(tid);
         });
       });
 
-      it('supports nested promise chains', function () {
-        const self = this;
-
-        return this.sequelize.transaction(() => {
-          const tid = self.ns.get('transaction').id;
-
-          return self.User.findAll().then(() => {
-            expect(self.ns.get('transaction').id).to.be.ok;
-            expect(self.ns.get('transaction').id).to.equal(tid);
-          });
-        });
-      });
-
-      it('does not leak variables to the outer scope', function () {
+      it('does not leak variables to the outer scope', async function () {
         // This is a little tricky. We want to check the values in the outer scope, when the transaction has been successfully set up, but before it has been comitted.
         // We can't just call another function from inside that transaction, since that would transfer the context to that function - exactly what we are trying to prevent;
 
-        const self = this;
         let transactionSetup = false,
           transactionEnded = false;
 
         // Deliberately not awaited yet: the assertions below have to run while it is still open.
-        const transaction = this.sequelize.transaction(() => {
+        const transaction = this.sequelize.transaction(async () => {
           transactionSetup = true;
 
-          return delay(500).then(() => {
-            expect(self.ns.get('transaction')).to.be.ok;
-            transactionEnded = true;
-          });
+          await delay(500);
+          expect(this.ns.get('transaction')).to.be.ok;
+          transactionEnded = true;
         });
 
-        return new Promise((resolve) => {
+        await new Promise((resolve) => {
           // Wait for the transaction to be setup
           const interval = setInterval(() => {
             if (transactionSetup) {
@@ -118,67 +109,58 @@ for (const [implementation, createNamespace] of implementations) {
               resolve();
             }
           }, 200);
-        }).then(() => {
-          expect(transactionEnded).not.to.be.ok;
-
-          expect(this.ns.get('transaction')).not.to.be.ok;
-
-          // Just to make sure it didn't change between our last check and the assertion
-          expect(transactionEnded).not.to.be.ok;
-
-          // Let it finish before the test ends. Otherwise its COMMIT is still in flight during a
-          // later test, and that test's afterEach reports the running query against itself.
-          return transaction;
         });
+
+        expect(transactionEnded).not.to.be.ok;
+
+        expect(this.ns.get('transaction')).not.to.be.ok;
+
+        // Just to make sure it didn't change between our last check and the assertion
+        expect(transactionEnded).not.to.be.ok;
+
+        // Let it finish before the test ends. Otherwise its COMMIT is still in flight during a
+        // later test, and that test's afterEach reports the running query against itself.
+        await transaction;
       });
 
-      it('does not leak variables to the following promise chain', function () {
-        return this.sequelize
-          .transaction(() => {
-            return Promise.resolve();
-          })
-          .then(() => {
-            expect(this.ns.get('transaction')).not.to.be.ok;
-          });
+      it('does not leak variables to the following promise chain', async function () {
+        await this.sequelize.transaction(() => {
+          return Promise.resolve();
+        });
+
+        expect(this.ns.get('transaction')).not.to.be.ok;
       });
 
-      it('does not leak variables to the following promise chain when the transaction rolls back', function () {
-        return expect(
+      it('does not leak variables to the following promise chain when the transaction rolls back', async function () {
+        await expect(
           this.sequelize.transaction(() => {
             expect(this.ns.get('transaction')).to.be.ok;
 
             return Promise.reject(new Error('rollback the transaction'));
           })
-        )
-          .to.be.rejectedWith('rollback the transaction')
-          .then(() => {
-            expect(this.ns.get('transaction')).not.to.be.ok;
-          });
+        ).to.be.rejectedWith('rollback the transaction');
+
+        expect(this.ns.get('transaction')).not.to.be.ok;
       });
 
-      it('does not leave a rolled back transaction ambient for later queries', function () {
-        return expect(
+      it('does not leave a rolled back transaction ambient for later queries', async function () {
+        await expect(
           this.sequelize.transaction(async () => {
             await this.User.create({ name: 'discarded' });
 
             throw new Error('rollback the transaction');
           })
-        )
-          .to.be.rejectedWith('rollback the transaction')
-          .then(() => {
-            // If the context leaked, this would run on the rolled back transaction and its
-            // already released connection rather than on a fresh one.
-            return this.User.create({ name: 'kept' });
-          })
-          .then(() => {
-            return expect(this.User.findAll()).to.eventually.have.length(1);
-          });
+        ).to.be.rejectedWith('rollback the transaction');
+
+        // If the context leaked, this would run on the rolled back transaction and its
+        // already released connection rather than on a fresh one.
+        await this.User.create({ name: 'kept' });
+
+        await expect(this.User.findAll()).to.eventually.have.length(1);
       });
 
-      it('does not leak outside findOrCreate', function () {
-        const self = this;
-
-        return this.User.findOrCreate({
+      it('does not leak outside findOrCreate', async function () {
+        await this.User.findOrCreate({
           where: {
             name: 'Kafka'
           },
@@ -187,9 +169,9 @@ for (const [implementation, createNamespace] of implementations) {
               throw new Error('The transaction was not properly assigned');
             }
           }
-        }).then(() => {
-          return self.User.findAll();
         });
+
+        await this.User.findAll();
       });
     });
 
@@ -225,45 +207,41 @@ for (const [implementation, createNamespace] of implementations) {
         });
       });
 
-      it('leaves the outer transaction usable after a constraint violation inside the savepoint', function () {
+      it('leaves the outer transaction usable after a constraint violation inside the savepoint', async function () {
         const Person = this.sequelize.define('person', {
           name: { type: Sequelize.STRING, unique: true }
         });
 
-        return Person.sync({ force: true }).then(() => {
-          return this.sequelize.transaction(() => {
-            return Person.create({ name: 'bob' })
-              .then(() => {
-                return expect(
-                  this.sequelize.transaction(() => {
-                    return Person.create({ name: 'bob' });
-                  })
-                ).to.be.rejectedWith(Sequelize.UniqueConstraintError);
-              })
-              .then(() => {
-                // Would fail with `25P02: current transaction is aborted` on postgres if the failed
-                // INSERT had run in the outer transaction rather than a savepoint.
-                return expect(Person.findAll()).to.eventually.have.length(1);
-              });
-          });
+        await Person.sync({ force: true });
+
+        await this.sequelize.transaction(async () => {
+          await Person.create({ name: 'bob' });
+
+          await expect(
+            this.sequelize.transaction(() => {
+              return Person.create({ name: 'bob' });
+            })
+          ).to.be.rejectedWith(Sequelize.UniqueConstraintError);
+
+          // Would fail with `25P02: current transaction is aborted` on postgres if the failed
+          // INSERT had run in the outer transaction rather than a savepoint.
+          await expect(Person.findAll()).to.eventually.have.length(1);
         });
       });
 
-      it('rolls back only the savepoint and leaves the outer transaction usable', function () {
-        return this.sequelize.transaction(() => {
-          return this.User.create({ name: 'bob' })
-            .then(() => {
-              return expect(
-                this.sequelize.transaction(() => {
-                  return this.User.create({ name: 'alice' }).then(() => {
-                    throw new Error('rollback the savepoint');
-                  });
-                })
-              ).to.be.rejectedWith('rollback the savepoint');
+      it('rolls back only the savepoint and leaves the outer transaction usable', async function () {
+        await this.sequelize.transaction(async () => {
+          await this.User.create({ name: 'bob' });
+
+          await expect(
+            this.sequelize.transaction(async () => {
+              await this.User.create({ name: 'alice' });
+
+              throw new Error('rollback the savepoint');
             })
-            .then(() => {
-              return expect(this.User.findAll()).to.eventually.have.length(1);
-            });
+          ).to.be.rejectedWith('rollback the savepoint');
+
+          await expect(this.User.findAll()).to.eventually.have.length(1);
         });
       });
     });
@@ -278,18 +256,16 @@ for (const [implementation, createNamespace] of implementations) {
         delete this.sequelize.options.releaseSavepointsOnCommit;
       });
 
-      it('releases the savepoint when a nested transaction commits', function () {
+      it('releases the savepoint when a nested transaction commits', async function () {
         const sql = [];
 
-        return this.sequelize
-          .transaction(async () => {
-            await this.sequelize.transaction({ logging: (s) => sql.push(s) }, async () => {
-              await this.User.create({ name: 'bob' });
-            });
-          })
-          .then(() => {
-            expect(sql.join('\n')).to.match(/RELEASE SAVEPOINT/);
+        await this.sequelize.transaction(async () => {
+          await this.sequelize.transaction({ logging: (s) => sql.push(s) }, async () => {
+            await this.User.create({ name: 'bob' });
           });
+        });
+
+        expect(sql.join('\n')).to.match(/RELEASE SAVEPOINT/);
       });
 
       it('leaves no savepoint to roll back to after the nested transaction commits', function () {
@@ -335,19 +311,17 @@ for (const [implementation, createNamespace] of implementations) {
         });
       });
 
-      it('generates no commit query for a savepoint when releasing is not enabled', function () {
+      it('generates no commit query for a savepoint when releasing is not enabled', async function () {
         delete this.sequelize.options.releaseSavepointsOnCommit;
         const sql = [];
 
-        return this.sequelize
-          .transaction(async () => {
-            await this.sequelize.transaction({ logging: (s) => sql.push(s) }, async () => {
-              await this.User.create({ name: 'bob' });
-            });
-          })
-          .then(() => {
-            expect(sql.join('\n')).not.to.match(/RELEASE SAVEPOINT/);
+        await this.sequelize.transaction(async () => {
+          await this.sequelize.transaction({ logging: (s) => sql.push(s) }, async () => {
+            await this.User.create({ name: 'bob' });
           });
+        });
+
+        expect(sql.join('\n')).not.to.match(/RELEASE SAVEPOINT/);
       });
 
       it('tolerates overlapping nested transactions when releasing is not enabled', function () {
@@ -388,69 +362,63 @@ for (const [implementation, createNamespace] of implementations) {
     });
 
     describe('nested transaction afterCommit hooks', () => {
-      it('defers a savepoint hook to the root transaction instead of running it at savepoint commit', function () {
+      it('defers a savepoint hook to the root transaction instead of running it at savepoint commit', async function () {
         const fired = [];
 
-        return this.sequelize
-          .transaction(async () => {
+        await this.sequelize.transaction(async () => {
+          // oxlint-disable-next-line require-await -- async on purpose: the shape under test is an async transaction callback
+          await this.sequelize.transaction(async (inner) => {
+            inner.afterCommit(() => fired.push('inner'));
+          });
+
+          // The savepoint has committed, but its work is not durable yet.
+          expect(fired).to.deep.equal([]);
+        });
+
+        expect(fired).to.deep.equal(['inner']);
+      });
+
+      it('does not run a hook registered in a savepoint that rolled back', async function () {
+        const fired = [];
+
+        await this.sequelize.transaction(async () => {
+          await expect(
             // oxlint-disable-next-line require-await -- async on purpose: the shape under test is an async transaction callback
-            await this.sequelize.transaction(async (inner) => {
+            this.sequelize.transaction(async (inner) => {
               inner.afterCommit(() => fired.push('inner'));
+              throw new Error('rollback the savepoint');
+            })
+          ).to.be.rejectedWith('rollback the savepoint');
+        });
+
+        expect(fired).to.deep.equal([]);
+      });
+
+      it('hands hooks up through several levels of savepoint', async function () {
+        const fired = [];
+
+        await this.sequelize.transaction(async (outer) => {
+          outer.afterCommit(() => fired.push('outer'));
+
+          await this.sequelize.transaction(async (middle) => {
+            middle.afterCommit(() => fired.push('middle'));
+
+            // oxlint-disable-next-line require-await -- async on purpose: the shape under test is an async transaction callback
+            await this.sequelize.transaction(async (deep) => {
+              deep.afterCommit(() => fired.push('deep'));
             });
-
-            // The savepoint has committed, but its work is not durable yet.
-            expect(fired).to.deep.equal([]);
-          })
-          .then(() => {
-            expect(fired).to.deep.equal(['inner']);
           });
+
+          expect(fired).to.deep.equal([]);
+        });
+
+        expect(fired).to.deep.equal(['outer', 'middle', 'deep']);
       });
 
-      it('does not run a hook registered in a savepoint that rolled back', function () {
+      it('discards hooks handed up by a savepoint when an enclosing transaction rolls back', async function () {
         const fired = [];
 
-        return this.sequelize
-          .transaction(async () => {
-            await expect(
-              // oxlint-disable-next-line require-await -- async on purpose: the shape under test is an async transaction callback
-              this.sequelize.transaction(async (inner) => {
-                inner.afterCommit(() => fired.push('inner'));
-                throw new Error('rollback the savepoint');
-              })
-            ).to.be.rejectedWith('rollback the savepoint');
-          })
-          .then(() => {
-            expect(fired).to.deep.equal([]);
-          });
-      });
-
-      it('hands hooks up through several levels of savepoint', function () {
-        const fired = [];
-
-        return this.sequelize
-          .transaction(async (outer) => {
-            outer.afterCommit(() => fired.push('outer'));
-
-            await this.sequelize.transaction(async (middle) => {
-              middle.afterCommit(() => fired.push('middle'));
-
-              // oxlint-disable-next-line require-await -- async on purpose: the shape under test is an async transaction callback
-              await this.sequelize.transaction(async (deep) => {
-                deep.afterCommit(() => fired.push('deep'));
-              });
-            });
-
-            expect(fired).to.deep.equal([]);
-          })
-          .then(() => {
-            expect(fired).to.deep.equal(['outer', 'middle', 'deep']);
-          });
-      });
-
-      it('discards hooks handed up by a savepoint when an enclosing transaction rolls back', function () {
-        const fired = [];
-
-        return expect(
+        await expect(
           this.sequelize.transaction(async () => {
             // oxlint-disable-next-line require-await -- async on purpose: the shape under test is an async transaction callback
             await this.sequelize.transaction(async (inner) => {
@@ -459,11 +427,9 @@ for (const [implementation, createNamespace] of implementations) {
 
             throw new Error('rollback the root');
           })
-        )
-          .to.be.rejectedWith('rollback the root')
-          .then(() => {
-            expect(fired).to.deep.equal([]);
-          });
+        ).to.be.rejectedWith('rollback the root');
+
+        expect(fired).to.deep.equal([]);
       });
 
       it('defers hooks from an unmanaged savepoint to its explicitly passed parent', async function () {
@@ -491,54 +457,49 @@ for (const [implementation, createNamespace] of implementations) {
         expect(fired).to.deep.equal([]);
       });
 
-      it('defers hooks from an unmanaged savepoint nested via CLS', function () {
+      it('defers hooks from an unmanaged savepoint nested via CLS', async function () {
         const fired = [];
 
-        return this.sequelize
-          .transaction(async () => {
-            const savepoint = await this.sequelize.transaction();
+        await this.sequelize.transaction(async () => {
+          const savepoint = await this.sequelize.transaction();
 
-            savepoint.afterCommit(() => fired.push('savepoint'));
-            await savepoint.commit();
+          savepoint.afterCommit(() => fired.push('savepoint'));
+          await savepoint.commit();
 
-            expect(fired).to.deep.equal([]);
-          })
-          .then(() => {
-            expect(fired).to.deep.equal(['savepoint']);
-          });
+          expect(fired).to.deep.equal([]);
+        });
+
+        expect(fired).to.deep.equal(['savepoint']);
       });
 
-      it('calls a deferred hook with the transaction it was registered on', function () {
+      it('calls a deferred hook with the transaction it was registered on', async function () {
         let received, savepoint;
 
-        return this.sequelize
-          .transaction(async (outer) => {
-            // oxlint-disable-next-line require-await -- async on purpose: the shape under test is an async transaction callback
-            await this.sequelize.transaction(async (inner) => {
-              savepoint = inner;
-              inner.afterCommit((transaction) => {
-                received = transaction;
-              });
+        await this.sequelize.transaction(async (outer) => {
+          // oxlint-disable-next-line require-await -- async on purpose: the shape under test is an async transaction callback
+          await this.sequelize.transaction(async (inner) => {
+            savepoint = inner;
+            inner.afterCommit((transaction) => {
+              received = transaction;
             });
-
-            expect(savepoint).to.not.equal(outer);
-          })
-          .then(() => {
-            expect(received).to.equal(savepoint);
           });
+
+          expect(savepoint).to.not.equal(outer);
+        });
+
+        expect(received).to.equal(savepoint);
       });
     });
 
     describe('sequelize.query integration', () => {
-      it('automagically uses the transaction in all calls', function () {
-        const self = this;
-        return this.sequelize.transaction(() => {
-          return self.User.create({ name: 'bob' }).then(() => {
-            return Promise.all([
-              expect(self.User.findAll({ transaction: null })).to.eventually.have.length(0),
-              expect(self.User.findAll({})).to.eventually.have.length(1)
-            ]);
-          });
+      it('automagically uses the transaction in all calls', async function () {
+        await this.sequelize.transaction(async () => {
+          await this.User.create({ name: 'bob' });
+
+          await Promise.all([
+            expect(this.User.findAll({ transaction: null })).to.eventually.have.length(0),
+            expect(this.User.findAll({})).to.eventually.have.length(1)
+          ]);
         });
       });
     });
@@ -581,12 +542,11 @@ for (const [implementation, createNamespace] of implementations) {
       expect(Sequelize._cls).to.equal(this.ns);
     });
 
-    it('promises returned by sequelize.query carry CLS context', function () {
-      return this.sequelize.transaction((t) =>
-        this.sequelize
-          .query('select 1', { type: Sequelize.QueryTypes.SELECT })
-          .then(() => expect(this.ns.get('transaction')).to.equal(t))
-      );
+    it('promises returned by sequelize.query carry CLS context', async function () {
+      await this.sequelize.transaction(async (t) => {
+        await this.sequelize.query('select 1', { type: Sequelize.QueryTypes.SELECT });
+        expect(this.ns.get('transaction')).to.equal(t);
+      });
     });
   });
 }

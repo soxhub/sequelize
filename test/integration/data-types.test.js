@@ -68,8 +68,8 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
   });
 
   const testSuccess = function (Type, value) {
-    const parse = (Type.constructor.parse = sinon.spy((value) => {
-      return value;
+    const parse = (Type.constructor.parse = sinon.spy((parsedValue) => {
+      return parsedValue;
     }));
 
     const stringify = (Type.constructor.prototype.stringify = sinon.spy(function () {

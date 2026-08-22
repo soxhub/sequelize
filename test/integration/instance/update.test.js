@@ -409,17 +409,17 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     it('updates attributes in the database', function () {
       return this.User.create({ username: 'user' }).then((user) => {
         expect(user.username).to.equal('user');
-        return user.update({ username: 'person' }).then((user) => {
-          expect(user.username).to.equal('person');
+        return user.update({ username: 'person' }).then((updatedUser) => {
+          expect(updatedUser.username).to.equal('person');
         });
       });
     });
 
     it('ignores unknown attributes', function () {
       return this.User.create({ username: 'user' }).then((user) => {
-        return user.update({ username: 'person', foo: 'bar' }).then((user) => {
-          expect(user.username).to.equal('person');
-          expect(user.foo).not.to.exist;
+        return user.update({ username: 'person', foo: 'bar' }).then((updatedUser) => {
+          expect(updatedUser.username).to.equal('person');
+          expect(updatedUser.foo).not.to.exist;
         });
       });
     });
@@ -450,10 +450,10 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
               createdAt: new Date(2000, 1, 1),
               identifier: 'another identifier'
             })
-            .then((user) => {
-              expect(new Date(user.createdAt)).to.equalDate(new Date(oldCreatedAt));
-              expect(new Date(user.updatedAt)).to.not.equalTime(new Date(oldUpdatedAt));
-              expect(user.identifier).to.equal(oldIdentifier);
+            .then((updatedUser) => {
+              expect(new Date(updatedUser.createdAt)).to.equalDate(new Date(oldCreatedAt));
+              expect(new Date(updatedUser.updatedAt)).to.not.equalTime(new Date(oldUpdatedAt));
+              expect(updatedUser.identifier).to.equal(oldIdentifier);
             });
         });
     });
@@ -477,18 +477,18 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
             .update({
               canceledAt: new Date()
             })
-            .then((download) => {
-              expect(download.startedAt instanceof Date).to.be.true;
-              expect(download.canceledAt instanceof Date).to.be.true;
-              expect(download.finishedAt).to.not.be.ok;
+            .then((canceledDownload) => {
+              expect(canceledDownload.startedAt instanceof Date).to.be.true;
+              expect(canceledDownload.canceledAt instanceof Date).to.be.true;
+              expect(canceledDownload.finishedAt).to.not.be.ok;
 
               return Download.findAll({
                 where: { finishedAt: null }
               }).then((downloads) => {
-                downloads.forEach((download) => {
-                  expect(download.startedAt instanceof Date).to.be.true;
-                  expect(download.canceledAt instanceof Date).to.be.true;
-                  expect(download.finishedAt).to.not.be.ok;
+                downloads.forEach((unfinishedDownload) => {
+                  expect(unfinishedDownload.startedAt instanceof Date).to.be.true;
+                  expect(unfinishedDownload.canceledAt instanceof Date).to.be.true;
+                  expect(unfinishedDownload.finishedAt).to.not.be.ok;
                 });
               });
             });

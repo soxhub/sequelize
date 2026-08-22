@@ -106,7 +106,7 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
     });
 
     describe('delete when the primary key has a different field name', () => {
-      const User = current.define(
+      const UserWithFieldPk = current.define(
         'test_user',
         {
           id: {
@@ -127,7 +127,7 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
       };
 
       it(inspect(options, { depth: 0, maxArrayLength: 5, breakLength: Infinity }), () => {
-        return expectsql(sql.deleteQuery(options.table, options.where, options, User), {
+        return expectsql(sql.deleteQuery(options.table, options.where, options, UserWithFieldPk), {
           postgres:
             'DELETE FROM "test_user" WHERE "test_user_id" IN (SELECT "test_user_id" FROM "test_user" WHERE "test_user_id" = 100 LIMIT 1)',
           default: 'DELETE FROM [test_user] WHERE [test_user_id] = 100 LIMIT 1'

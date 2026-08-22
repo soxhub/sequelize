@@ -275,11 +275,11 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
   });
 
   describe('datatype validations', () => {
-    const current = Support.createSequelizeInstance({
+    const typeValidating = Support.createSequelizeInstance({
       typeValidation: true
     });
 
-    const User = current.define('user', {
+    const User = typeValidating.define('user', {
       age: Sequelize.INTEGER,
       name: Sequelize.STRING,
       awesome: Sequelize.BOOLEAN,
@@ -289,7 +289,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     });
 
     before(function () {
-      this.stub = sinon.stub(current, 'query').callsFake(() => {
+      this.stub = sinon.stub(typeValidating, 'query').callsFake(() => {
         return new Promise((resolve) => {
           resolve([User.build({}), 1]);
         });

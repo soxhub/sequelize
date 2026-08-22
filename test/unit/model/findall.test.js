@@ -110,13 +110,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       it('works for models without PK #4607', function () {
-        const Model = current.define('model', {}, { timestamps: false });
+        const PklessModel = current.define('model', {}, { timestamps: false });
         const Foo = current.define('foo');
-        Model.hasOne(Foo);
+        PklessModel.hasOne(Foo);
 
-        Model.removeAttribute('id');
+        PklessModel.removeAttribute('id');
 
-        return Model.findAll({
+        return PklessModel.findAll({
           attributes: {
             include: ['name']
           },

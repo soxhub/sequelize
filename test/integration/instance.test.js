@@ -100,8 +100,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       const self = this;
       return this.User.create({ username: 'user' }).then(() => {
         return self.User.create({ username: 'user' }).then((user) => {
-          return self.User.findById(user.id).then((user) => {
-            expect(user.isNewRecord).to.not.be.ok;
+          return self.User.findById(user.id).then((foundUser) => {
+            expect(foundUser.isNewRecord).to.not.be.ok;
           });
         });
       });
@@ -116,8 +116,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       }
 
       return this.User.bulkCreate(users).then(() => {
-        return self.User.findAll().then((users) => {
-          users.forEach((u) => {
+        return self.User.findAll().then((foundUsers) => {
+          foundUsers.forEach((u) => {
             expect(u.isNewRecord).to.not.be.ok;
           });
         });
@@ -505,10 +505,10 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
             return User.create({ username: 'foo' }).then((user) => {
               return sequelize.transaction().then((t) => {
                 return User.update({ username: 'bar' }, { where: { username: 'foo' }, transaction: t }).then(() => {
-                  return user.reload().then((user) => {
-                    expect(user.username).to.equal('foo');
-                    return user.reload({ transaction: t }).then((user) => {
-                      expect(user.username).to.equal('bar');
+                  return user.reload().then((reloadedUser) => {
+                    expect(reloadedUser.username).to.equal('foo');
+                    return reloadedUser.reload({ transaction: t }).then((transactionalUser) => {
+                      expect(transactionalUser.username).to.equal('bar');
                       return t.rollback();
                     });
                   });
@@ -614,14 +614,14 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
                   where: { id: book.id },
                   include: [Page]
                 }).then((leBook) => {
-                  return page.updateAttributes({ content: 'something totally different' }).then((page) => {
+                  return page.updateAttributes({ content: 'something totally different' }).then((updatedPage) => {
                     expect(leBook.Pages.length).to.equal(1);
                     expect(leBook.Pages[0].content).to.equal('om nom nom');
-                    expect(page.content).to.equal('something totally different');
-                    return leBook.reload().then((leBook) => {
-                      expect(leBook.Pages.length).to.equal(1);
-                      expect(leBook.Pages[0].content).to.equal('something totally different');
-                      expect(page.content).to.equal('something totally different');
+                    expect(updatedPage.content).to.equal('something totally different');
+                    return leBook.reload().then((reloadedBook) => {
+                      expect(reloadedBook.Pages.length).to.equal(1);
+                      expect(reloadedBook.Pages[0].content).to.equal('something totally different');
+                      expect(updatedPage.content).to.equal('something totally different');
                     });
                   });
                 });
@@ -652,11 +652,11 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
                     .reload({
                       include: [Page]
                     })
-                    .then((leBook) => {
-                      expect(oldOptions).not.to.equal(leBook._options);
-                      expect(leBook._options.include.length).to.equal(1);
-                      expect(leBook.Pages.length).to.equal(1);
-                      expect(leBook.get({ plain: true }).Pages.length).to.equal(1);
+                    .then((reloadedBook) => {
+                      expect(oldOptions).not.to.equal(reloadedBook._options);
+                      expect(reloadedBook._options.include.length).to.equal(1);
+                      expect(reloadedBook.Pages.length).to.equal(1);
+                      expect(reloadedBook.get({ plain: true }).Pages.length).to.equal(1);
                     });
                 });
               });
@@ -1233,11 +1233,11 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       return User.findAll().then((users) => {
         expect(users).to.have.length(0);
         return user.save().then(() => {
-          return User.findAll().then((users) => {
-            expect(users).to.have.length(1);
-            expect(users[0].username).to.equal(username);
-            expect(users[0].touchedAt).to.be.instanceof(Date);
-            expect(users[0].touchedAt).to.equalDate(new Date(1984, 8, 23));
+          return User.findAll().then((savedUsers) => {
+            expect(savedUsers).to.have.length(1);
+            expect(savedUsers[0].username).to.equal(username);
+            expect(savedUsers[0].touchedAt).to.be.instanceof(Date);
+            expect(savedUsers[0].touchedAt).to.equalDate(new Date(1984, 8, 23));
           });
         });
       });
@@ -1260,14 +1260,14 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
           expect(user).to.be.ok;
           expect(user.id).to.equal(0);
           expect(user.username).to.equal(username);
-          return User2.findById(0).then((user) => {
-            expect(user).to.be.ok;
-            expect(user.id).to.equal(0);
-            expect(user.username).to.equal(username);
-            return user.updateAttributes({ username: newUsername }).then((user) => {
-              expect(user).to.be.ok;
-              expect(user.id).to.equal(0);
-              expect(user.username).to.equal(newUsername);
+          return User2.findById(0).then((foundUser) => {
+            expect(foundUser).to.be.ok;
+            expect(foundUser.id).to.equal(0);
+            expect(foundUser.username).to.equal(username);
+            return foundUser.updateAttributes({ username: newUsername }).then((updatedUser) => {
+              expect(updatedUser).to.be.ok;
+              expect(updatedUser.id).to.equal(0);
+              expect(updatedUser.username).to.equal(newUsername);
             });
           });
         });
@@ -1349,8 +1349,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
             self.clock.tick(2000);
             return user.save().then((newlySavedUser) => {
               expect(newlySavedUser.updatedAt).to.equalTime(updatedAt);
-              return self.User.findOne({ where: { username: 'John' } }).then((newlySavedUser) => {
-                expect(newlySavedUser.updatedAt).to.equalTime(updatedAt);
+              return self.User.findOne({ where: { username: 'John' } }).then((refetchedUser) => {
+                expect(refetchedUser.updatedAt).to.equalTime(updatedAt);
               });
             });
           });
@@ -1592,18 +1592,18 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
                 return self.UserEager.findOne({
                   where: { age: 1 },
                   include: [{ model: self.ProjectEager, as: 'Projects' }]
-                }).then((user) => {
-                  expect(user.username).to.equal('joe');
-                  expect(user.age).to.equal(1);
-                  expect(user.Projects).to.exist;
-                  expect(user.Projects.length).to.equal(2);
+                }).then((eagerUser) => {
+                  expect(eagerUser.username).to.equal('joe');
+                  expect(eagerUser.age).to.equal(1);
+                  expect(eagerUser.Projects).to.exist;
+                  expect(eagerUser.Projects.length).to.equal(2);
 
-                  user.age = user.age + 1; // happy birthday joe
-                  return user.save().then((user) => {
-                    expect(user.username).to.equal('joe');
-                    expect(user.age).to.equal(2);
-                    expect(user.Projects).to.exist;
-                    expect(user.Projects.length).to.equal(2);
+                  eagerUser.age = eagerUser.age + 1; // happy birthday joe
+                  return eagerUser.save().then((savedUser) => {
+                    expect(savedUser.username).to.equal('joe');
+                    expect(savedUser.age).to.equal(2);
+                    expect(savedUser.Projects).to.exist;
+                    expect(savedUser.Projects.length).to.equal(2);
                   });
                 });
               });
@@ -1903,8 +1903,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
         const query = { where: { username: 'fnord' } };
         return self.User.findAll(query).then((users) => {
           expect(users[0].username).to.equal('fnord');
-          return self.User.findAll(query).then((users) => {
-            expect(users[0].username).to.equal('fnord');
+          return self.User.findAll(query).then((usersAgain) => {
+            expect(usersAgain[0].username).to.equal('fnord');
           });
         });
       });
@@ -1918,8 +1918,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
         const query = { where: { username: 'fnord' } };
         return self.User.findOne(query).then((user) => {
           expect(user.username).to.equal('fnord');
-          return self.User.findOne(query).then((user) => {
-            expect(user.username).to.equal('fnord');
+          return self.User.findOne(query).then((userAgain) => {
+            expect(userAgain.username).to.equal('fnord');
           });
         });
       });
@@ -2088,8 +2088,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
           return UserDestroy.findAll().then((users) => {
             expect(users.length).to.equal(1);
             return u.destroy().then(() => {
-              return UserDestroy.findAll().then((users) => {
-                expect(users.length).to.equal(0);
+              return UserDestroy.findAll().then((remainingUsers) => {
+                expect(remainingUsers.length).to.equal(0);
               });
             });
           });
@@ -2146,10 +2146,10 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
                   }
                 })
                 .then(() => {
-                  return MultiPrimary.findAll().then((ms) => {
-                    expect(ms.length).to.equal(1);
-                    expect(ms[0].bilibili).to.equal('bl');
-                    expect(ms[0].guruguru).to.equal('gu');
+                  return MultiPrimary.findAll().then((remainingMs) => {
+                    expect(remainingMs.length).to.equal(1);
+                    expect(remainingMs[0].bilibili).to.equal('bl');
+                    expect(remainingMs[0].guruguru).to.equal('gu');
                   });
                 });
             });

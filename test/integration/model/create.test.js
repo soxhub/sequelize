@@ -54,8 +54,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             return self.User.count().then((count) => {
               expect(count).to.equal(0);
               return t.commit().then(() => {
-                return self.User.count().then((count) => {
-                  expect(count).to.equal(1);
+                return self.User.count().then((committedCount) => {
+                  expect(committedCount).to.equal(1);
                 });
               });
             });
@@ -777,9 +777,9 @@ describe(Support.getTestDialectTeaser('Model'), () => {
                 ne: null
               }
             }
-          }).then((user) => {
-            expect(createdAt.getTime()).to.equal(user.get('createdAt').getTime());
-            expect(updatedAt.getTime()).to.equal(user.get('updatedAt').getTime());
+          }).then((foundUser) => {
+            expect(createdAt.getTime()).to.equal(foundUser.get('createdAt').getTime());
+            expect(updatedAt.getTime()).to.equal(foundUser.get('updatedAt').getTime());
           });
         });
       });
@@ -856,8 +856,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             return self.User.count().then((count) => {
               expect(count).to.equal(0);
               return t.commit().then(() => {
-                return self.User.count().then((count) => {
-                  expect(count).to.equal(1);
+                return self.User.count().then((committedCount) => {
+                  expect(committedCount).to.equal(1);
                 });
               });
             });
@@ -915,8 +915,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         }
       ).then((user) => {
-        return self.User.findById(user.id).then((user) => {
-          expect(user.intVal).to.equal(1);
+        return self.User.findById(user.id).then((foundUser) => {
+          expect(foundUser.intVal).to.equal(1);
           expect(match).to.equal(true);
         });
       });
@@ -939,8 +939,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         }
       ).then((user) => {
-        return self.User.findById(user.id).then((user) => {
-          expect(user.intVal).to.equal(-1);
+        return self.User.findById(user.id).then((foundUser) => {
+          expect(foundUser.intVal).to.equal(-1);
           expect(match).to.equal(true);
         });
       });
@@ -952,8 +952,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       return this.User.create({
         intVal: this.sequelize.literal('CAST(1-2 AS INTEGER)')
       }).then((user) => {
-        return self.User.findById(user.id).then((user) => {
-          expect(user.intVal).to.equal(-1);
+        return self.User.findById(user.id).then((foundUser) => {
+          expect(foundUser.intVal).to.equal(-1);
         });
       });
     });
@@ -963,8 +963,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       return this.User.create({
         secretValue: this.sequelize.fn('upper', 'sequelize')
       }).then((user) => {
-        return self.User.findById(user.id).then((user) => {
-          expect(user.secretValue).to.equal('SEQUELIZE');
+        return self.User.findById(user.id).then((foundUser) => {
+          expect(foundUser.secretValue).to.equal('SEQUELIZE');
         });
       });
     });
@@ -1170,8 +1170,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       return User.sync({ force: true }).then(() => {
         return User.create({}).then((user) => {
           expect(user.userid).to.equal(1);
-          return User.create({}).then((user) => {
-            expect(user.userid).to.equal(2);
+          return User.create({}).then((secondUser) => {
+            expect(secondUser.userid).to.equal(2);
           });
         });
       });
@@ -1281,8 +1281,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       return this.User.create({ data: quote }).then((user) => {
         expect(user.data).to.equal(quote);
-        return self.User.find({ where: { id: user.id } }).then((user) => {
-          expect(user.data).to.equal(quote);
+        return self.User.find({ where: { id: user.id } }).then((foundUser) => {
+          expect(foundUser.data).to.equal(quote);
         });
       });
     });
@@ -1293,8 +1293,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       return this.User.create({ data: quote }).then((user) => {
         expect(user.data).to.equal(quote);
-        return self.User.find({ where: { id: user.id } }).then((user) => {
-          expect(user.data).to.equal(quote);
+        return self.User.find({ where: { id: user.id } }).then((foundUser) => {
+          expect(foundUser.data).to.equal(quote);
         });
       });
     });
@@ -1305,8 +1305,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       return this.User.create({ data: json }).then((user) => {
         expect(user.data).to.equal(json);
-        return self.User.find({ where: { id: user.id } }).then((user) => {
-          expect(user.data).to.equal(json);
+        return self.User.find({ where: { id: user.id } }).then((foundUser) => {
+          expect(foundUser.data).to.equal(json);
         });
       });
     });
@@ -1321,8 +1321,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       const self = this;
       return this.User.create({ id: 42 }).then((user) => {
         expect(user.id).to.equal(42);
-        return self.User.findById(42).then((user) => {
-          expect(user).to.exist;
+        return self.User.findById(42).then((foundUser) => {
+          expect(foundUser).to.exist;
         });
       });
     });
@@ -1367,9 +1367,9 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         ).then((user) => {
           expect(user.name).to.be.ok;
           expect(user.email).not.to.be.ok;
-          return User.findById(user.id).then((user) => {
-            expect(user.name).to.be.ok;
-            expect(user.email).not.to.be.ok;
+          return User.findById(user.id).then((foundUser) => {
+            expect(foundUser.name).to.be.ok;
+            expect(foundUser.email).not.to.be.ok;
           });
         });
       });

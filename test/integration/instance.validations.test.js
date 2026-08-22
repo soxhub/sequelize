@@ -24,8 +24,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
       return User.sync({ force: true }).then(() => {
         return User.create({ username: 'bob', email: 'hello@world.com' }).then((user) => {
           return User.update({ username: 'toni' }, { where: { id: user.id } }).then(() => {
-            return User.findById(1).then((user) => {
-              expect(user.username).to.equal('toni');
+            return User.findById(1).then((updatedUser) => {
+              expect(updatedUser.username).to.equal('toni');
             });
           });
         });
@@ -207,10 +207,10 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
         const self = this;
         return this.Project.create({}).then((project) => {
           return self.Task.create({ something: 1 }).then((task) => {
-            return project.setTask(task).then((task) => {
-              expect(task.ProjectId).to.not.be.null;
-              return task.setProject(project).then((project) => {
-                expect(project.ProjectId).to.not.be.null;
+            return project.setTask(task).then((associatedTask) => {
+              expect(associatedTask.ProjectId).to.not.be.null;
+              return associatedTask.setProject(project).then((associatedProject) => {
+                expect(associatedProject.ProjectId).to.not.be.null;
               });
             });
           });

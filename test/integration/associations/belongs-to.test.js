@@ -86,9 +86,9 @@ describe(Support.getTestDialectTeaser('BelongsTo'), () => {
                     return Group.all().then((groups) => {
                       return groups[0].getUser().then((associatedUser) => {
                         expect(associatedUser).to.be.null;
-                        return Group.all({ transaction: t }).then((groups) => {
-                          return groups[0].getUser({ transaction: t }).then((associatedUser) => {
-                            expect(associatedUser).to.be.not.null;
+                        return Group.all({ transaction: t }).then((transactionGroups) => {
+                          return transactionGroups[0].getUser({ transaction: t }).then((transactionUser) => {
+                            expect(transactionUser).to.be.not.null;
                             return t.rollback();
                           });
                         });
@@ -219,12 +219,12 @@ describe(Support.getTestDialectTeaser('BelongsTo'), () => {
         return User.create({ user_id: 1, username: 'foo' }).then((user) => {
           return Task.create({ task_id: 1, title: 'task' }).then((task) => {
             return task.setUserXYZ(user).then(() => {
-              return task.getUserXYZ().then((user) => {
-                expect(user).not.to.be.null;
+              return task.getUserXYZ().then((associatedUser) => {
+                expect(associatedUser).not.to.be.null;
 
                 return task.setUserXYZ(null).then(() => {
-                  return task.getUserXYZ().then((user) => {
-                    expect(user).to.be.null;
+                  return task.getUserXYZ().then((clearedUser) => {
+                    expect(clearedUser).to.be.null;
                   });
                 });
               });
@@ -244,12 +244,12 @@ describe(Support.getTestDialectTeaser('BelongsTo'), () => {
         return User.create({ username: 'foo' }).then((user) => {
           return Task.create({ title: 'task' }).then((task) => {
             return task.setUserXYZ(user).then(() => {
-              return task.getUserXYZ().then((user) => {
-                expect(user).not.to.be.null;
+              return task.getUserXYZ().then((associatedUser) => {
+                expect(associatedUser).not.to.be.null;
 
                 return task.setUserXYZ(null).then(() => {
-                  return task.getUserXYZ().then((user) => {
-                    expect(user).to.be.null;
+                  return task.getUserXYZ().then((clearedUser) => {
+                    expect(clearedUser).to.be.null;
                   });
                 });
               });
@@ -288,8 +288,8 @@ describe(Support.getTestDialectTeaser('BelongsTo'), () => {
         return User.create({ id: 15, username: 'jansemand' }).then((user) => {
           return Task.create({}).then((task) => {
             return task.setUserXYZ(user.id).then(() => {
-              return task.getUserXYZ().then((user) => {
-                expect(user.username).to.equal('jansemand');
+              return task.getUserXYZ().then((associatedUser) => {
+                expect(associatedUser.username).to.equal('jansemand');
               });
             });
           });
@@ -428,8 +428,8 @@ describe(Support.getTestDialectTeaser('BelongsTo'), () => {
                   return group.getUser().then((user) => {
                     expect(user).to.be.null;
 
-                    return group.getUser({ transaction: t }).then((user) => {
-                      expect(user).not.to.be.null;
+                    return group.getUser({ transaction: t }).then((transactionUser) => {
+                      expect(transactionUser).not.to.be.null;
 
                       return t.rollback();
                     });

@@ -22,24 +22,23 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
 
   describe('#destroy', () => {
     describe('on success', () => {
-      it('should run hooks', function () {
+      it('should run hooks', async function () {
         const beforeHook = sinon.spy(),
           afterHook = sinon.spy();
 
         this.User.beforeDestroy(beforeHook);
         this.User.afterDestroy(afterHook);
 
-        return this.User.create({ username: 'Toni', mood: 'happy' }).then((user) => {
-          return user.destroy().then(() => {
-            expect(beforeHook.calledOnce).to.be.true;
-            expect(afterHook.calledOnce).to.be.true;
-          });
-        });
+        const user = await this.User.create({ username: 'Toni', mood: 'happy' });
+        await user.destroy();
+
+        expect(beforeHook.calledOnce).to.be.true;
+        expect(afterHook.calledOnce).to.be.true;
       });
     });
 
     describe('on error', () => {
-      it('should return an error from before', function () {
+      it('should return an error from before', async function () {
         const beforeHook = sinon.spy(),
           afterHook = sinon.spy();
 
@@ -49,15 +48,14 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         });
         this.User.afterDestroy(afterHook);
 
-        return this.User.create({ username: 'Toni', mood: 'happy' }).then((user) => {
-          return expect(user.destroy()).to.be.rejected.then(() => {
-            expect(beforeHook.calledOnce).to.be.true;
-            expect(afterHook.called, 'afterHook should not have been called').to.be.false;
-          });
-        });
+        const user = await this.User.create({ username: 'Toni', mood: 'happy' });
+        await expect(user.destroy()).to.be.rejected;
+
+        expect(beforeHook.calledOnce).to.be.true;
+        expect(afterHook.called, 'afterHook should not have been called').to.be.false;
       });
 
-      it('should return an error from after', function () {
+      it('should return an error from after', async function () {
         const beforeHook = sinon.spy(),
           afterHook = sinon.spy();
 
@@ -67,12 +65,11 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           throw new Error('Whoops!');
         });
 
-        return this.User.create({ username: 'Toni', mood: 'happy' }).then((user) => {
-          return expect(user.destroy()).to.be.rejected.then(() => {
-            expect(beforeHook.calledOnce).to.be.true;
-            expect(afterHook.calledOnce).to.be.true;
-          });
-        });
+        const user = await this.User.create({ username: 'Toni', mood: 'happy' });
+        await expect(user.destroy()).to.be.rejected;
+
+        expect(beforeHook.calledOnce).to.be.true;
+        expect(afterHook.calledOnce).to.be.true;
       });
     });
   });

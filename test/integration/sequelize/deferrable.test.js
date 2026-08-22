@@ -12,7 +12,7 @@ const describeDeferrable = Support.sequelize.dialect.supports.deferrableConstrai
 describeDeferrable(Support.getTestDialectTeaser('Sequelize'), () => {
   describe('Deferrable', () => {
     beforeEach(function () {
-      this.run = function (deferrable, options) {
+      this.run = async function (deferrable, options) {
         options = options || {};
 
         const taskTableName = options.taskTableName || 'tasks_' + config.rand();
@@ -40,22 +40,16 @@ describeDeferrable(Support.getTestDialectTeaser('Sequelize'), () => {
           }
         );
 
-        return User.sync({ force: true })
-          .then(() => {
-            return Task.sync({ force: true });
-          })
-          .then(() => {
-            return this.sequelize.transaction(transactionOptions, (t) => {
-              return Task.create({ title: 'a task', user_id: -1 }, { transaction: t })
-                .then((task) => {
-                  return Promise.all([task, User.create({}, { transaction: t })]);
-                })
-                .then(([task, user]) => {
-                  task.user_id = user.id;
-                  return task.save({ transaction: t });
-                });
-            });
-          });
+        await User.sync({ force: true });
+        await Task.sync({ force: true });
+
+        return this.sequelize.transaction(transactionOptions, async (t) => {
+          const task = await Task.create({ title: 'a task', user_id: -1 }, { transaction: t });
+          const user = await User.create({}, { transaction: t });
+
+          task.user_id = user.id;
+          return task.save({ transaction: t });
+        });
       };
     });
 

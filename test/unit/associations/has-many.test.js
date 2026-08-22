@@ -39,14 +39,13 @@ describe(Support.getTestDialectTeaser('hasMany'), () => {
       this.update.restore();
     });
 
-    it('uses one update statement for addition', function () {
-      return user.setTasks([task1, task2]).then(() => {
-        expect(this.findAll.calledOnce).to.be.true;
-        expect(this.update.calledOnce).to.be.true;
-      });
+    it('uses one update statement for addition', async function () {
+      await user.setTasks([task1, task2]);
+      expect(this.findAll.calledOnce).to.be.true;
+      expect(this.update.calledOnce).to.be.true;
     });
 
-    it('uses one delete from statement', function () {
+    it('uses one delete from statement', async function () {
       this.findAll
         .onFirstCall()
         .returns(Promise.resolve([]))
@@ -58,16 +57,13 @@ describe(Support.getTestDialectTeaser('hasMany'), () => {
           ])
         );
 
-      return user
-        .setTasks([task1, task2])
-        .then(() => {
-          this.update.resetHistory();
-          return user.setTasks(null);
-        })
-        .then(() => {
-          expect(this.findAll.calledTwice).to.be.true;
-          expect(this.update.calledOnce).to.be.true;
-        });
+      await user.setTasks([task1, task2]);
+
+      this.update.resetHistory();
+      await user.setTasks(null);
+
+      expect(this.findAll.calledTwice).to.be.true;
+      expect(this.update.calledOnce).to.be.true;
     });
   });
 
@@ -133,7 +129,7 @@ describe(Support.getTestDialectTeaser('hasMany'), () => {
       idC = Math.random().toString(),
       foreignKey = 'user_id';
 
-    it('should fetch associations for a single instance', () => {
+    it('should fetch associations for a single instance', async () => {
       const findAll = stub(Task, 'findAll').returns(Promise.resolve([Task.build({}), Task.build({})])),
         where = {};
 
@@ -145,17 +141,16 @@ describe(Support.getTestDialectTeaser('hasMany'), () => {
       expect(findAll.calledOnce).to.be.true;
       expect(findAll.firstCall.args[0].where).to.deep.equal(where);
 
-      return actual
-        .then((results) => {
-          expect(results).to.be.an('array');
-          expect(results.length).to.equal(2);
-        })
-        .finally(() => {
-          findAll.restore();
-        });
+      try {
+        const results = await actual;
+        expect(results).to.be.an('array');
+        expect(results.length).to.equal(2);
+      } finally {
+        findAll.restore();
+      }
     });
 
-    it('should fetch associations for multiple source instances', () => {
+    it('should fetch associations for multiple source instances', async () => {
       const findAll = stub(Task, 'findAll').returns(
         Promise.resolve([
           Task.build({
@@ -181,18 +176,17 @@ describe(Support.getTestDialectTeaser('hasMany'), () => {
       expect(findAll.firstCall.args[0].where[foreignKey]).to.have.property(Op.in);
       expect(findAll.firstCall.args[0].where[foreignKey][Op.in]).to.deep.equal([idA, idB, idC]);
 
-      return actual
-        .then((result) => {
-          expect(result).to.be.an('object');
-          expect(Object.keys(result)).to.deep.equal([idA, idB, idC]);
+      try {
+        const result = await actual;
+        expect(result).to.be.an('object');
+        expect(Object.keys(result)).to.deep.equal([idA, idB, idC]);
 
-          expect(result[idA].length).to.equal(3);
-          expect(result[idB].length).to.equal(1);
-          expect(result[idC].length).to.equal(0);
-        })
-        .finally(() => {
-          findAll.restore();
-        });
+        expect(result[idA].length).to.equal(3);
+        expect(result[idB].length).to.equal(1);
+        expect(result[idC].length).to.equal(0);
+      } finally {
+        findAll.restore();
+      }
     });
   });
 });

@@ -184,14 +184,13 @@ describe(Support.getTestDialectTeaser('belongsToMany'), () => {
       this.destroy.restore();
     });
 
-    it('uses one insert into statement', function () {
-      return user.setTasks([task1, task2]).then(() => {
-        expect(this.findAll.calledOnce).to.be.true;
-        expect(this.bulkCreate.calledOnce).to.be.true;
-      });
+    it('uses one insert into statement', async function () {
+      await user.setTasks([task1, task2]);
+      expect(this.findAll.calledOnce).to.be.true;
+      expect(this.bulkCreate.calledOnce).to.be.true;
     });
 
-    it('uses one delete from statement', function () {
+    it('uses one delete from statement', async function () {
       this.findAll
         .onFirstCall()
         .returns(Promise.resolve([]))
@@ -203,15 +202,11 @@ describe(Support.getTestDialectTeaser('belongsToMany'), () => {
           ])
         );
 
-      return user
-        .setTasks([task1, task2])
-        .then(() => {
-          return user.setTasks(null);
-        })
-        .then(() => {
-          expect(this.findAll.calledTwice).to.be.true;
-          expect(this.destroy.calledOnce).to.be.true;
-        });
+      await user.setTasks([task1, task2]);
+      await user.setTasks(null);
+
+      expect(this.findAll.calledTwice).to.be.true;
+      expect(this.destroy.calledOnce).to.be.true;
     });
   });
 

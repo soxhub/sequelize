@@ -2,7 +2,6 @@ import * as chai from 'chai';
 import Sequelize from '../../index.js';
 import Support from './support.js';
 import sinon from 'sinon';
-import _ from 'lodash';
 import moment from 'moment';
 import * as uuid from 'uuid';
 import DataTypes from '../../lib/data-types.js';
@@ -23,7 +22,6 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
     this.sequelize.connectionManager.refreshTypeParser(DataTypes[dialect]); // Reload custom parsers
   });
 
-  // oxlint-disable-next-line prefer-arrow-callback
   it('allows me to return values from a custom parse function', function () {
     const parse = (Sequelize.DATE.parse = sinon.spy((value) => {
       return moment(value, 'YYYY-MM-DD HH:mm:ss');
@@ -108,7 +106,7 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
   };
 
   const testFailure = function (Type) {
-    Type.constructor.parse = _.noop();
+    Type.constructor.parse = () => {};
 
     expect(() => {
       current.refreshTypes();

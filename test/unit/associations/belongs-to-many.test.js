@@ -65,7 +65,6 @@ describe(Support.getTestDialectTeaser('belongsToMany'), () => {
     expect(AB.options.validate).to.deep.equal({});
   });
 
-  // oxlint-disable-next-line prefer-arrow-callback
   it('should not override custom methods with association mixin', function () {
     const methods = {
       getTasks: 'get',

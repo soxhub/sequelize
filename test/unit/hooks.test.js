@@ -6,7 +6,6 @@ import _ from 'lodash';
 const expect = chai.expect;
 
 const current = Support.sequelize;
-const Promise = current.Promise;
 
 describe(Support.getTestDialectTeaser('Hooks'), () => {
   beforeEach(function () {

@@ -6,7 +6,6 @@ import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import config from '../../config/config.js';
 
-const Promise = Sequelize.Promise;
 const expect = chai.expect;
 
 const current = Support.sequelize;

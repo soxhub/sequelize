@@ -6,7 +6,6 @@ import DataTypes from '../../../lib/data-types.js';
 const expect = chai.expect;
 
 const current = Support.sequelize;
-const Promise = current.Promise;
 
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('bulkCreate', () => {

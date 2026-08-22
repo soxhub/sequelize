@@ -9,7 +9,6 @@ const expect = chai.expect;
 const Sequelize = Support.Sequelize;
 
 const current = Support.sequelize;
-const Promise = current.Promise;
 
 if (current.dialect.supports['UNION ALL']) {
   describe(Support.getTestDialectTeaser('Model'), () => {

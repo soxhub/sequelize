@@ -5,7 +5,6 @@ import DataTypes from '../../../lib/data-types.js';
 
 const expect = chai.expect;
 
-const Promise = Sequelize.Promise;
 const Op = Sequelize.Op;
 
 describe(Support.getTestDialectTeaser('Include'), () => {

@@ -314,7 +314,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           const expectedNotNullError = 'notNull Violation: Task.name cannot be null';
 
           expect(aggregate).to.be.instanceof(AggregateError);
-          const messages = aggregate.errors.map((e) => e.message).join('\n');
+          const messages = aggregate.errors.map((err) => err.message).join('\n');
           expect(messages).to.include(expectedValidationError).and.to.include(expectedNotNullError);
           expect(aggregate.errors).to.have.length(2);
 

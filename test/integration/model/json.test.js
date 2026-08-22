@@ -1,10 +1,7 @@
 import * as chai from 'chai';
-import Sequelize from '../../../index.js';
 import moment from 'moment';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
-
-const Promise = Sequelize.Promise;
 
 const expect = chai.expect;
 

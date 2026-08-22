@@ -5,8 +5,6 @@ import Sequelize from '../../../index.js';
 
 const expect = chai.expect;
 
-const Promise = Sequelize.Promise;
-
 describe(Support.getTestDialectTeaser('associations'), () => {
   describe('scope', () => {
     beforeEach(function () {

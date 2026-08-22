@@ -6,7 +6,6 @@ import sinon from 'sinon';
 const expect = chai.expect;
 
 const current = Support.sequelize;
-const Promise = current.Promise;
 
 describe(Support.getTestDialectTeaser('Instance'), () => {
   describe('set', () => {

@@ -6,8 +6,6 @@ import sinon from 'sinon';
 
 const expect = chai.expect;
 
-const Promise = Support.sequelize.Promise;
-
 describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
   beforeEach(function () {
     this.User = Support.sequelize.define('user', {

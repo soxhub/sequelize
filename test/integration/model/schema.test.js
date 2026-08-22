@@ -5,7 +5,6 @@ import DataTypes from '../../../lib/data-types.js';
 const expect = chai.expect;
 
 const current = Support.sequelize;
-const Promise = current.Promise;
 const SCHEMA_ONE = 'schema_one';
 const SCHEMA_TWO = 'schema_two';
 

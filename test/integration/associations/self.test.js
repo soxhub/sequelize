@@ -1,12 +1,9 @@
 import * as chai from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
-import Sequelize from '../../../index.js';
 import _ from 'lodash';
 
 const expect = chai.expect;
-
-const Promise = Sequelize.Promise;
 
 describe(Support.getTestDialectTeaser('Self'), () => {
   it('supports freezeTableName', function () {

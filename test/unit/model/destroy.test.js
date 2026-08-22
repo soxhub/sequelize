@@ -8,8 +8,6 @@ const expect = chai.expect;
 
 const current = Support.sequelize;
 
-const Promise = current.Promise;
-
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('method destroy', () => {
     const User = current.define('User', {

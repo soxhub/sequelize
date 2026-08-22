@@ -10,7 +10,6 @@ const expect = chai.expect;
 const stub = sinon.stub;
 
 const current = Support.sequelize;
-const Promise = current.Promise;
 
 describe(Support.getTestDialectTeaser('hasMany'), () => {
   describe('optimizations using bulk create, destroy and update', () => {

@@ -15,13 +15,13 @@ chai.config.includeStack = true;
 chai.should();
 
 // Make sure errors get thrown when testing
-process.on('uncaughtException', (e) => {
+process.on('uncaughtException', (err) => {
   console.error('An unhandled exception occured:');
-  throw e;
+  throw err;
 });
-process.on('unhandledRejection', (e) => {
+process.on('unhandledRejection', (err) => {
   console.error('An unhandled rejection occured:');
-  throw e;
+  throw err;
 });
 
 const Support = {

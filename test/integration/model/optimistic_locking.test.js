@@ -22,79 +22,60 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       return Account.sync({ force: true });
     });
 
-    it('should increment the version on save', () => {
-      return Account.create({ number: 1 })
-        .then((account) => {
-          account.number += 1;
-          expect(account.version).to.eq(0);
-          return account.save();
-        })
-        .then((account) => {
-          expect(account.version).to.eq(1);
-        });
+    it('should increment the version on save', async () => {
+      const account = await Account.create({ number: 1 });
+
+      account.number += 1;
+      expect(account.version).to.eq(0);
+
+      const saved = await account.save();
+      expect(saved.version).to.eq(1);
     });
 
-    it('should increment the version on update', () => {
-      return Account.create({ number: 1 })
-        .then((account) => {
-          expect(account.version).to.eq(0);
-          return account.update({ number: 2 });
-        })
-        .then((account) => {
-          expect(account.version).to.eq(1);
-          account.number += 1;
-          return account.save();
-        })
-        .then((account) => {
-          expect(account.number).to.eq(3);
-          expect(account.version).to.eq(2);
-        });
+    it('should increment the version on update', async () => {
+      const account = await Account.create({ number: 1 });
+      expect(account.version).to.eq(0);
+
+      const updated = await account.update({ number: 2 });
+      expect(updated.version).to.eq(1);
+      updated.number += 1;
+
+      const saved = await updated.save();
+      expect(saved.number).to.eq(3);
+      expect(saved.version).to.eq(2);
     });
 
-    it('prevents stale instances from being saved', () => {
-      return expect(
-        Account.create({ number: 1 })
-          .then((accountA) => {
-            return Account.findById(accountA.id).then((accountB) => {
-              accountA.number += 1;
-              return accountA.save().then(() => {
-                return accountB;
-              });
-            });
-          })
-          .then((accountB) => {
-            accountB.number += 1;
-            return accountB.save();
-          })
-      ).to.eventually.be.rejectedWith(Support.Sequelize.OptimisticLockError);
+    it('prevents stale instances from being saved', async () => {
+      const staleSave = async () => {
+        const accountA = await Account.create({ number: 1 });
+        const accountB = await Account.findById(accountA.id);
+
+        accountA.number += 1;
+        await accountA.save();
+
+        accountB.number += 1;
+        return accountB.save();
+      };
+
+      await expect(staleSave()).to.eventually.be.rejectedWith(Support.Sequelize.OptimisticLockError);
     });
 
-    it('increment() also increments the version', () => {
-      return Account.create({ number: 1 })
-        .then((account) => {
-          expect(account.version).to.eq(0);
-          return account.increment('number', { by: 1 });
-        })
-        .then((account) => {
-          return account.reload();
-        })
-        .then((account) => {
-          expect(account.version).to.eq(1);
-        });
+    it('increment() also increments the version', async () => {
+      const account = await Account.create({ number: 1 });
+      expect(account.version).to.eq(0);
+
+      const incremented = await account.increment('number', { by: 1 });
+      const reloaded = await incremented.reload();
+      expect(reloaded.version).to.eq(1);
     });
 
-    it('decrement() also increments the version', () => {
-      return Account.create({ number: 1 })
-        .then((account) => {
-          expect(account.version).to.eq(0);
-          return account.decrement('number', { by: 1 });
-        })
-        .then((account) => {
-          return account.reload();
-        })
-        .then((account) => {
-          expect(account.version).to.eq(1);
-        });
+    it('decrement() also increments the version', async () => {
+      const account = await Account.create({ number: 1 });
+      expect(account.version).to.eq(0);
+
+      const decremented = await account.decrement('number', { by: 1 });
+      const reloaded = await decremented.reload();
+      expect(reloaded.version).to.eq(1);
     });
   });
 });

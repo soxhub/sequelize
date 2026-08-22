@@ -281,7 +281,7 @@ describe(Support.getTestDialectTeaser('Sequelize Errors'), () => {
         exception: Sequelize.ValidationError
       }
     ].forEach((constraintTest) => {
-      it('Can be intercepted as ' + constraintTest.type + ' using .catch', function () {
+      it('Can be intercepted as ' + constraintTest.type + ' using .catch', async function () {
         const spy = sinon.spy(),
           User = this.sequelize.define('user', {
             first_name: {
@@ -295,26 +295,23 @@ describe(Support.getTestDialectTeaser('Sequelize Errors'), () => {
           });
 
         const record = { first_name: 'jan', last_name: 'meier' };
-        return this.sequelize
-          .sync({ force: true })
-          .then(() => {
-            return User.create(record);
-          })
-          .then(() => {
-            return User.create(record).catch((err) => {
-              if (err instanceof constraintTest.exception) {
-                return spy(err);
-              }
-              throw err;
-            });
-          })
-          .then(() => {
-            expect(spy.calledOnce).to.be.true;
-          });
+        await this.sequelize.sync({ force: true });
+        await User.create(record);
+
+        try {
+          await User.create(record);
+        } catch (err) {
+          if (!(err instanceof constraintTest.exception)) {
+            throw err;
+          }
+          spy(err);
+        }
+
+        expect(spy.calledOnce).to.be.true;
       });
     });
 
-    it('Supports newlines in keys', function () {
+    it('Supports newlines in keys', async function () {
       const spy = sinon.spy(),
         User = this.sequelize.define('user', {
           name: {
@@ -323,26 +320,23 @@ describe(Support.getTestDialectTeaser('Sequelize Errors'), () => {
           }
         });
 
-      return this.sequelize
-        .sync({ force: true })
-        .then(() => {
-          return User.create({ name: 'jan' });
-        })
-        .then(() => {
-          // If the error was successfully parsed, we can catch it!
-          return User.create({ name: 'jan' }).catch((err) => {
-            if (err instanceof this.sequelize.UniqueConstraintError) {
-              return spy(err);
-            }
-            throw err;
-          });
-        })
-        .then(() => {
-          expect(spy.calledOnce).to.be.true;
-        });
+      await this.sequelize.sync({ force: true });
+      await User.create({ name: 'jan' });
+
+      // If the error was successfully parsed, we can catch it!
+      try {
+        await User.create({ name: 'jan' });
+      } catch (err) {
+        if (!(err instanceof this.sequelize.UniqueConstraintError)) {
+          throw err;
+        }
+        spy(err);
+      }
+
+      expect(spy.calledOnce).to.be.true;
     });
 
-    it('Works when unique keys are not defined in sequelize', function () {
+    it('Works when unique keys are not defined in sequelize', async function () {
       let User = this.sequelize.define(
         'user',
         {
@@ -354,30 +348,26 @@ describe(Support.getTestDialectTeaser('Sequelize Errors'), () => {
         { timestamps: false }
       );
 
-      return this.sequelize
-        .sync({ force: true })
-        .then(() => {
-          // Now let's pretend the index was created by someone else, and sequelize doesn't know about it
-          User = this.sequelize.define(
-            'user',
-            {
-              name: Sequelize.STRING
-            },
-            { timestamps: false }
-          );
+      await this.sequelize.sync({ force: true });
 
-          return User.create({ name: 'jan' });
-        })
-        .then(() => {
-          // It should work even though the unique key is not defined in the model
-          return expect(User.create({ name: 'jan' })).to.be.rejectedWith(this.sequelize.UniqueConstraintError);
-        })
-        .then(() => {
-          // And when the model is not passed at all
-          return expect(this.sequelize.query("INSERT INTO users (name) VALUES ('jan')")).to.be.rejectedWith(
-            this.sequelize.UniqueConstraintError
-          );
-        });
+      // Now let's pretend the index was created by someone else, and sequelize doesn't know about it
+      User = this.sequelize.define(
+        'user',
+        {
+          name: Sequelize.STRING
+        },
+        { timestamps: false }
+      );
+
+      await User.create({ name: 'jan' });
+
+      // It should work even though the unique key is not defined in the model
+      await expect(User.create({ name: 'jan' })).to.be.rejectedWith(this.sequelize.UniqueConstraintError);
+
+      // And when the model is not passed at all
+      await expect(this.sequelize.query("INSERT INTO users (name) VALUES ('jan')")).to.be.rejectedWith(
+        this.sequelize.UniqueConstraintError
+      );
     });
 
     it('adds parent and sql properties', function () {

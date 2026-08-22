@@ -17,7 +17,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       this.clock.restore();
     });
 
-    it('should be able to soft delete with timestamps', function () {
+    it('should be able to soft delete with timestamps', async function () {
       const Account = this.sequelize.define(
         'Account',
         {
@@ -36,31 +36,23 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         }
       );
 
-      return Account.sync({ force: true })
-        .then(() => Account.create({ ownerId: 12 }))
-        .then(() => Account.count())
-        .then((count) => {
-          expect(count).to.be.equal(1);
-          return Account.destroy({ where: { ownerId: 12 } }).then((result) => {
-            expect(result).to.be.equal(1);
-          });
-        })
-        .then(() => Account.count())
-        .then((count) => {
-          expect(count).to.be.equal(0);
-          return Account.count({ paranoid: false });
-        })
-        .then((count) => {
-          expect(count).to.be.equal(1);
-          return Account.restore({ where: { ownerId: 12 } });
-        })
-        .then(() => Account.count())
-        .then((count) => {
-          expect(count).to.be.equal(1);
-        });
+      await Account.sync({ force: true });
+      await Account.create({ ownerId: 12 });
+
+      expect(await Account.count()).to.be.equal(1);
+
+      const result = await Account.destroy({ where: { ownerId: 12 } });
+      expect(result).to.be.equal(1);
+
+      expect(await Account.count()).to.be.equal(0);
+      expect(await Account.count({ paranoid: false })).to.be.equal(1);
+
+      await Account.restore({ where: { ownerId: 12 } });
+
+      expect(await Account.count()).to.be.equal(1);
     });
 
-    it('should be able to soft delete without timestamps', function () {
+    it('should be able to soft delete without timestamps', async function () {
       const Account = this.sequelize.define(
         'Account',
         {
@@ -87,26 +79,19 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         }
       );
 
-      return Account.sync({ force: true })
-        .then(() => Account.create({ ownerId: 12 }))
-        .then(() => Account.count())
-        .then((count) => {
-          expect(count).to.be.equal(1);
-          return Account.destroy({ where: { ownerId: 12 } });
-        })
-        .then(() => Account.count())
-        .then((count) => {
-          expect(count).to.be.equal(0);
-          return Account.count({ paranoid: false });
-        })
-        .then((count) => {
-          expect(count).to.be.equal(1);
-          return Account.restore({ where: { ownerId: 12 } });
-        })
-        .then(() => Account.count())
-        .then((count) => {
-          expect(count).to.be.equal(1);
-        });
+      await Account.sync({ force: true });
+      await Account.create({ ownerId: 12 });
+
+      expect(await Account.count()).to.be.equal(1);
+
+      await Account.destroy({ where: { ownerId: 12 } });
+
+      expect(await Account.count()).to.be.equal(0);
+      expect(await Account.count({ paranoid: false })).to.be.equal(1);
+
+      await Account.restore({ where: { ownerId: 12 } });
+
+      expect(await Account.count()).to.be.equal(1);
     });
 
     if (current.dialect.supports.JSON) {
@@ -139,8 +124,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           return this.Model.sync({ force: true });
         });
 
-        it('should soft delete with JSON condition', function () {
-          return this.Model.bulkCreate([
+        it('should soft delete with JSON condition', async function () {
+          await this.Model.bulkCreate([
             {
               name: 'One',
               data: {
@@ -157,23 +142,21 @@ describe(Support.getTestDialectTeaser('Model'), () => {
                 }
               }
             }
-          ])
-            .then(() =>
-              this.Model.destroy({
-                where: {
-                  data: {
-                    field: {
-                      deep: true
-                    }
-                  }
+          ]);
+
+          await this.Model.destroy({
+            where: {
+              data: {
+                field: {
+                  deep: true
                 }
-              })
-            )
-            .then(() => this.Model.findAll())
-            .then((records) => {
-              expect(records.length).to.equal(1);
-              expect(records[0].get('name')).to.equal('Two');
-            });
+              }
+            }
+          });
+
+          const records = await this.Model.findAll();
+          expect(records.length).to.equal(1);
+          expect(records[0].get('name')).to.equal('Two');
         });
       });
     }

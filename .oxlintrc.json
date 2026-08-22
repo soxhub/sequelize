@@ -78,7 +78,7 @@
     "no-useless-call": "error",
     "no-object-constructor": "error",
     "guard-for-in": "error",
-    "require-await": "warn",
+    "require-await": "error",
     "radix": "error",
     "unicorn/no-array-method-this-argument": "error",
     "unicorn/no-useless-promise-resolve-reject": "error",

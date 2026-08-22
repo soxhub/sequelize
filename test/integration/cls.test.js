@@ -296,6 +296,7 @@ for (const [implementation, createNamespace] of implementations) {
         return this.sequelize.transaction(async (outer) => {
           let savepointName;
 
+          // oxlint-disable-next-line require-await -- async on purpose: the shape under test is an async transaction callback
           await this.sequelize.transaction(async (inner) => {
             savepointName = inner.name;
           });
@@ -392,6 +393,7 @@ for (const [implementation, createNamespace] of implementations) {
 
         return this.sequelize
           .transaction(async () => {
+            // oxlint-disable-next-line require-await -- async on purpose: the shape under test is an async transaction callback
             await this.sequelize.transaction(async (inner) => {
               inner.afterCommit(() => fired.push('inner'));
             });
@@ -410,6 +412,7 @@ for (const [implementation, createNamespace] of implementations) {
         return this.sequelize
           .transaction(async () => {
             await expect(
+              // oxlint-disable-next-line require-await -- async on purpose: the shape under test is an async transaction callback
               this.sequelize.transaction(async (inner) => {
                 inner.afterCommit(() => fired.push('inner'));
                 throw new Error('rollback the savepoint');
@@ -431,6 +434,7 @@ for (const [implementation, createNamespace] of implementations) {
             await this.sequelize.transaction(async (middle) => {
               middle.afterCommit(() => fired.push('middle'));
 
+              // oxlint-disable-next-line require-await -- async on purpose: the shape under test is an async transaction callback
               await this.sequelize.transaction(async (deep) => {
                 deep.afterCommit(() => fired.push('deep'));
               });
@@ -448,6 +452,7 @@ for (const [implementation, createNamespace] of implementations) {
 
         return expect(
           this.sequelize.transaction(async () => {
+            // oxlint-disable-next-line require-await -- async on purpose: the shape under test is an async transaction callback
             await this.sequelize.transaction(async (inner) => {
               inner.afterCommit(() => fired.push('inner'));
             });
@@ -508,6 +513,7 @@ for (const [implementation, createNamespace] of implementations) {
 
         return this.sequelize
           .transaction(async (outer) => {
+            // oxlint-disable-next-line require-await -- async on purpose: the shape under test is an async transaction callback
             await this.sequelize.transaction(async (inner) => {
               savepoint = inner;
               inner.afterCommit((transaction) => {
@@ -562,6 +568,7 @@ for (const [implementation, createNamespace] of implementations) {
 
       it('does not take a transaction on the first instance as the parent of its own', function () {
         return this.sequelize.transaction(async (outer) => {
+          // oxlint-disable-next-line require-await -- async on purpose: the shape under test is an async transaction callback
           await this.other.transaction(async (inner) => {
             expect(inner.parent).to.be.undefined;
             expect(inner.id).to.not.equal(outer.id);

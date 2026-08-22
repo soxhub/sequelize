@@ -121,7 +121,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(JSON.stringify(options)).to.equal(snapshot);
     });
 
-    it('runs no hooks and issues no query', async function () {
+    it('runs no hooks and issues no query', function () {
       const fired = [];
       for (const name of ['beforeFind', 'beforeFindAfterExpandIncludeAll', 'beforeFindAfterOptions', 'afterFind']) {
         this.User.addHook(name, () => fired.push(name));

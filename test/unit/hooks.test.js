@@ -267,7 +267,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           {},
           {
             hooks: {
-              beforeUpdate: _.noop // Just to make sure we can define other hooks without overwriting the global one
+              beforeUpdate: () => {} // Just to make sure we can define other hooks without overwriting the global one
             }
           }
         );

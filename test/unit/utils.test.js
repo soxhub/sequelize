@@ -6,8 +6,6 @@ import DataTypes from '../../lib/data-types.js';
 import * as Utils from '../../lib/utils.js';
 import Op from '../../lib/operators.js';
 
-/* eslint-disable camelcase */
-
 const expect = chai.expect;
 
 describe(Support.getTestDialectTeaser('Utils'), () => {
@@ -229,7 +227,6 @@ describe(Support.getTestDialectTeaser('Utils'), () => {
   });
 
   describe('stack', () => {
-    // eslint-disable-next-line prefer-arrow-callback
     it('stack trace starts after call to Util.stack()', function this_here_test() {
       // We need a named function to be able to capture its trace
       function a() {

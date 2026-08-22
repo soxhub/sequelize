@@ -130,6 +130,7 @@ describe('CLSNamespace', () => {
     });
 
     it('returns the promise of an async function', async () => {
+      // oxlint-disable-next-line require-await
       await expect(ns.runAndReturn(async () => 'value')).to.eventually.equal('value');
     });
   });
@@ -194,6 +195,7 @@ describe('CLSNamespace', () => {
 
     it('does not leak a value out of a run that threw', async () => {
       await expect(
+        // oxlint-disable-next-line require-await
         ns.runAndReturn(async () => {
           ns.set('transaction', 'inner');
           throw new Error('boom');

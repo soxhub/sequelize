@@ -10,48 +10,47 @@ describe(Support.getTestDialectTeaser('Model'), () => {
   describe('findAll', () => {
     describe('order', () => {
       describe('Sequelize.literal()', () => {
-        beforeEach(function () {
+        beforeEach(async function () {
           this.User = this.sequelize.define('User', {
             email: DataTypes.STRING
           });
 
-          return this.User.sync({ force: true }).then(() => {
-            return this.User.create({
-              email: 'test@sequelizejs.com'
-            });
+          await this.User.sync({ force: true });
+          await this.User.create({
+            email: 'test@sequelizejs.com'
           });
         });
 
-        it('should work with order: literal()', function () {
-          return this.User.findAll({
+        it('should work with order: literal()', async function () {
+          const users = await this.User.findAll({
             order: this.sequelize.literal('email = ' + this.sequelize.escape('test@sequelizejs.com'))
-          }).then((users) => {
-            expect(users.length).to.equal(1);
-            users.forEach((user) => {
-              expect(user.get('email')).to.be.ok;
-            });
+          });
+
+          expect(users.length).to.equal(1);
+          users.forEach((user) => {
+            expect(user.get('email')).to.be.ok;
           });
         });
 
-        it('should work with order: [literal()]', function () {
-          return this.User.findAll({
+        it('should work with order: [literal()]', async function () {
+          const users = await this.User.findAll({
             order: [this.sequelize.literal('email = ' + this.sequelize.escape('test@sequelizejs.com'))]
-          }).then((users) => {
-            expect(users.length).to.equal(1);
-            users.forEach((user) => {
-              expect(user.get('email')).to.be.ok;
-            });
+          });
+
+          expect(users.length).to.equal(1);
+          users.forEach((user) => {
+            expect(user.get('email')).to.be.ok;
           });
         });
 
-        it('should work with order: [[literal()]]', function () {
-          return this.User.findAll({
+        it('should work with order: [[literal()]]', async function () {
+          const users = await this.User.findAll({
             order: [[this.sequelize.literal('email = ' + this.sequelize.escape('test@sequelizejs.com'))]]
-          }).then((users) => {
-            expect(users.length).to.equal(1);
-            users.forEach((user) => {
-              expect(user.get('email')).to.be.ok;
-            });
+          });
+
+          expect(users.length).to.equal(1);
+          users.forEach((user) => {
+            expect(user.get('email')).to.be.ok;
           });
         });
       });

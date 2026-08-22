@@ -6,7 +6,7 @@ const expect = chai.expect;
 const Sequelize = Support.Sequelize;
 
 describe('[POSTGRES Specific] Regressions', () => {
-  it('properly fetch OIDs after sync, #8749', function () {
+  it('properly fetch OIDs after sync, #8749', async function () {
     const User = this.sequelize.define('User', {
       active: Sequelize.BOOLEAN
     });
@@ -23,23 +23,17 @@ describe('[POSTGRES Specific] Regressions', () => {
     User.hasMany(Media);
     Media.belongsTo(User);
 
-    return this.sequelize
-      .sync({ force: true })
-      .then(() => User.create({ active: true }))
-      .then((user) => {
-        expect(user.active).to.be.true;
-        expect(user.get('active')).to.be.true;
+    await this.sequelize.sync({ force: true });
 
-        return User.findOne();
-      })
-      .then((user) => {
-        expect(user.active).to.be.true;
-        expect(user.get('active')).to.be.true;
+    const created = await User.create({ active: true });
+    expect(created.active).to.be.true;
+    expect(created.get('active')).to.be.true;
 
-        return User.findOne({ raw: true });
-      })
-      .then((user) => {
-        expect(user.active).to.be.true;
-      });
+    const found = await User.findOne();
+    expect(found.active).to.be.true;
+    expect(found.get('active')).to.be.true;
+
+    const raw = await User.findOne({ raw: true });
+    expect(raw.active).to.be.true;
   });
 });

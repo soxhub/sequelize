@@ -8,21 +8,20 @@ const expect = chai.expect;
 const Sequelize = Support.Sequelize;
 
 const constraintName = 'overlap_period';
-beforeEach(function () {
-  const self = this;
-  this.Booking = self.sequelize.define('Booking', {
+beforeEach(async function () {
+  this.Booking = this.sequelize.define('Booking', {
     roomNo: DataTypes.INTEGER,
     period: DataTypes.RANGE(DataTypes.DATE)
   });
-  return self.Booking.sync({ force: true }).then(() => {
-    return self.sequelize.query(
-      'ALTER TABLE "' +
-        self.Booking.tableName +
-        '" ADD CONSTRAINT ' +
-        constraintName +
-        ' EXCLUDE USING gist ("roomNo" WITH =, period WITH &&)'
-    );
-  });
+  await this.Booking.sync({ force: true });
+
+  await this.sequelize.query(
+    'ALTER TABLE "' +
+      this.Booking.tableName +
+      '" ADD CONSTRAINT ' +
+      constraintName +
+      ' EXCLUDE USING gist ("roomNo" WITH =, period WITH &&)'
+  );
 });
 
 describe('[POSTGRES Specific] ExclusionConstraintError', () => {
@@ -41,21 +40,21 @@ describe('[POSTGRES Specific] ExclusionConstraintError', () => {
     });
   });
 
-  it('should throw ExclusionConstraintError when "period" value overlaps existing', function () {
+  it('should throw ExclusionConstraintError when "period" value overlaps existing', async function () {
     const Booking = this.Booking;
 
-    return Booking.create({
+    await Booking.create({
       roomNo: 1,
       guestName: 'Incognito Visitor',
       period: [new Date(2015, 0, 1), new Date(2015, 0, 3)]
-    }).then(() => {
-      return expect(
-        Booking.create({
-          roomNo: 1,
-          guestName: 'Frequent Visitor',
-          period: [new Date(2015, 0, 2), new Date(2015, 0, 5)]
-        })
-      ).to.eventually.be.rejectedWith(Sequelize.ExclusionConstraintError);
     });
+
+    await expect(
+      Booking.create({
+        roomNo: 1,
+        guestName: 'Frequent Visitor',
+        period: [new Date(2015, 0, 2), new Date(2015, 0, 5)]
+      })
+    ).to.eventually.be.rejectedWith(Sequelize.ExclusionConstraintError);
   });
 });

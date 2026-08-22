@@ -23,37 +23,35 @@ describe(Support.getTestDialectTeaser('Timezone'), () => {
   // instant is what distinguishes them; `now()` does not, because it comes back as a
   // timestamptz whose offset the driver uses to recover the correct absolute time
   // either way.
-  const renderKnownInstant = (sequelize) => {
-    return sequelize
-      .query("SELECT (timestamptz '2015-01-20 00:00:00+00')::text AS rendered", {
-        type: sequelize.QueryTypes.SELECT
-      })
-      .then((rows) => rows[0].rendered);
+  const renderKnownInstant = async (sequelize) => {
+    const rows = await sequelize.query("SELECT (timestamptz '2015-01-20 00:00:00+00')::text AS rendered", {
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    return rows[0].rendered;
   };
 
-  it('applies a named timezone to the session', function () {
-    return renderKnownInstant(this.sequelizeWithNamedTimezone).then((rendered) => {
-      expect(rendered).to.equal('2015-01-19 19:00:00-05');
-    });
+  it('applies a named timezone to the session', async function () {
+    const rendered = await renderKnownInstant(this.sequelizeWithNamedTimezone);
+    expect(rendered).to.equal('2015-01-19 19:00:00-05');
   });
 
-  it('applies an offset timezone to the session with the sign the user intended', function () {
-    return renderKnownInstant(this.sequelizeWithTimezone).then((rendered) => {
-      expect(rendered).to.equal('2015-01-20 07:00:00+07');
-    });
+  it('applies an offset timezone to the session with the sign the user intended', async function () {
+    const rendered = await renderKnownInstant(this.sequelizeWithTimezone);
+    expect(rendered).to.equal('2015-01-20 07:00:00+07');
   });
 
-  it('returns the same value for current timestamp', function () {
+  it('returns the same value for current timestamp', async function () {
     const now = 'now()';
     const startQueryTime = Date.now();
 
     const query = 'SELECT ' + now + ' as now';
-    return Promise.all([
+    const [now1, now2] = await Promise.all([
       this.sequelize.query(query, { type: this.sequelize.QueryTypes.SELECT }),
       this.sequelizeWithTimezone.query(query, { type: this.sequelize.QueryTypes.SELECT })
-    ]).then(([now1, now2]) => {
-      const elapsedQueryTime = Date.now() - startQueryTime + 1001;
-      expect(now1[0].now.getTime()).to.be.closeTo(now2[0].now.getTime(), elapsedQueryTime);
-    });
+    ]);
+
+    const elapsedQueryTime = Date.now() - startQueryTime + 1001;
+    expect(now1[0].now.getTime()).to.be.closeTo(now2[0].now.getTime(), elapsedQueryTime);
   });
 });

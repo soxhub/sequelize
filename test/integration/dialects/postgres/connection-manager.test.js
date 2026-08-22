@@ -6,16 +6,15 @@ import _ from 'lodash';
 const expect = chai.expect;
 
 describe('[POSTGRES] Sequelize', () => {
-  function checkTimezoneParsing(baseOptions) {
+  async function checkTimezoneParsing(baseOptions) {
     const options = _.extend({}, baseOptions, { timezone: 'Asia/Kolkata', timestamps: true });
     const sequelize = Support.createSequelizeInstance(options);
 
     const tzTable = sequelize.define('tz_table', { foo: DataTypes.STRING });
-    return tzTable.sync({ force: true }).then(() => {
-      return tzTable.create({ foo: 'test' }).then((row) => {
-        expect(row).to.be.not.null;
-      });
-    });
+    await tzTable.sync({ force: true });
+
+    const row = await tzTable.create({ foo: 'test' });
+    expect(row).to.be.not.null;
   }
 
   it('should correctly parse the moment based timezone', function () {

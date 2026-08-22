@@ -53,7 +53,7 @@ describe('Connection Manager', () => {
     expect(poolSpy.calledTwice).to.be.true;
   });
 
-  it('should round robin calls to the read pool', () => {
+  it('should round robin calls to the read pool', async () => {
     if (Support.getTestDialect() === 'sqlite') {
       return;
     }
@@ -92,21 +92,20 @@ describe('Connection Manager', () => {
 
     const _getConnection = _.bind(connectionManager.getConnection, connectionManager, queryOptions);
 
-    return _getConnection()
-      .then(_getConnection)
-      .then(_getConnection)
-      .then(() => {
-        chai.expect(connectStub.callCount).to.equal(4);
+    await _getConnection();
+    await _getConnection();
+    await _getConnection();
 
-        // First call is the get connection for DB versions - ignore
-        const calls = connectStub.getCalls();
-        chai.expect(calls[1].args[0].host).to.eql('slave1');
-        chai.expect(calls[2].args[0].host).to.eql('slave2');
-        chai.expect(calls[3].args[0].host).to.eql('slave1');
-      });
+    chai.expect(connectStub.callCount).to.equal(4);
+
+    // First call is the get connection for DB versions - ignore
+    const calls = connectStub.getCalls();
+    chai.expect(calls[1].args[0].host).to.eql('slave1');
+    chai.expect(calls[2].args[0].host).to.eql('slave2');
+    chai.expect(calls[3].args[0].host).to.eql('slave1');
   });
 
-  it('should allow forced reads from the write pool', () => {
+  it('should allow forced reads from the write pool', async () => {
     const master = _.clone(poolEntry);
     master.host = 'the-boss';
 
@@ -137,14 +136,14 @@ describe('Connection Manager', () => {
       useMaster: true
     };
 
-    return connectionManager.getConnection(queryOptions).then(() => {
-      chai.expect(connectStub.calledTwice).to.be.true; // Once to get DB version, and once to actually get the connection.
-      const calls = connectStub.getCalls();
-      chai.expect(calls[1].args[0].host).to.eql('the-boss');
-    });
+    await connectionManager.getConnection(queryOptions);
+
+    chai.expect(connectStub.calledTwice).to.be.true; // Once to get DB version, and once to actually get the connection.
+    const calls = connectStub.getCalls();
+    chai.expect(calls[1].args[0].host).to.eql('the-boss');
   });
 
-  it('should clear the pool after draining it', () => {
+  it('should clear the pool after draining it', async () => {
     const options = {
       replication: null
     };
@@ -156,9 +155,8 @@ describe('Connection Manager', () => {
     const poolDrainSpy = sandbox.spy(connectionManager.pool, 'drain');
     const poolClearSpy = sandbox.spy(connectionManager.pool, 'clear');
 
-    return connectionManager.close().then(() => {
-      expect(poolDrainSpy.calledOnce).to.be.true;
-      expect(poolClearSpy.calledOnce).to.be.true;
-    });
+    await connectionManager.close();
+    expect(poolDrainSpy.calledOnce).to.be.true;
+    expect(poolClearSpy.calledOnce).to.be.true;
   });
 });

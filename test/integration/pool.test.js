@@ -31,7 +31,7 @@ describe(Support.getTestDialectTeaser('Pooling'), function () {
     return expect(this.testInstance.authenticate()).to.eventually.be.rejectedWith('ResourceRequest timed out');
   });
 
-  it('should not result in unhandled promise rejection when unable to acquire connection', function () {
+  it('should not result in unhandled promise rejection when unable to acquire connection', async function () {
     this.testInstance = new Sequelize('localhost', 'ffd', 'dfdf', {
       dialect,
       databaseVersion: '1.2.3',
@@ -43,8 +43,11 @@ describe(Support.getTestDialectTeaser('Pooling'), function () {
 
     this.sinon.stub(this.testInstance.connectionManager, '_connect').returns(new Sequelize.Promise(() => {}));
 
-    return expect(
-      this.testInstance.transaction().then(() => this.testInstance.transaction())
-    ).to.eventually.be.rejectedWith('ResourceRequest timed out');
+    const acquireTwice = async () => {
+      await this.testInstance.transaction();
+      return this.testInstance.transaction();
+    };
+
+    await expect(acquireTwice()).to.eventually.be.rejectedWith('ResourceRequest timed out');
   });
 });

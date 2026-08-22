@@ -1,13 +1,34 @@
-name: Test Postgres
+name: Tests
 
 on:
   push:
-    branches: [main, 'release/**', 'develop-v4']
+    branches: ['develop-v4']
   pull_request:
-    branches: [main, 'release/**', 'develop-v4']
+    branches: ['develop-v4']
   workflow_dispatch:
 
 jobs:
+  # The unit suite needs no database, it only exercises SQL generation and
+  # in-memory model behaviour so it runs once here rather than four times
+  # inside the matrix below.
+  test-unit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests
+        run: pnpm run test-unit-postgres
+
   test-postgres:
     runs-on: ubuntu-latest
 
@@ -60,11 +81,12 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Run Postgres tests
+      # Integration only — the unit suite is covered once by the test-unit job.
+      - name: Run integration tests
         env:
           DIALECT: postgres
           SEQ_PORT: 5432
           SEQ_USER: sequelize_test
           SEQ_PW: sequelize_test
           SEQ_DB: sequelize_test
-        run: pnpm run test-postgres
+        run: pnpm run test-integration-postgres

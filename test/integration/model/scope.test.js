@@ -6,7 +6,7 @@ const expect = chai.expect;
 
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('scope', () => {
-    beforeEach(function () {
+    beforeEach(async function () {
       this.ScopeMe = this.sequelize.define(
         'ScopeMe',
         {
@@ -54,62 +54,51 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         }
       );
 
-      return this.sequelize.sync({ force: true }).then(() => {
-        const records = [
-          { username: 'tony', email: 'tony@sequelizejs.com', access_level: 3, other_value: 7 },
-          { username: 'tobi', email: 'tobi@fakeemail.com', access_level: 10, other_value: 11 },
-          { username: 'dan', email: 'dan@sequelizejs.com', access_level: 5, other_value: 10 },
-          { username: 'fred', email: 'fred@foobar.com', access_level: 3, other_value: 7 }
-        ];
-        return this.ScopeMe.bulkCreate(records);
+      await this.sequelize.sync({ force: true });
+
+      await this.ScopeMe.bulkCreate([
+        { username: 'tony', email: 'tony@sequelizejs.com', access_level: 3, other_value: 7 },
+        { username: 'tobi', email: 'tobi@fakeemail.com', access_level: 10, other_value: 11 },
+        { username: 'dan', email: 'dan@sequelizejs.com', access_level: 5, other_value: 10 },
+        { username: 'fred', email: 'fred@foobar.com', access_level: 3, other_value: 7 }
+      ]);
+    });
+
+    it('should be able to merge attributes as array', async function () {
+      const record = await this.ScopeMe.scope('lowAccess', 'withName').findOne();
+
+      expect(record.other_value).to.exist;
+      expect(record.username).to.exist;
+      expect(record.access_level).to.exist;
+    });
+
+    it('should work with Symbol operators', async function () {
+      const record = await this.ScopeMe.scope('highAccess').findOne();
+      expect(record.username).to.equal('tobi');
+
+      const lessThanFour = await this.ScopeMe.scope('lessThanFour').findAll();
+      expect(lessThanFour).to.have.length(2);
+      expect(lessThanFour[0].get('access_level')).to.equal(3);
+      expect(lessThanFour[1].get('access_level')).to.equal(3);
+
+      const issue8473 = await this.ScopeMe.scope('issue8473').findAll();
+      expect(issue8473).to.have.length(1);
+      expect(issue8473[0].get('access_level')).to.equal(5);
+      expect(issue8473[0].get('other_value')).to.equal(10);
+    });
+
+    it('should keep symbols after default assignment', async function () {
+      const record = await this.ScopeMe.scope('highAccess').findOne();
+      expect(record.username).to.equal('tobi');
+
+      const lessThanFour = await this.ScopeMe.scope('lessThanFour').findAll({
+        where: {}
       });
-    });
+      expect(lessThanFour).to.have.length(2);
+      expect(lessThanFour[0].get('access_level')).to.equal(3);
+      expect(lessThanFour[1].get('access_level')).to.equal(3);
 
-    it('should be able to merge attributes as array', function () {
-      return this.ScopeMe.scope('lowAccess', 'withName')
-        .findOne()
-        .then((record) => {
-          expect(record.other_value).to.exist;
-          expect(record.username).to.exist;
-          expect(record.access_level).to.exist;
-        });
-    });
-
-    it('should work with Symbol operators', function () {
-      return this.ScopeMe.scope('highAccess')
-        .findOne()
-        .then((record) => {
-          expect(record.username).to.equal('tobi');
-          return this.ScopeMe.scope('lessThanFour').findAll();
-        })
-        .then((records) => {
-          expect(records).to.have.length(2);
-          expect(records[0].get('access_level')).to.equal(3);
-          expect(records[1].get('access_level')).to.equal(3);
-          return this.ScopeMe.scope('issue8473').findAll();
-        })
-        .then((records) => {
-          expect(records).to.have.length(1);
-          expect(records[0].get('access_level')).to.equal(5);
-          expect(records[0].get('other_value')).to.equal(10);
-        });
-    });
-
-    it('should keep symbols after default assignment', function () {
-      return this.ScopeMe.scope('highAccess')
-        .findOne()
-        .then((record) => {
-          expect(record.username).to.equal('tobi');
-          return this.ScopeMe.scope('lessThanFour').findAll({
-            where: {}
-          });
-        })
-        .then((records) => {
-          expect(records).to.have.length(2);
-          expect(records[0].get('access_level')).to.equal(3);
-          expect(records[1].get('access_level')).to.equal(3);
-          return this.ScopeMe.scope('issue8473').findAll();
-        });
+      await this.ScopeMe.scope('issue8473').findAll();
     });
   });
 });

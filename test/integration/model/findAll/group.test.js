@@ -11,7 +11,7 @@ const current = Support.sequelize;
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('findAll', () => {
     describe('group', () => {
-      it('should correctly group with attributes, #3009', () => {
+      it('should correctly group with attributes, #3009', async () => {
         const Post = current.define('Post', {
           id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
           name: { type: DataTypes.STRING, allowNull: false }
@@ -24,36 +24,30 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
         Post.hasMany(Comment);
 
-        return current
-          .sync({ force: true })
-          .then(() => {
-            // Create an enviroment
-            return Post.bulkCreate([{ name: 'post-1' }, { name: 'post-2' }]);
-          })
-          .then(() => {
-            return Comment.bulkCreate([
-              { text: 'Market', PostId: 1 },
-              { text: 'Text', PostId: 2 },
-              { text: 'Abc', PostId: 2 },
-              { text: 'Semaphor', PostId: 1 },
-              { text: 'Text', PostId: 1 }
-            ]);
-          })
-          .then(() => {
-            return Post.findAll({
-              attributes: [[Sequelize.fn('COUNT', Sequelize.col('Comments.id')), 'comment_count']],
-              include: [{ model: Comment, attributes: [] }],
-              group: ['Post.id'],
-              order: [[Sequelize.literal('"Post"."id"'), 'ASC']]
-            });
-          })
-          .then((posts) => {
-            expect(parseInt(posts[0].get('comment_count'), 10)).to.be.equal(3);
-            expect(parseInt(posts[1].get('comment_count'), 10)).to.be.equal(2);
-          });
+        await current.sync({ force: true });
+
+        // Create an enviroment
+        await Post.bulkCreate([{ name: 'post-1' }, { name: 'post-2' }]);
+        await Comment.bulkCreate([
+          { text: 'Market', PostId: 1 },
+          { text: 'Text', PostId: 2 },
+          { text: 'Abc', PostId: 2 },
+          { text: 'Semaphor', PostId: 1 },
+          { text: 'Text', PostId: 1 }
+        ]);
+
+        const posts = await Post.findAll({
+          attributes: [[Sequelize.fn('COUNT', Sequelize.col('Comments.id')), 'comment_count']],
+          include: [{ model: Comment, attributes: [] }],
+          group: ['Post.id'],
+          order: [[Sequelize.literal('"Post"."id"'), 'ASC']]
+        });
+
+        expect(parseInt(posts[0].get('comment_count'), 10)).to.be.equal(3);
+        expect(parseInt(posts[1].get('comment_count'), 10)).to.be.equal(2);
       });
 
-      it('should not add primary key when grouping using a belongsTo association', () => {
+      it('should not add primary key when grouping using a belongsTo association', async () => {
         const Post = current.define('Post', {
           id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
           name: { type: DataTypes.STRING, allowNull: false }
@@ -67,34 +61,28 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         Post.hasMany(Comment);
         Comment.belongsTo(Post);
 
-        return current
-          .sync({ force: true })
-          .then(() => {
-            return Post.bulkCreate([{ name: 'post-1' }, { name: 'post-2' }]);
-          })
-          .then(() => {
-            return Comment.bulkCreate([
-              { text: 'Market', PostId: 1 },
-              { text: 'Text', PostId: 2 },
-              { text: 'Abc', PostId: 2 },
-              { text: 'Semaphor', PostId: 1 },
-              { text: 'Text', PostId: 1 }
-            ]);
-          })
-          .then(() => {
-            return Comment.findAll({
-              attributes: ['PostId', [Sequelize.fn('COUNT', Sequelize.col('Comment.id')), 'comment_count']],
-              include: [{ model: Post, attributes: [] }],
-              group: ['PostId'],
-              order: [['PostId', 'ASC']]
-            });
-          })
-          .then((posts) => {
-            expect(Object.hasOwn(posts[0].get(), 'id')).to.equal(false);
-            expect(Object.hasOwn(posts[1].get(), 'id')).to.equal(false);
-            expect(parseInt(posts[0].get('comment_count'), 10)).to.be.equal(3);
-            expect(parseInt(posts[1].get('comment_count'), 10)).to.be.equal(2);
-          });
+        await current.sync({ force: true });
+
+        await Post.bulkCreate([{ name: 'post-1' }, { name: 'post-2' }]);
+        await Comment.bulkCreate([
+          { text: 'Market', PostId: 1 },
+          { text: 'Text', PostId: 2 },
+          { text: 'Abc', PostId: 2 },
+          { text: 'Semaphor', PostId: 1 },
+          { text: 'Text', PostId: 1 }
+        ]);
+
+        const posts = await Comment.findAll({
+          attributes: ['PostId', [Sequelize.fn('COUNT', Sequelize.col('Comment.id')), 'comment_count']],
+          include: [{ model: Post, attributes: [] }],
+          group: ['PostId'],
+          order: [['PostId', 'ASC']]
+        });
+
+        expect(Object.hasOwn(posts[0].get(), 'id')).to.equal(false);
+        expect(Object.hasOwn(posts[1].get(), 'id')).to.equal(false);
+        expect(parseInt(posts[0].get('comment_count'), 10)).to.be.equal(3);
+        expect(parseInt(posts[1].get('comment_count'), 10)).to.be.equal(2);
       });
     });
   });

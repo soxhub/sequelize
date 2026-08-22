@@ -67,13 +67,9 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           });
         });
 
-        it('should be ignored in table creation', function () {
-          return this.sequelize
-            .getQueryInterface()
-            .describeTable(this.User.tableName)
-            .then((fields) => {
-              expect(Object.keys(fields).length).to.equal(2);
-            });
+        it('should be ignored in table creation', async function () {
+          const fields = await this.sequelize.getQueryInterface().describeTable(this.User.tableName);
+          expect(Object.keys(fields).length).to.equal(2);
         });
 
         it('should be ignored in find, findAll and includes', function () {
@@ -95,7 +91,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           ]);
         });
 
-        it('should allow me to store selected values', function () {
+        it('should allow me to store selected values', async function () {
           const Post = this.sequelize.define('Post', {
             text: Sequelize.TEXT,
             someBoolean: {
@@ -103,49 +99,41 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             }
           });
 
-          return this.sequelize
-            .sync({ force: true })
-            .then(() => {
-              return Post.bulkCreate([{ text: 'text1' }, { text: 'text2' }]);
-            })
-            .then(() => {
-              const boolQuery = 'EXISTS(SELECT 1) AS "someBoolean"';
+          await this.sequelize.sync({ force: true });
+          await Post.bulkCreate([{ text: 'text1' }, { text: 'text2' }]);
 
-              return Post.find({ attributes: ['id', 'text', Sequelize.literal(boolQuery)] });
-            })
-            .then((post) => {
-              expect(post.get('someBoolean')).to.be.ok;
-              expect(post.get().someBoolean).to.be.ok;
-            });
+          const boolQuery = 'EXISTS(SELECT 1) AS "someBoolean"';
+          const post = await Post.find({ attributes: ['id', 'text', Sequelize.literal(boolQuery)] });
+
+          expect(post.get('someBoolean')).to.be.ok;
+          expect(post.get().someBoolean).to.be.ok;
         });
 
-        it('should be ignored in create and updateAttributes', function () {
-          return this.User.create({
+        it('should be ignored in create and updateAttributes', async function () {
+          const created = await this.User.create({
             field1: 'something'
-          })
-            .then((user) => {
-              // We already verified that the virtual is not added to the table definition, so if this succeeds, were good
+          });
 
-              expect(user.virtualWithDefault).to.equal('cake');
-              expect(user.storage).to.equal('something');
-              return user.updateAttributes(
-                {
-                  field1: 'something else'
-                },
-                {
-                  fields: ['storage']
-                }
-              );
-            })
-            .then((user) => {
-              expect(user.virtualWithDefault).to.equal('cake');
-              expect(user.storage).to.equal('something else');
-            });
+          // We already verified that the virtual is not added to the table definition, so if this succeeds, were good
+
+          expect(created.virtualWithDefault).to.equal('cake');
+          expect(created.storage).to.equal('something');
+
+          const updated = await created.updateAttributes(
+            {
+              field1: 'something else'
+            },
+            {
+              fields: ['storage']
+            }
+          );
+
+          expect(updated.virtualWithDefault).to.equal('cake');
+          expect(updated.storage).to.equal('something else');
         });
 
-        it('should be ignored in bulkCreate and and bulkUpdate', function () {
-          const self = this;
-          return this.User.bulkCreate(
+        it('should be ignored in bulkCreate and and bulkUpdate', async function () {
+          await this.User.bulkCreate(
             [
               {
                 field1: 'something'
@@ -154,13 +142,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             {
               logging: this.sqlAssert
             }
-          )
-            .then(() => {
-              return self.User.findAll();
-            })
-            .then((users) => {
-              expect(users[0].storage).to.equal('something');
-            });
+          );
+
+          const users = await this.User.findAll();
+          expect(users[0].storage).to.equal('something');
         });
       });
     });

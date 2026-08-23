@@ -57,28 +57,18 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
       });
 
-      beforeEach('build restaurant tables', function () {
+      beforeEach('build restaurant tables', async function () {
         const Restaurant = this.Restaurant;
-        return current
-          .createSchema('schema_one')
-          .then(() => {
-            return current.createSchema('schema_two');
-          })
-          .then(() => {
-            return Restaurant.sync({ force: true, searchPath: SEARCH_PATH_ONE });
-          })
-          .then(() => {
-            return Restaurant.sync({ force: true, searchPath: SEARCH_PATH_TWO });
-          })
-          .catch((err) => {
-            expect(err).to.be.null;
-          });
+
+        await current.createSchema('schema_one');
+        await current.createSchema('schema_two');
+        await Restaurant.sync({ force: true, searchPath: SEARCH_PATH_ONE });
+        await Restaurant.sync({ force: true, searchPath: SEARCH_PATH_TWO });
       });
 
-      afterEach('drop schemas', () => {
-        return current.dropSchema('schema_one').then(() => {
-          return current.dropSchema('schema_two');
-        });
+      afterEach('drop schemas', async () => {
+        await current.dropSchema('schema_one');
+        await current.dropSchema('schema_two');
       });
 
       describe('enum case', () => {
@@ -88,497 +78,390 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       describe('Add data via model.create, retrieve via model.findOne', () => {
-        it('should be able to insert data into the table in schema_one using create', function () {
+        it('should be able to insert data into the table in schema_one using create', async function () {
           const Restaurant = this.Restaurant;
-          let restaurantId;
 
-          return Restaurant.create(
+          await Restaurant.create(
             {
               foo: 'one',
               location_id: locationId
             },
             { searchPath: SEARCH_PATH_ONE }
-          )
-            .then(() => {
-              return Restaurant.findOne({
-                where: { foo: 'one' },
-                searchPath: SEARCH_PATH_ONE
-              });
-            })
-            .then((obj) => {
-              expect(obj).to.not.be.null;
-              expect(obj.foo).to.equal('one');
-              restaurantId = obj.id;
-              return Restaurant.findById(restaurantId, { searchPath: SEARCH_PATH_ONE });
-            })
-            .then((obj) => {
-              expect(obj).to.not.be.null;
-              expect(obj.foo).to.equal('one');
-            });
-        });
+          );
 
-        it('should fail to insert data into schema_two using create', function () {
-          const Restaurant = this.Restaurant;
-
-          return Restaurant.create(
-            {
-              foo: 'test'
-            },
-            { searchPath: SEARCH_PATH_TWO }
-          ).catch((err) => {
-            expect(err).to.not.be.null;
+          const found = await Restaurant.findOne({
+            where: { foo: 'one' },
+            searchPath: SEARCH_PATH_ONE
           });
+          expect(found).to.not.be.null;
+          expect(found.foo).to.equal('one');
+
+          const byId = await Restaurant.findById(found.id, { searchPath: SEARCH_PATH_ONE });
+          expect(byId).to.not.be.null;
+          expect(byId.foo).to.equal('one');
         });
 
-        it('should be able to insert data into the table in schema_two using create', function () {
+        it('should be able to insert data into the table in schema_two using create', async function () {
           const Restaurant = this.Restaurant;
-          let restaurantId;
 
-          return Restaurant.create(
+          await Restaurant.create(
             {
               foo: 'two',
               location_id: locationId
             },
             { searchPath: SEARCH_PATH_TWO }
-          )
-            .then(() => {
-              return Restaurant.findOne({
-                where: { foo: 'two' },
-                searchPath: SEARCH_PATH_TWO
-              });
-            })
-            .then((obj) => {
-              expect(obj).to.not.be.null;
-              expect(obj.foo).to.equal('two');
-              restaurantId = obj.id;
-              return Restaurant.findById(restaurantId, { searchPath: SEARCH_PATH_TWO });
-            })
-            .then((obj) => {
-              expect(obj).to.not.be.null;
-              expect(obj.foo).to.equal('two');
-            });
+          );
+
+          const found = await Restaurant.findOne({
+            where: { foo: 'two' },
+            searchPath: SEARCH_PATH_TWO
+          });
+          expect(found).to.not.be.null;
+          expect(found.foo).to.equal('two');
+
+          const byId = await Restaurant.findById(found.id, { searchPath: SEARCH_PATH_TWO });
+          expect(byId).to.not.be.null;
+          expect(byId.foo).to.equal('two');
         });
 
-        it('should fail to find schema_one object in schema_two', function () {
+        it('should fail to find schema_one object in schema_two', async function () {
           const Restaurant = this.Restaurant;
 
-          return Restaurant.findOne({ where: { foo: 'one' }, searchPath: SEARCH_PATH_TWO }).then((RestaurantObj) => {
-            expect(RestaurantObj).to.be.null;
-          });
+          const RestaurantObj = await Restaurant.findOne({ where: { foo: 'one' }, searchPath: SEARCH_PATH_TWO });
+          expect(RestaurantObj).to.be.null;
         });
 
-        it('should fail to find schema_two object in schema_one', function () {
+        it('should fail to find schema_two object in schema_one', async function () {
           const Restaurant = this.Restaurant;
 
-          return Restaurant.findOne({ where: { foo: 'two' }, searchPath: SEARCH_PATH_ONE }).then((RestaurantObj) => {
-            expect(RestaurantObj).to.be.null;
-          });
+          const RestaurantObj = await Restaurant.findOne({ where: { foo: 'two' }, searchPath: SEARCH_PATH_ONE });
+          expect(RestaurantObj).to.be.null;
         });
       });
 
       describe('Add data via instance.save, retrieve via model.findAll', () => {
-        it('should be able to insert data into both schemas using instance.save and retrieve it via findAll', function () {
+        it('should be able to insert data into both schemas using instance.save and retrieve it via findAll', async function () {
           const Restaurant = this.Restaurant;
 
-          let restaurauntModel = Restaurant.build({ bar: 'one.1' });
+          await Restaurant.build({ bar: 'one.1' }).save({ searchPath: SEARCH_PATH_ONE });
+          await Restaurant.build({ bar: 'one.2' }).save({ searchPath: SEARCH_PATH_ONE });
+          await Restaurant.build({ bar: 'two.1' }).save({ searchPath: SEARCH_PATH_TWO });
+          await Restaurant.build({ bar: 'two.2' }).save({ searchPath: SEARCH_PATH_TWO });
+          await Restaurant.build({ bar: 'two.3' }).save({ searchPath: SEARCH_PATH_TWO });
 
-          return restaurauntModel
-            .save({ searchPath: SEARCH_PATH_ONE })
-            .then(() => {
-              restaurauntModel = Restaurant.build({ bar: 'one.2' });
-              return restaurauntModel.save({ searchPath: SEARCH_PATH_ONE });
-            })
-            .then(() => {
-              restaurauntModel = Restaurant.build({ bar: 'two.1' });
-              return restaurauntModel.save({ searchPath: SEARCH_PATH_TWO });
-            })
-            .then(() => {
-              restaurauntModel = Restaurant.build({ bar: 'two.2' });
-              return restaurauntModel.save({ searchPath: SEARCH_PATH_TWO });
-            })
-            .then(() => {
-              restaurauntModel = Restaurant.build({ bar: 'two.3' });
-              return restaurauntModel.save({ searchPath: SEARCH_PATH_TWO });
-            })
-            .then(() => {
-              return Restaurant.findAll({ searchPath: SEARCH_PATH_ONE });
-            })
-            .then((restaurantsOne) => {
-              expect(restaurantsOne).to.not.be.null;
-              expect(restaurantsOne.length).to.equal(2);
-              restaurantsOne.forEach((restaurant) => {
-                expect(restaurant.bar).to.contain('one');
-              });
-              return Restaurant.findAndCountAll({ searchPath: SEARCH_PATH_ONE });
-            })
-            .then((restaurantsOne) => {
-              expect(restaurantsOne).to.not.be.null;
-              expect(restaurantsOne.rows.length).to.equal(2);
-              expect(restaurantsOne.count).to.equal(2);
-              restaurantsOne.rows.forEach((restaurant) => {
-                expect(restaurant.bar).to.contain('one');
-              });
-              return Restaurant.findAll({ searchPath: SEARCH_PATH_TWO });
-            })
-            .then((restaurantsTwo) => {
-              expect(restaurantsTwo).to.not.be.null;
-              expect(restaurantsTwo.length).to.equal(3);
-              restaurantsTwo.forEach((restaurant) => {
-                expect(restaurant.bar).to.contain('two');
-              });
-              return Restaurant.findAndCountAll({ searchPath: SEARCH_PATH_TWO });
-            })
-            .then((restaurantsTwo) => {
-              expect(restaurantsTwo).to.not.be.null;
-              expect(restaurantsTwo.rows.length).to.equal(3);
-              expect(restaurantsTwo.count).to.equal(3);
-              restaurantsTwo.rows.forEach((restaurant) => {
-                expect(restaurant.bar).to.contain('two');
-              });
-            });
+          const allOne = await Restaurant.findAll({ searchPath: SEARCH_PATH_ONE });
+          expect(allOne).to.not.be.null;
+          expect(allOne.length).to.equal(2);
+          allOne.forEach((restaurant) => {
+            expect(restaurant.bar).to.contain('one');
+          });
+
+          const countedOne = await Restaurant.findAndCountAll({ searchPath: SEARCH_PATH_ONE });
+          expect(countedOne).to.not.be.null;
+          expect(countedOne.rows.length).to.equal(2);
+          expect(countedOne.count).to.equal(2);
+          countedOne.rows.forEach((restaurant) => {
+            expect(restaurant.bar).to.contain('one');
+          });
+
+          const allTwo = await Restaurant.findAll({ searchPath: SEARCH_PATH_TWO });
+          expect(allTwo).to.not.be.null;
+          expect(allTwo.length).to.equal(3);
+          allTwo.forEach((restaurant) => {
+            expect(restaurant.bar).to.contain('two');
+          });
+
+          const countedTwo = await Restaurant.findAndCountAll({ searchPath: SEARCH_PATH_TWO });
+          expect(countedTwo).to.not.be.null;
+          expect(countedTwo.rows.length).to.equal(3);
+          expect(countedTwo.count).to.equal(3);
+          countedTwo.rows.forEach((restaurant) => {
+            expect(restaurant.bar).to.contain('two');
+          });
         });
       });
 
       describe('Add data via instance.save, retrieve via model.count and model.find', () => {
-        it('should be able to insert data into both schemas using instance.save count it and retrieve it via findAll with where', function () {
+        it('should be able to insert data into both schemas using instance.save count it and retrieve it via findAll with where', async function () {
           const Restaurant = this.Restaurant;
 
-          let restaurauntModel = Restaurant.build({ bar: 'one.1' });
+          await Restaurant.build({ bar: 'one.1' }).save({ searchPath: SEARCH_PATH_ONE });
+          await Restaurant.build({ bar: 'one.2' }).save({ searchPath: SEARCH_PATH_ONE });
+          await Restaurant.build({ bar: 'two.1' }).save({ searchPath: SEARCH_PATH_TWO });
+          await Restaurant.build({ bar: 'two.2' }).save({ searchPath: SEARCH_PATH_TWO });
+          await Restaurant.build({ bar: 'two.3' }).save({ searchPath: SEARCH_PATH_TWO });
 
-          return restaurauntModel
-            .save({ searchPath: SEARCH_PATH_ONE })
-            .then(() => {
-              restaurauntModel = Restaurant.build({ bar: 'one.2' });
-              return restaurauntModel.save({ searchPath: SEARCH_PATH_ONE });
-            })
-            .then(() => {
-              restaurauntModel = Restaurant.build({ bar: 'two.1' });
-              return restaurauntModel.save({ searchPath: SEARCH_PATH_TWO });
-            })
-            .then(() => {
-              restaurauntModel = Restaurant.build({ bar: 'two.2' });
-              return restaurauntModel.save({ searchPath: SEARCH_PATH_TWO });
-            })
-            .then(() => {
-              restaurauntModel = Restaurant.build({ bar: 'two.3' });
-              return restaurauntModel.save({ searchPath: SEARCH_PATH_TWO });
-            })
-            .then(() => {
-              return Restaurant.findAll({
-                where: { bar: { $like: 'one%' } },
-                searchPath: SEARCH_PATH_ONE
-              });
-            })
-            .then((restaurantsOne) => {
-              expect(restaurantsOne).to.not.be.null;
-              expect(restaurantsOne.length).to.equal(2);
-              restaurantsOne.forEach((restaurant) => {
-                expect(restaurant.bar).to.contain('one');
-              });
-              return Restaurant.count({ searchPath: SEARCH_PATH_ONE });
-            })
-            .then((count) => {
-              expect(count).to.not.be.null;
-              expect(count).to.equal(2);
-              return Restaurant.findAll({
-                where: { bar: { $like: 'two%' } },
-                searchPath: SEARCH_PATH_TWO
-              });
-            })
-            .then((restaurantsTwo) => {
-              expect(restaurantsTwo).to.not.be.null;
-              expect(restaurantsTwo.length).to.equal(3);
-              restaurantsTwo.forEach((restaurant) => {
-                expect(restaurant.bar).to.contain('two');
-              });
-              return Restaurant.count({ searchPath: SEARCH_PATH_TWO });
-            })
-            .then((count) => {
-              expect(count).to.not.be.null;
-              expect(count).to.equal(3);
-            });
+          const restaurantsOne = await Restaurant.findAll({
+            where: { bar: { $like: 'one%' } },
+            searchPath: SEARCH_PATH_ONE
+          });
+          expect(restaurantsOne).to.not.be.null;
+          expect(restaurantsOne.length).to.equal(2);
+          restaurantsOne.forEach((restaurant) => {
+            expect(restaurant.bar).to.contain('one');
+          });
+
+          const oneCount = await Restaurant.count({ searchPath: SEARCH_PATH_ONE });
+          expect(oneCount).to.not.be.null;
+          expect(oneCount).to.equal(2);
+
+          const restaurantsTwo = await Restaurant.findAll({
+            where: { bar: { $like: 'two%' } },
+            searchPath: SEARCH_PATH_TWO
+          });
+          expect(restaurantsTwo).to.not.be.null;
+          expect(restaurantsTwo.length).to.equal(3);
+          restaurantsTwo.forEach((restaurant) => {
+            expect(restaurant.bar).to.contain('two');
+          });
+
+          const twoCount = await Restaurant.count({ searchPath: SEARCH_PATH_TWO });
+          expect(twoCount).to.not.be.null;
+          expect(twoCount).to.equal(3);
         });
       });
 
       describe('Get associated data in public schema via include', () => {
-        beforeEach(function () {
+        beforeEach(async function () {
           const Location = this.Location;
 
-          return Location.sync({ force: true })
-            .then(() => {
-              return Location.create({ name: 'HQ' }).then(() => {
-                return Location.findOne({ where: { name: 'HQ' } }).then((obj) => {
-                  expect(obj).to.not.be.null;
-                  expect(obj.name).to.equal('HQ');
-                  locationId = obj.id;
-                });
-              });
-            })
-            .catch((err) => {
-              expect(err).to.be.null;
-            });
+          await Location.sync({ force: true });
+          await Location.create({ name: 'HQ' });
+
+          const obj = await Location.findOne({ where: { name: 'HQ' } });
+          expect(obj).to.not.be.null;
+          expect(obj.name).to.equal('HQ');
+          locationId = obj.id;
         });
 
-        it('should be able to insert and retrieve associated data into the table in schema_one', function () {
+        it('should be able to insert and retrieve associated data into the table in schema_one', async function () {
           const Restaurant = this.Restaurant;
           const Location = this.Location;
 
-          return Restaurant.create(
+          await Restaurant.create(
             {
               foo: 'one',
               location_id: locationId
             },
             { searchPath: SEARCH_PATH_ONE }
-          )
-            .then(() => {
-              return Restaurant.findOne({
-                where: { foo: 'one' },
-                include: [
-                  {
-                    model: Location,
-                    as: 'location'
-                  }
-                ],
-                searchPath: SEARCH_PATH_ONE
-              });
-            })
-            .then((obj) => {
-              expect(obj).to.not.be.null;
-              expect(obj.foo).to.equal('one');
-              expect(obj.location).to.not.be.null;
-              expect(obj.location.name).to.equal('HQ');
-            });
+          );
+
+          const obj = await Restaurant.findOne({
+            where: { foo: 'one' },
+            include: [
+              {
+                model: Location,
+                as: 'location'
+              }
+            ],
+            searchPath: SEARCH_PATH_ONE
+          });
+
+          expect(obj).to.not.be.null;
+          expect(obj.foo).to.equal('one');
+          expect(obj.location).to.not.be.null;
+          expect(obj.location.name).to.equal('HQ');
         });
 
-        it('should be able to insert and retrieve associated data into the table in schema_two', function () {
+        it('should be able to insert and retrieve associated data into the table in schema_two', async function () {
           const Restaurant = this.Restaurant;
           const Location = this.Location;
 
-          return Restaurant.create(
+          await Restaurant.create(
             {
               foo: 'two',
               location_id: locationId
             },
             { searchPath: SEARCH_PATH_TWO }
-          )
-            .then(() => {
-              return Restaurant.findOne({
-                where: { foo: 'two' },
-                include: [
-                  {
-                    model: Location,
-                    as: 'location'
-                  }
-                ],
-                searchPath: SEARCH_PATH_TWO
-              });
-            })
-            .then((obj) => {
-              expect(obj).to.not.be.null;
-              expect(obj.foo).to.equal('two');
-              expect(obj.location).to.not.be.null;
-              expect(obj.location.name).to.equal('HQ');
-            });
+          );
+
+          const obj = await Restaurant.findOne({
+            where: { foo: 'two' },
+            include: [
+              {
+                model: Location,
+                as: 'location'
+              }
+            ],
+            searchPath: SEARCH_PATH_TWO
+          });
+
+          expect(obj).to.not.be.null;
+          expect(obj.foo).to.equal('two');
+          expect(obj.location).to.not.be.null;
+          expect(obj.location.name).to.equal('HQ');
         });
       });
 
       describe('Get schema specific associated data via include', () => {
-        beforeEach(function () {
+        beforeEach(async function () {
           const Employee = this.Employee;
-          return Employee.sync({ force: true, searchPath: SEARCH_PATH_ONE })
-            .then(() => {
-              return Employee.sync({ force: true, searchPath: SEARCH_PATH_TWO });
-            })
-            .catch((err) => {
-              expect(err).to.be.null;
-            });
+
+          await Employee.sync({ force: true, searchPath: SEARCH_PATH_ONE });
+          await Employee.sync({ force: true, searchPath: SEARCH_PATH_TWO });
         });
 
-        it('should be able to insert and retrieve associated data into the table in schema_one', function () {
+        it('should be able to insert and retrieve associated data into the table in schema_one', async function () {
           const Restaurant = this.Restaurant;
           const Employee = this.Employee;
-          let restaurantId;
 
-          return Restaurant.create(
+          await Restaurant.create(
             {
               foo: 'one'
             },
             { searchPath: SEARCH_PATH_ONE }
-          )
-            .then(() => {
-              return Restaurant.findOne({
-                where: { foo: 'one' },
-                searchPath: SEARCH_PATH_ONE
-              });
-            })
-            .then((obj) => {
-              expect(obj).to.not.be.null;
-              expect(obj.foo).to.equal('one');
-              restaurantId = obj.id;
-              return Employee.create(
-                {
-                  first_name: 'Restaurant',
-                  last_name: 'one',
-                  restaurant_id: restaurantId
-                },
-                { searchPath: SEARCH_PATH_ONE }
-              );
-            })
-            .then(() => {
-              return Restaurant.findOne({
-                where: { foo: 'one' },
-                searchPath: SEARCH_PATH_ONE,
-                include: [
-                  {
-                    model: Employee,
-                    as: 'employees'
-                  }
-                ]
-              });
-            })
-            .then((obj) => {
-              expect(obj).to.not.be.null;
-              expect(obj.employees).to.not.be.null;
-              expect(obj.employees.length).to.equal(1);
-              expect(obj.employees[0].last_name).to.equal('one');
-              return obj.getEmployees({ searchPath: SEARCH_PATH_ONE });
-            })
-            .then((employees) => {
-              expect(employees.length).to.equal(1);
-              expect(employees[0].last_name).to.equal('one');
-              return Employee.findOne({
-                where: { last_name: 'one' },
-                searchPath: SEARCH_PATH_ONE,
-                include: [
-                  {
-                    model: Restaurant,
-                    as: 'restaurant'
-                  }
-                ]
-              });
-            })
-            .then((obj) => {
-              expect(obj).to.not.be.null;
-              expect(obj.restaurant).to.not.be.null;
-              expect(obj.restaurant.foo).to.equal('one');
-              return obj.getRestaurant({ searchPath: SEARCH_PATH_ONE });
-            })
-            .then((restaurant) => {
-              expect(restaurant).to.not.be.null;
-              expect(restaurant.foo).to.equal('one');
-            });
+          );
+
+          const found = await Restaurant.findOne({
+            where: { foo: 'one' },
+            searchPath: SEARCH_PATH_ONE
+          });
+          expect(found).to.not.be.null;
+          expect(found.foo).to.equal('one');
+
+          await Employee.create(
+            {
+              first_name: 'Restaurant',
+              last_name: 'one',
+              restaurant_id: found.id
+            },
+            { searchPath: SEARCH_PATH_ONE }
+          );
+
+          const withEmployees = await Restaurant.findOne({
+            where: { foo: 'one' },
+            searchPath: SEARCH_PATH_ONE,
+            include: [
+              {
+                model: Employee,
+                as: 'employees'
+              }
+            ]
+          });
+
+          expect(withEmployees).to.not.be.null;
+          expect(withEmployees.employees).to.not.be.null;
+          expect(withEmployees.employees.length).to.equal(1);
+          expect(withEmployees.employees[0].last_name).to.equal('one');
+
+          const employees = await withEmployees.getEmployees({ searchPath: SEARCH_PATH_ONE });
+          expect(employees.length).to.equal(1);
+          expect(employees[0].last_name).to.equal('one');
+
+          const withRestaurant = await Employee.findOne({
+            where: { last_name: 'one' },
+            searchPath: SEARCH_PATH_ONE,
+            include: [
+              {
+                model: Restaurant,
+                as: 'restaurant'
+              }
+            ]
+          });
+
+          expect(withRestaurant).to.not.be.null;
+          expect(withRestaurant.restaurant).to.not.be.null;
+          expect(withRestaurant.restaurant.foo).to.equal('one');
+
+          const restaurant = await withRestaurant.getRestaurant({ searchPath: SEARCH_PATH_ONE });
+          expect(restaurant).to.not.be.null;
+          expect(restaurant.foo).to.equal('one');
         });
 
-        it('should be able to insert and retrieve associated data into the table in schema_two', function () {
+        it('should be able to insert and retrieve associated data into the table in schema_two', async function () {
           const Restaurant = this.Restaurant;
           const Employee = this.Employee;
-          let restaurantId;
 
-          return Restaurant.create(
+          await Restaurant.create(
             {
               foo: 'two'
             },
             { searchPath: SEARCH_PATH_TWO }
-          )
-            .then(() => {
-              return Restaurant.findOne({
-                where: { foo: 'two' },
-                searchPath: SEARCH_PATH_TWO
-              });
-            })
-            .then((obj) => {
-              expect(obj).to.not.be.null;
-              expect(obj.foo).to.equal('two');
-              restaurantId = obj.id;
-              return Employee.create(
-                {
-                  first_name: 'Restaurant',
-                  last_name: 'two',
-                  restaurant_id: restaurantId
-                },
-                { searchPath: SEARCH_PATH_TWO }
-              );
-            })
-            .then(() => {
-              return Restaurant.findOne({
-                where: { foo: 'two' },
-                searchPath: SEARCH_PATH_TWO,
-                include: [
-                  {
-                    model: Employee,
-                    as: 'employees'
-                  }
-                ]
-              });
-            })
-            .then((obj) => {
-              expect(obj).to.not.be.null;
-              expect(obj.employees).to.not.be.null;
-              expect(obj.employees.length).to.equal(1);
-              expect(obj.employees[0].last_name).to.equal('two');
-              return obj.getEmployees({ searchPath: SEARCH_PATH_TWO });
-            })
-            .then((employees) => {
-              expect(employees.length).to.equal(1);
-              expect(employees[0].last_name).to.equal('two');
-              return Employee.findOne({
-                where: { last_name: 'two' },
-                searchPath: SEARCH_PATH_TWO,
-                include: [
-                  {
-                    model: Restaurant,
-                    as: 'restaurant'
-                  }
-                ]
-              });
-            })
-            .then((obj) => {
-              expect(obj).to.not.be.null;
-              expect(obj.restaurant).to.not.be.null;
-              expect(obj.restaurant.foo).to.equal('two');
-              return obj.getRestaurant({ searchPath: SEARCH_PATH_TWO });
-            })
-            .then((restaurant) => {
-              expect(restaurant).to.not.be.null;
-              expect(restaurant.foo).to.equal('two');
-            });
+          );
+
+          const found = await Restaurant.findOne({
+            where: { foo: 'two' },
+            searchPath: SEARCH_PATH_TWO
+          });
+          expect(found).to.not.be.null;
+          expect(found.foo).to.equal('two');
+
+          await Employee.create(
+            {
+              first_name: 'Restaurant',
+              last_name: 'two',
+              restaurant_id: found.id
+            },
+            { searchPath: SEARCH_PATH_TWO }
+          );
+
+          const withEmployees = await Restaurant.findOne({
+            where: { foo: 'two' },
+            searchPath: SEARCH_PATH_TWO,
+            include: [
+              {
+                model: Employee,
+                as: 'employees'
+              }
+            ]
+          });
+
+          expect(withEmployees).to.not.be.null;
+          expect(withEmployees.employees).to.not.be.null;
+          expect(withEmployees.employees.length).to.equal(1);
+          expect(withEmployees.employees[0].last_name).to.equal('two');
+
+          const employees = await withEmployees.getEmployees({ searchPath: SEARCH_PATH_TWO });
+          expect(employees.length).to.equal(1);
+          expect(employees[0].last_name).to.equal('two');
+
+          const withRestaurant = await Employee.findOne({
+            where: { last_name: 'two' },
+            searchPath: SEARCH_PATH_TWO,
+            include: [
+              {
+                model: Restaurant,
+                as: 'restaurant'
+              }
+            ]
+          });
+
+          expect(withRestaurant).to.not.be.null;
+          expect(withRestaurant.restaurant).to.not.be.null;
+          expect(withRestaurant.restaurant.foo).to.equal('two');
+
+          const restaurant = await withRestaurant.getRestaurant({ searchPath: SEARCH_PATH_TWO });
+          expect(restaurant).to.not.be.null;
+          expect(restaurant.foo).to.equal('two');
         });
       });
 
       describe('concurency tests', () => {
-        it('should build and persist instances to 2 schemas concurrently in any order', function () {
+        it('should build and persist instances to 2 schemas concurrently in any order', async function () {
           const Restaurant = this.Restaurant;
 
           let restaurauntModelSchema1 = Restaurant.build({ bar: 'one.1' });
           const restaurauntModelSchema2 = Restaurant.build({ bar: 'two.1' });
 
-          return restaurauntModelSchema1
-            .save({ searchPath: SEARCH_PATH_ONE })
-            .then(() => {
-              restaurauntModelSchema1 = Restaurant.build({ bar: 'one.2' });
-              return restaurauntModelSchema2.save({ searchPath: SEARCH_PATH_TWO });
-            })
-            .then(() => {
-              return restaurauntModelSchema1.save({ searchPath: SEARCH_PATH_ONE });
-            })
-            .then(() => {
-              return Restaurant.findAll({ searchPath: SEARCH_PATH_ONE });
-            })
-            .then((restaurantsOne) => {
-              expect(restaurantsOne).to.not.be.null;
-              expect(restaurantsOne.length).to.equal(2);
-              restaurantsOne.forEach((restaurant) => {
-                expect(restaurant.bar).to.contain('one');
-              });
-              return Restaurant.findAll({ searchPath: SEARCH_PATH_TWO });
-            })
-            .then((restaurantsTwo) => {
-              expect(restaurantsTwo).to.not.be.null;
-              expect(restaurantsTwo.length).to.equal(1);
-              restaurantsTwo.forEach((restaurant) => {
-                expect(restaurant.bar).to.contain('two');
-              });
-            });
+          await restaurauntModelSchema1.save({ searchPath: SEARCH_PATH_ONE });
+
+          restaurauntModelSchema1 = Restaurant.build({ bar: 'one.2' });
+          await restaurauntModelSchema2.save({ searchPath: SEARCH_PATH_TWO });
+          await restaurauntModelSchema1.save({ searchPath: SEARCH_PATH_ONE });
+
+          const restaurantsOne = await Restaurant.findAll({ searchPath: SEARCH_PATH_ONE });
+          expect(restaurantsOne).to.not.be.null;
+          expect(restaurantsOne.length).to.equal(2);
+          restaurantsOne.forEach((restaurant) => {
+            expect(restaurant.bar).to.contain('one');
+          });
+
+          const restaurantsTwo = await Restaurant.findAll({ searchPath: SEARCH_PATH_TWO });
+          expect(restaurantsTwo).to.not.be.null;
+          expect(restaurantsTwo.length).to.equal(1);
+          restaurantsTwo.forEach((restaurant) => {
+            expect(restaurant.bar).to.contain('two');
+          });
         });
       });
     });

@@ -370,7 +370,7 @@ describe(Support.getTestDialectTeaser('Sequelize Errors'), () => {
       );
     });
 
-    it('adds parent and sql properties', function () {
+    it('adds parent and sql properties', async function () {
       const User = this.sequelize.define(
         'user',
         {
@@ -382,20 +382,14 @@ describe(Support.getTestDialectTeaser('Sequelize Errors'), () => {
         { timestamps: false }
       );
 
-      return this.sequelize
-        .sync({ force: true })
-        .then(() => {
-          return User.create({ name: 'jan' });
-        })
-        .then(() => {
-          return expect(User.create({ name: 'jan' })).to.be.rejected;
-        })
-        .then((error) => {
-          expect(error).to.be.instanceOf(this.sequelize.UniqueConstraintError);
-          expect(error).to.have.property('parent');
-          expect(error).to.have.property('original');
-          expect(error).to.have.property('sql');
-        });
+      await this.sequelize.sync({ force: true });
+      await User.create({ name: 'jan' });
+
+      const error = await expect(User.create({ name: 'jan' })).to.be.rejected;
+      expect(error).to.be.instanceOf(this.sequelize.UniqueConstraintError);
+      expect(error).to.have.property('parent');
+      expect(error).to.have.property('original');
+      expect(error).to.have.property('sql');
     });
   });
 });

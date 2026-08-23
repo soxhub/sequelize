@@ -13,81 +13,79 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       return this.testSync.drop();
     });
 
-    it('should remove a column if it exists in the databases schema but not the model', function () {
+    it('should remove a column if it exists in the databases schema but not the model', async function () {
       const User = this.sequelize.define('testSync', {
         name: Sequelize.STRING,
         age: Sequelize.INTEGER
       });
-      return this.sequelize
-        .sync()
-        .then(() => {
-          this.sequelize.define('testSync', {
-            name: Sequelize.STRING
-          });
-        })
-        .then(() => this.sequelize.sync({ alter: true }))
-        .then(() => User.describe())
-        .then((data) => {
-          expect(data).to.not.have.ownProperty('age');
-          expect(data).to.have.ownProperty('name');
-        });
+
+      await this.sequelize.sync();
+
+      this.sequelize.define('testSync', {
+        name: Sequelize.STRING
+      });
+
+      await this.sequelize.sync({ alter: true });
+
+      const data = await User.describe();
+      expect(data).to.not.have.ownProperty('age');
+      expect(data).to.have.ownProperty('name');
     });
 
-    it('should add a column if it exists in the model but not the database', function () {
+    it('should add a column if it exists in the model but not the database', async function () {
       const testSync = this.sequelize.define('testSync', {
         name: Sequelize.STRING
       });
-      return this.sequelize
-        .sync()
-        .then(() =>
-          this.sequelize.define('testSync', {
-            name: Sequelize.STRING,
-            age: Sequelize.INTEGER
-          })
-        )
-        .then(() => this.sequelize.sync({ alter: true }))
-        .then(() => testSync.describe())
-        .then((data) => expect(data).to.have.ownProperty('age'));
+
+      await this.sequelize.sync();
+
+      this.sequelize.define('testSync', {
+        name: Sequelize.STRING,
+        age: Sequelize.INTEGER
+      });
+
+      await this.sequelize.sync({ alter: true });
+
+      const data = await testSync.describe();
+      expect(data).to.have.ownProperty('age');
     });
 
-    it('should change a column if it exists in the model but is different in the database', function () {
+    it('should change a column if it exists in the model but is different in the database', async function () {
       const testSync = this.sequelize.define('testSync', {
         name: Sequelize.STRING,
         age: Sequelize.INTEGER
       });
-      return this.sequelize
-        .sync()
-        .then(() =>
-          this.sequelize.define('testSync', {
-            name: Sequelize.STRING,
-            age: Sequelize.STRING
-          })
-        )
-        .then(() => this.sequelize.sync({ alter: true }))
-        .then(() => testSync.describe())
-        .then((data) => {
-          expect(data).to.have.ownProperty('age');
-          expect(data.age.type).to.have.string('CHAR'); // CHARACTER VARYING, VARCHAR(n)
-        });
+
+      await this.sequelize.sync();
+
+      this.sequelize.define('testSync', {
+        name: Sequelize.STRING,
+        age: Sequelize.STRING
+      });
+
+      await this.sequelize.sync({ alter: true });
+
+      const data = await testSync.describe();
+      expect(data).to.have.ownProperty('age');
+      expect(data.age.type).to.have.string('CHAR'); // CHARACTER VARYING, VARCHAR(n)
     });
 
-    it('should not alter table if data type does not change', function () {
+    it('should not alter table if data type does not change', async function () {
       const testSync = this.sequelize.define('testSync', {
         name: Sequelize.STRING,
         age: Sequelize.STRING
       });
-      return this.sequelize
-        .sync()
-        .then(() => testSync.create({ name: 'test', age: '1' }))
-        .then(() => this.sequelize.sync({ alter: true }))
-        .then(() => testSync.findOne())
-        .then((data) => {
-          expect(data.dataValues.name).to.eql('test');
-          expect(data.dataValues.age).to.eql('1');
-        });
+
+      await this.sequelize.sync();
+      await testSync.create({ name: 'test', age: '1' });
+      await this.sequelize.sync({ alter: true });
+
+      const data = await testSync.findOne();
+      expect(data.dataValues.name).to.eql('test');
+      expect(data.dataValues.age).to.eql('1');
     });
 
-    it('should properly create composite index without affecting individual fields', function () {
+    it('should properly create composite index without affecting individual fields', async function () {
       const testSync = this.sequelize.define(
         'testSync',
         {
@@ -96,24 +94,25 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         },
         { indexes: [{ unique: true, fields: ['name', 'age'] }] }
       );
-      return this.sequelize
-        .sync()
-        .then(() => testSync.create({ name: 'test' }))
-        .then(() => testSync.create({ name: 'test2' }))
-        .then(() => testSync.create({ name: 'test3' }))
-        .then(() => testSync.create({ age: '1' }))
-        .then(() => testSync.create({ age: '2' }))
-        .then(() => testSync.create({ name: 'test', age: '1' }))
-        .then(() => testSync.create({ name: 'test', age: '2' }))
-        .then(() => testSync.create({ name: 'test2', age: '2' }))
-        .then(() => testSync.create({ name: 'test3', age: '2' }))
-        .then(() => testSync.create({ name: 'test3', age: '1' }))
-        .then((data) => {
-          expect(data.dataValues.name).to.eql('test3');
-          expect(data.dataValues.age).to.eql('1');
-        });
+
+      await this.sequelize.sync();
+
+      await testSync.create({ name: 'test' });
+      await testSync.create({ name: 'test2' });
+      await testSync.create({ name: 'test3' });
+      await testSync.create({ age: '1' });
+      await testSync.create({ age: '2' });
+      await testSync.create({ name: 'test', age: '1' });
+      await testSync.create({ name: 'test', age: '2' });
+      await testSync.create({ name: 'test2', age: '2' });
+      await testSync.create({ name: 'test3', age: '2' });
+
+      const data = await testSync.create({ name: 'test3', age: '1' });
+      expect(data.dataValues.name).to.eql('test3');
+      expect(data.dataValues.age).to.eql('1');
     });
-    it('should properly create composite index that fails on constraint violation', function () {
+
+    it('should properly create composite index that fails on constraint violation', async function () {
       const testSync = this.sequelize.define(
         'testSync',
         {
@@ -122,17 +121,15 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         },
         { indexes: [{ unique: true, fields: ['name', 'age'] }] }
       );
-      return this.sequelize
-        .sync()
-        .then(() => testSync.create({ name: 'test', age: '1' }))
-        .then(() => testSync.create({ name: 'test', age: '1' }))
-        .then(
-          (data) => expect(data).not.to.be.ok,
-          (error) => expect(error).to.be.ok
-        );
+
+      await this.sequelize.sync();
+      await testSync.create({ name: 'test', age: '1' });
+
+      const error = await expect(testSync.create({ name: 'test', age: '1' })).to.be.rejected;
+      expect(error).to.be.ok;
     });
 
-    it('should properly alter tables when there are foreign keys', function () {
+    it('should properly alter tables when there are foreign keys', async function () {
       const foreignKeyTestSyncA = this.sequelize.define('foreignKeyTestSyncA', {
         dummy: Sequelize.STRING
       });
@@ -144,12 +141,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       foreignKeyTestSyncA.hasMany(foreignKeyTestSyncB);
       foreignKeyTestSyncB.belongsTo(foreignKeyTestSyncA);
 
-      return this.sequelize.sync({ alter: true }).then(() => this.sequelize.sync({ alter: true }));
+      await this.sequelize.sync({ alter: true });
+      await this.sequelize.sync({ alter: true });
     });
 
     describe('indexes', () => {
       describe('with alter:true', () => {
-        it('should not duplicate named indexes after multiple sync calls', function () {
+        it('should not duplicate named indexes after multiple sync calls', async function () {
           const User = this.sequelize.define(
             'testSync',
             {
@@ -173,23 +171,23 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             }
           );
 
-          return User.sync({ sync: true })
-            .then(() => User.sync({ alter: true }))
-            .then(() => User.sync({ alter: true }))
-            .then(() => User.sync({ alter: true }))
-            .then(() => this.sequelize.getQueryInterface().showIndex(User.getTableName()))
-            .then((results) => {
-              expect(results).to.have.length(4 + 1);
-              expect(results.filter((r) => r.primary)).to.have.length(1);
+          await User.sync({ sync: true });
+          await User.sync({ alter: true });
+          await User.sync({ alter: true });
+          await User.sync({ alter: true });
 
-              expect(results.filter((r) => r.name === 'another_index_email_mobile')).to.have.length(1);
-              expect(results.filter((r) => r.name === 'another_index_phone_mobile')).to.have.length(1);
-              expect(results.filter((r) => r.name === 'another_index_email')).to.have.length(1);
-              expect(results.filter((r) => r.name === 'another_index_mobile')).to.have.length(1);
-            });
+          const results = await this.sequelize.getQueryInterface().showIndex(User.getTableName());
+
+          expect(results).to.have.length(4 + 1);
+          expect(results.filter((r) => r.primary)).to.have.length(1);
+
+          expect(results.filter((r) => r.name === 'another_index_email_mobile')).to.have.length(1);
+          expect(results.filter((r) => r.name === 'another_index_phone_mobile')).to.have.length(1);
+          expect(results.filter((r) => r.name === 'another_index_email')).to.have.length(1);
+          expect(results.filter((r) => r.name === 'another_index_mobile')).to.have.length(1);
         });
 
-        it('should not duplicate unnamed indexes after multiple sync calls', function () {
+        it('should not duplicate unnamed indexes after multiple sync calls', async function () {
           const User = this.sequelize.define(
             'testSync',
             {
@@ -213,19 +211,19 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             }
           );
 
-          return User.sync({ sync: true })
-            .then(() => User.sync({ alter: true }))
-            .then(() => User.sync({ alter: true }))
-            .then(() => User.sync({ alter: true }))
-            .then(() => this.sequelize.getQueryInterface().showIndex(User.getTableName()))
-            .then((results) => {
-              expect(results).to.have.length(4 + 1);
-              expect(results.filter((r) => r.primary)).to.have.length(1);
-            });
+          await User.sync({ sync: true });
+          await User.sync({ alter: true });
+          await User.sync({ alter: true });
+          await User.sync({ alter: true });
+
+          const results = await this.sequelize.getQueryInterface().showIndex(User.getTableName());
+
+          expect(results).to.have.length(4 + 1);
+          expect(results.filter((r) => r.primary)).to.have.length(1);
         });
       });
 
-      it('should create only one unique index for unique:true column', function () {
+      it('should create only one unique index for unique:true column', async function () {
         const User = this.sequelize.define('testSync', {
           email: {
             type: Sequelize.STRING,
@@ -233,19 +231,17 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         });
 
-        return User.sync({ force: true })
-          .then(() => {
-            return this.sequelize.getQueryInterface().showIndex(User.getTableName());
-          })
-          .then((results) => {
-            expect(results).to.have.length(2);
-            expect(results.filter((r) => r.primary)).to.have.length(1);
+        await User.sync({ force: true });
 
-            expect(results.filter((r) => r.unique === true && r.primary === false)).to.have.length(1);
-          });
+        const results = await this.sequelize.getQueryInterface().showIndex(User.getTableName());
+
+        expect(results).to.have.length(2);
+        expect(results.filter((r) => r.primary)).to.have.length(1);
+
+        expect(results.filter((r) => r.unique === true && r.primary === false)).to.have.length(1);
       });
 
-      it('should create only one unique index for unique:true columns', function () {
+      it('should create only one unique index for unique:true columns', async function () {
         const User = this.sequelize.define('testSync', {
           email: {
             type: Sequelize.STRING,
@@ -257,19 +253,17 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         });
 
-        return User.sync({ force: true })
-          .then(() => {
-            return this.sequelize.getQueryInterface().showIndex(User.getTableName());
-          })
-          .then((results) => {
-            expect(results).to.have.length(3);
-            expect(results.filter((r) => r.primary)).to.have.length(1);
+        await User.sync({ force: true });
 
-            expect(results.filter((r) => r.unique === true && r.primary === false)).to.have.length(2);
-          });
+        const results = await this.sequelize.getQueryInterface().showIndex(User.getTableName());
+
+        expect(results).to.have.length(3);
+        expect(results.filter((r) => r.primary)).to.have.length(1);
+
+        expect(results.filter((r) => r.unique === true && r.primary === false)).to.have.length(2);
       });
 
-      it('should create only one unique index for unique:true columns taking care of options.indexes', function () {
+      it('should create only one unique index for unique:true columns taking care of options.indexes', async function () {
         const User = this.sequelize.define(
           'testSync',
           {
@@ -287,20 +281,18 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        return User.sync({ force: true })
-          .then(() => {
-            return this.sequelize.getQueryInterface().showIndex(User.getTableName());
-          })
-          .then((results) => {
-            expect(results).to.have.length(4);
-            expect(results.filter((r) => r.primary)).to.have.length(1);
+        await User.sync({ force: true });
 
-            expect(results.filter((r) => r.unique === true && r.primary === false)).to.have.length(3);
-            expect(results.filter((r) => r.name === 'wow_my_index')).to.have.length(1);
-          });
+        const results = await this.sequelize.getQueryInterface().showIndex(User.getTableName());
+
+        expect(results).to.have.length(4);
+        expect(results.filter((r) => r.primary)).to.have.length(1);
+
+        expect(results.filter((r) => r.unique === true && r.primary === false)).to.have.length(3);
+        expect(results.filter((r) => r.name === 'wow_my_index')).to.have.length(1);
       });
 
-      it('should create only one unique index for unique:name column', function () {
+      it('should create only one unique index for unique:name column', async function () {
         const User = this.sequelize.define('testSync', {
           email: {
             type: Sequelize.STRING,
@@ -308,19 +300,17 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         });
 
-        return User.sync({ force: true })
-          .then(() => {
-            return this.sequelize.getQueryInterface().showIndex(User.getTableName());
-          })
-          .then((results) => {
-            expect(results).to.have.length(2);
-            expect(results.filter((r) => r.primary)).to.have.length(1);
+        await User.sync({ force: true });
 
-            expect(results.filter((r) => r.unique === true && r.primary === false)).to.have.length(1);
-          });
+        const results = await this.sequelize.getQueryInterface().showIndex(User.getTableName());
+
+        expect(results).to.have.length(2);
+        expect(results.filter((r) => r.primary)).to.have.length(1);
+
+        expect(results.filter((r) => r.unique === true && r.primary === false)).to.have.length(1);
       });
 
-      it('should create only one unique index for unique:name columns', function () {
+      it('should create only one unique index for unique:name columns', async function () {
         const User = this.sequelize.define('testSync', {
           email: {
             type: Sequelize.STRING,
@@ -332,16 +322,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         });
 
-        return User.sync({ force: true })
-          .then(() => {
-            return this.sequelize.getQueryInterface().showIndex(User.getTableName());
-          })
-          .then((results) => {
-            expect(results).to.have.length(2);
-            expect(results.filter((r) => r.primary)).to.have.length(1);
+        await User.sync({ force: true });
 
-            expect(results.filter((r) => r.unique === true && r.primary === false)).to.have.length(1);
-          });
+        const results = await this.sequelize.getQueryInterface().showIndex(User.getTableName());
+
+        expect(results).to.have.length(2);
+        expect(results.filter((r) => r.primary)).to.have.length(1);
+
+        expect(results.filter((r) => r.unique === true && r.primary === false)).to.have.length(1);
       });
     });
   });

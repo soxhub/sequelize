@@ -58,47 +58,37 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
   if (current.dialect.supports.upserts) {
     describe('upsert', () => {
-      it('works with upsert on id', function () {
-        return this.User.upsert({ id: 42, username: 'john' })
-          .then((created) => {
-            expect(created).to.be.ok;
+      it('works with upsert on id', async function () {
+        const created = await this.User.upsert({ id: 42, username: 'john' });
+        expect(created).to.be.ok;
 
-            this.clock.tick(1000);
-            return this.User.upsert({ id: 42, username: 'doe' });
-          })
-          .then((created) => {
-            expect(created).not.to.be.ok;
+        this.clock.tick(1000);
 
-            return this.User.findById(42);
-          })
-          .then((user) => {
-            expect(user.createdAt).to.be.ok;
-            expect(user.username).to.equal('doe');
-            expect(user.updatedAt).to.be.afterTime(user.createdAt);
-          });
+        const updated = await this.User.upsert({ id: 42, username: 'doe' });
+        expect(updated).not.to.be.ok;
+
+        const user = await this.User.findById(42);
+        expect(user.createdAt).to.be.ok;
+        expect(user.username).to.equal('doe');
+        expect(user.updatedAt).to.be.afterTime(user.createdAt);
       });
 
-      it('works with upsert on a composite key', function () {
-        return this.User.upsert({ foo: 'baz', bar: 19, username: 'john' })
-          .then((created) => {
-            expect(created).to.be.ok;
+      it('works with upsert on a composite key', async function () {
+        const created = await this.User.upsert({ foo: 'baz', bar: 19, username: 'john' });
+        expect(created).to.be.ok;
 
-            this.clock.tick(1000);
-            return this.User.upsert({ foo: 'baz', bar: 19, username: 'doe' });
-          })
-          .then((created) => {
-            expect(created).not.to.be.ok;
+        this.clock.tick(1000);
 
-            return this.User.find({ where: { foo: 'baz', bar: 19 } });
-          })
-          .then((user) => {
-            expect(user.createdAt).to.be.ok;
-            expect(user.username).to.equal('doe');
-            expect(user.updatedAt).to.be.afterTime(user.createdAt);
-          });
+        const updated = await this.User.upsert({ foo: 'baz', bar: 19, username: 'doe' });
+        expect(updated).not.to.be.ok;
+
+        const user = await this.User.find({ where: { foo: 'baz', bar: 19 } });
+        expect(user.createdAt).to.be.ok;
+        expect(user.username).to.equal('doe');
+        expect(user.updatedAt).to.be.afterTime(user.createdAt);
       });
 
-      it('should work with UUIDs wth default values', function () {
+      it('should work with UUIDs wth default values', async function () {
         const User = this.sequelize.define('User', {
           id: {
             primaryKey: true,
@@ -113,12 +103,11 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         });
 
-        return User.sync({ force: true }).then(() => {
-          return User.upsert({ name: 'John Doe' });
-        });
+        await User.sync({ force: true });
+        await User.upsert({ name: 'John Doe' });
       });
 
-      it('works with upsert on a composite primary key', function () {
+      it('works with upsert on a composite primary key', async function () {
         const User = this.sequelize.define('user', {
           a: {
             type: Sequelize.STRING,
@@ -131,40 +120,33 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           username: DataTypes.STRING
         });
 
-        return User.sync({ force: true })
-          .then(() => {
-            return Promise.all([
-              // Create two users
-              User.upsert({ a: 'a', b: 'b', username: 'john' }),
-              User.upsert({ a: 'a', b: 'a', username: 'curt' })
-            ]);
-          })
-          .then(([created1, created2]) => {
-            expect(created1).to.be.ok;
-            expect(created2).to.be.ok;
+        await User.sync({ force: true });
 
-            this.clock.tick(1000);
-            // Update the first one
-            return User.upsert({ a: 'a', b: 'b', username: 'doe' });
-          })
-          .then((created) => {
-            expect(created).not.to.be.ok;
+        const [created1, created2] = await Promise.all([
+          // Create two users
+          User.upsert({ a: 'a', b: 'b', username: 'john' }),
+          User.upsert({ a: 'a', b: 'a', username: 'curt' })
+        ]);
 
-            return User.find({ where: { a: 'a', b: 'b' } });
-          })
-          .then((user1) => {
-            expect(user1.createdAt).to.be.ok;
-            expect(user1.username).to.equal('doe');
-            expect(user1.updatedAt).to.be.afterTime(user1.createdAt);
+        expect(created1).to.be.ok;
+        expect(created2).to.be.ok;
 
-            return User.find({ where: { a: 'a', b: 'a' } });
-          })
-          .then((user2) => {
-            // The second one should not be updated
-            expect(user2.createdAt).to.be.ok;
-            expect(user2.username).to.equal('curt');
-            expect(user2.updatedAt).to.equalTime(user2.createdAt);
-          });
+        this.clock.tick(1000);
+
+        // Update the first one
+        const updated = await User.upsert({ a: 'a', b: 'b', username: 'doe' });
+        expect(updated).not.to.be.ok;
+
+        const user1 = await User.find({ where: { a: 'a', b: 'b' } });
+        expect(user1.createdAt).to.be.ok;
+        expect(user1.username).to.equal('doe');
+        expect(user1.updatedAt).to.be.afterTime(user1.createdAt);
+
+        const user2 = await User.find({ where: { a: 'a', b: 'a' } });
+        // The second one should not be updated
+        expect(user2.createdAt).to.be.ok;
+        expect(user2.username).to.equal('curt');
+        expect(user2.updatedAt).to.equalTime(user2.createdAt);
       });
 
       it('supports validations', function () {
@@ -182,7 +164,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         );
       });
 
-      it('supports skipping validations', function () {
+      it('supports skipping validations', async function () {
         const User = this.sequelize.define('user', {
           email: {
             type: Sequelize.STRING,
@@ -194,152 +176,123 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
         const options = { validate: false };
 
-        return User.sync({ force: true })
-          .then(() => User.upsert({ id: 1, email: 'notanemail' }, options))
-          .then((created) => {
-            expect(created).to.be.ok;
-          });
+        await User.sync({ force: true });
+
+        const created = await User.upsert({ id: 1, email: 'notanemail' }, options);
+        expect(created).to.be.ok;
       });
 
-      it('works with BLOBs', function () {
-        return this.User.upsert({ id: 42, username: 'john', blob: new Buffer('kaj') })
-          .then((created) => {
-            expect(created).to.be.ok;
+      it('works with BLOBs', async function () {
+        const created = await this.User.upsert({ id: 42, username: 'john', blob: new Buffer('kaj') });
+        expect(created).to.be.ok;
 
-            this.clock.tick(1000);
-            return this.User.upsert({ id: 42, username: 'doe', blob: new Buffer('andrea') });
-          })
-          .then((created) => {
-            expect(created).not.to.be.ok;
+        this.clock.tick(1000);
 
-            return this.User.findById(42);
-          })
-          .then((user) => {
-            expect(user.createdAt).to.be.ok;
-            expect(user.username).to.equal('doe');
-            expect(user.blob.toString()).to.equal('andrea');
-            expect(user.updatedAt).to.be.afterTime(user.createdAt);
-          });
+        const updated = await this.User.upsert({ id: 42, username: 'doe', blob: new Buffer('andrea') });
+        expect(updated).not.to.be.ok;
+
+        const user = await this.User.findById(42);
+        expect(user.createdAt).to.be.ok;
+        expect(user.username).to.equal('doe');
+        expect(user.blob.toString()).to.equal('andrea');
+        expect(user.updatedAt).to.be.afterTime(user.createdAt);
       });
 
-      it('works with .field', function () {
-        return this.User.upsert({ id: 42, baz: 'foo' })
-          .then((created) => {
-            expect(created).to.be.ok;
+      it('works with .field', async function () {
+        const created = await this.User.upsert({ id: 42, baz: 'foo' });
+        expect(created).to.be.ok;
 
-            return this.User.upsert({ id: 42, baz: 'oof' });
-          })
-          .then((created) => {
-            expect(created).not.to.be.ok;
+        const updated = await this.User.upsert({ id: 42, baz: 'oof' });
+        expect(updated).not.to.be.ok;
 
-            return this.User.findById(42);
-          })
-          .then((user) => {
-            expect(user.baz).to.equal('oof');
-          });
+        const user = await this.User.findById(42);
+        expect(user.baz).to.equal('oof');
       });
 
-      it('works with primary key using .field', function () {
-        return this.ModelWithFieldPK.upsert({ userId: 42, foo: 'first' })
-          .then((created) => {
-            expect(created).to.be.ok;
+      it('works with primary key using .field', async function () {
+        const created = await this.ModelWithFieldPK.upsert({ userId: 42, foo: 'first' });
+        expect(created).to.be.ok;
 
-            this.clock.tick(1000);
-            return this.ModelWithFieldPK.upsert({ userId: 42, foo: 'second' });
-          })
-          .then((created) => {
-            expect(created).not.to.be.ok;
+        this.clock.tick(1000);
 
-            return this.ModelWithFieldPK.findOne({ where: { userId: 42 } });
-          })
-          .then((instance) => {
-            expect(instance.foo).to.equal('second');
-          });
+        const updated = await this.ModelWithFieldPK.upsert({ userId: 42, foo: 'second' });
+        expect(updated).not.to.be.ok;
+
+        const instance = await this.ModelWithFieldPK.findOne({ where: { userId: 42 } });
+        expect(instance.foo).to.equal('second');
       });
 
-      it('works with database functions', function () {
-        return this.User.upsert({ id: 42, username: 'john', foo: this.sequelize.fn('upper', 'mixedCase1') })
-          .then((created) => {
-            expect(created).to.be.ok;
+      it('works with database functions', async function () {
+        const created = await this.User.upsert({
+          id: 42,
+          username: 'john',
+          foo: this.sequelize.fn('upper', 'mixedCase1')
+        });
+        expect(created).to.be.ok;
 
-            this.clock.tick(1000);
-            return this.User.upsert({ id: 42, username: 'doe', foo: this.sequelize.fn('upper', 'mixedCase2') });
-          })
-          .then((created) => {
-            expect(created).not.to.be.ok;
+        this.clock.tick(1000);
 
-            return this.User.findById(42);
-          })
-          .then((user) => {
-            expect(user.createdAt).to.be.ok;
-            expect(user.username).to.equal('doe');
-            expect(user.foo).to.equal('MIXEDCASE2');
-          });
+        const updated = await this.User.upsert({
+          id: 42,
+          username: 'doe',
+          foo: this.sequelize.fn('upper', 'mixedCase2')
+        });
+        expect(updated).not.to.be.ok;
+
+        const user = await this.User.findById(42);
+        expect(user.createdAt).to.be.ok;
+        expect(user.username).to.equal('doe');
+        expect(user.foo).to.equal('MIXEDCASE2');
       });
 
-      it('does not overwrite createdAt time on update', function () {
-        let originalCreatedAt;
-        let originalUpdatedAt;
+      it('does not overwrite createdAt time on update', async function () {
         const clock = this.clock;
-        return this.User.create({ id: 42, username: 'john' })
-          .then(() => {
-            return this.User.findById(42);
-          })
-          .then((user) => {
-            originalCreatedAt = user.createdAt;
-            originalUpdatedAt = user.updatedAt;
-            clock.tick(5000);
-            return this.User.upsert({ id: 42, username: 'doe' });
-          })
-          .then(() => {
-            return this.User.findById(42);
-          })
-          .then((user) => {
-            expect(user.updatedAt).to.be.gt(originalUpdatedAt);
-            expect(user.createdAt).to.deep.equal(originalCreatedAt);
-          });
+
+        await this.User.create({ id: 42, username: 'john' });
+
+        const original = await this.User.findById(42);
+        const originalCreatedAt = original.createdAt;
+        const originalUpdatedAt = original.updatedAt;
+
+        clock.tick(5000);
+        await this.User.upsert({ id: 42, username: 'doe' });
+
+        const user = await this.User.findById(42);
+        expect(user.updatedAt).to.be.gt(originalUpdatedAt);
+        expect(user.createdAt).to.deep.equal(originalCreatedAt);
       });
 
-      it('does not update using default values', function () {
-        return this.User.create({ id: 42, username: 'john', baz: 'new baz value' })
-          .then(() => {
-            return this.User.findById(42);
-          })
-          .then((user) => {
-            // 'username' should be 'john' since it was set
-            expect(user.username).to.equal('john');
-            // 'baz' should be 'new baz value' since it was set
-            expect(user.baz).to.equal('new baz value');
-            return this.User.upsert({ id: 42, username: 'doe' });
-          })
-          .then(() => {
-            return this.User.findById(42);
-          })
-          .then((user) => {
-            // 'username' was updated
-            expect(user.username).to.equal('doe');
-            // 'baz' should still be 'new baz value' since it was not updated
-            expect(user.baz).to.equal('new baz value');
-          });
+      it('does not update using default values', async function () {
+        await this.User.create({ id: 42, username: 'john', baz: 'new baz value' });
+
+        const original = await this.User.findById(42);
+        // 'username' should be 'john' since it was set
+        expect(original.username).to.equal('john');
+        // 'baz' should be 'new baz value' since it was set
+        expect(original.baz).to.equal('new baz value');
+
+        await this.User.upsert({ id: 42, username: 'doe' });
+
+        const user = await this.User.findById(42);
+        // 'username' was updated
+        expect(user.username).to.equal('doe');
+        // 'baz' should still be 'new baz value' since it was not updated
+        expect(user.baz).to.equal('new baz value');
       });
 
-      it('does not update when setting current values', function () {
-        return this.User.create({ id: 42, username: 'john' })
-          .then(() => {
-            return this.User.findById(42);
-          })
-          .then((user) => {
-            return this.User.upsert({ id: user.id, username: user.username });
-          })
-          .then((created) => {
-            // After set node-mysql flags = '-FOUND_ROWS' in connection of mysql,
-            // result from upsert should be false when upsert a row to its current value
-            // https://dev.mysql.com/doc/refman/5.7/en/insert-on-duplicate.html
-            expect(created).to.equal(false);
-          });
+      it('does not update when setting current values', async function () {
+        await this.User.create({ id: 42, username: 'john' });
+
+        const user = await this.User.findById(42);
+        const created = await this.User.upsert({ id: user.id, username: user.username });
+
+        // After set node-mysql flags = '-FOUND_ROWS' in connection of mysql,
+        // result from upsert should be false when upsert a row to its current value
+        // https://dev.mysql.com/doc/refman/5.7/en/insert-on-duplicate.html
+        expect(created).to.equal(false);
       });
 
-      it('Works when two separate uniqueKeys are passed', function () {
+      it('Works when two separate uniqueKeys are passed', async function () {
         const User = this.sequelize.define('User', {
           username: {
             type: Sequelize.STRING,
@@ -354,29 +307,26 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         });
         const clock = this.clock;
-        return User.sync({ force: true }).then(() => {
-          return User.upsert({ username: 'user1', email: 'user1@domain.ext', city: 'City' })
-            .then((created) => {
-              expect(created).to.be.ok;
 
-              clock.tick(1000);
-              return User.upsert({ username: 'user1', email: 'user1@domain.ext', city: 'New City' });
-            })
-            .then((created) => {
-              expect(created).not.to.be.ok;
+        await User.sync({ force: true });
 
-              clock.tick(1000);
-              return User.findOne({ where: { username: 'user1', email: 'user1@domain.ext' } });
-            })
-            .then((user) => {
-              expect(user.createdAt).to.be.ok;
-              expect(user.city).to.equal('New City');
-              expect(user.updatedAt).to.be.afterTime(user.createdAt);
-            });
-        });
+        const created = await User.upsert({ username: 'user1', email: 'user1@domain.ext', city: 'City' });
+        expect(created).to.be.ok;
+
+        clock.tick(1000);
+
+        const updated = await User.upsert({ username: 'user1', email: 'user1@domain.ext', city: 'New City' });
+        expect(updated).not.to.be.ok;
+
+        clock.tick(1000);
+
+        const user = await User.findOne({ where: { username: 'user1', email: 'user1@domain.ext' } });
+        expect(user.createdAt).to.be.ok;
+        expect(user.city).to.equal('New City');
+        expect(user.updatedAt).to.be.afterTime(user.createdAt);
       });
 
-      it('works when indexes are created via indexes array', function () {
+      it('works when indexes are created via indexes array', async function () {
         const User = this.sequelize.define(
           'User',
           {
@@ -398,26 +348,20 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        return User.sync({ force: true }).then(() => {
-          return User.upsert({ username: 'user1', email: 'user1@domain.ext', city: 'City' })
-            .then((created) => {
-              expect(created).to.be.ok;
+        await User.sync({ force: true });
 
-              return User.upsert({ username: 'user1', email: 'user1@domain.ext', city: 'New City' });
-            })
-            .then((created) => {
-              expect(created).not.to.be.ok;
+        const created = await User.upsert({ username: 'user1', email: 'user1@domain.ext', city: 'City' });
+        expect(created).to.be.ok;
 
-              return User.findOne({ where: { username: 'user1', email: 'user1@domain.ext' } });
-            })
-            .then((user) => {
-              expect(user.createdAt).to.be.ok;
-              expect(user.city).to.equal('New City');
-            });
-        });
+        const updated = await User.upsert({ username: 'user1', email: 'user1@domain.ext', city: 'New City' });
+        expect(updated).not.to.be.ok;
+
+        const user = await User.findOne({ where: { username: 'user1', email: 'user1@domain.ext' } });
+        expect(user.createdAt).to.be.ok;
+        expect(user.city).to.equal('New City');
       });
 
-      it('works when composite indexes are created via indexes array', () => {
+      it('works when composite indexes are created via indexes array', async () => {
         const User = current.define(
           'User',
           {
@@ -435,26 +379,20 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        return User.sync({ force: true }).then(() => {
-          return User.upsert({ name: 'user1', address: 'address', city: 'City' })
-            .then((created) => {
-              expect(created).to.be.ok;
+        await User.sync({ force: true });
 
-              return User.upsert({ name: 'user1', address: 'address', city: 'New City' });
-            })
-            .then((created) => {
-              expect(created).not.to.be.ok;
+        const created = await User.upsert({ name: 'user1', address: 'address', city: 'City' });
+        expect(created).to.be.ok;
 
-              return User.findOne({ where: { name: 'user1', address: 'address' } });
-            })
-            .then((user) => {
-              expect(user.createdAt).to.be.ok;
-              expect(user.city).to.equal('New City');
-            });
-        });
+        const updated = await User.upsert({ name: 'user1', address: 'address', city: 'New City' });
+        expect(updated).not.to.be.ok;
+
+        const user = await User.findOne({ where: { name: 'user1', address: 'address' } });
+        expect(user.createdAt).to.be.ok;
+        expect(user.city).to.equal('New City');
       });
 
-      it('works when deletedAt is Infinity and part of primary key', function () {
+      it('works when deletedAt is Infinity and part of primary key', async function () {
         const User = this.sequelize.define(
           'User',
           {
@@ -475,47 +413,40 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        return User.sync({ force: true }).then(() => {
-          return Promise.all([
-            User.create({ name: 'user1' }),
-            User.create({ name: 'user2', deletedAt: Infinity }),
+        await User.sync({ force: true });
 
-            // this record is soft deleted
-            User.create({ name: 'user3', deletedAt: -Infinity })
-          ])
-            .then(() => {
-              return User.upsert({ name: 'user1', address: 'address' });
-            })
-            .then(() => {
-              return User.findAll({
-                where: { address: null }
-              });
-            })
-            .then((users) => {
-              expect(users).to.have.lengthOf(2);
-            });
+        await Promise.all([
+          User.create({ name: 'user1' }),
+          User.create({ name: 'user2', deletedAt: Infinity }),
+
+          // this record is soft deleted
+          User.create({ name: 'user3', deletedAt: -Infinity })
+        ]);
+
+        await User.upsert({ name: 'user1', address: 'address' });
+
+        const users = await User.findAll({
+          where: { address: null }
         });
+
+        expect(users).to.have.lengthOf(2);
       });
 
       if (current.dialect.supports.returnValues) {
         describe('with returning option', () => {
-          it('works with upsert on id', function () {
-            return this.User.upsert({ id: 42, username: 'john' }, { returning: true })
-              .then(([user, created]) => {
-                expect(user.get('id')).to.equal(42);
-                expect(user.get('username')).to.equal('john');
-                expect(created).to.be.true;
+          it('works with upsert on id', async function () {
+            const [inserted, wasCreated] = await this.User.upsert({ id: 42, username: 'john' }, { returning: true });
+            expect(inserted.get('id')).to.equal(42);
+            expect(inserted.get('username')).to.equal('john');
+            expect(wasCreated).to.be.true;
 
-                return this.User.upsert({ id: 42, username: 'doe' }, { returning: true });
-              })
-              .then(([user, created]) => {
-                expect(user.get('id')).to.equal(42);
-                expect(user.get('username')).to.equal('doe');
-                expect(created).to.be.false;
-              });
+            const [user, created] = await this.User.upsert({ id: 42, username: 'doe' }, { returning: true });
+            expect(user.get('id')).to.equal(42);
+            expect(user.get('username')).to.equal('doe');
+            expect(created).to.be.false;
           });
 
-          it('works for table with custom primary key field', function () {
+          it('works for table with custom primary key field', async function () {
             const User = this.sequelize.define('User', {
               id: {
                 type: DataTypes.INTEGER,
@@ -528,25 +459,20 @@ describe(Support.getTestDialectTeaser('Model'), () => {
               }
             });
 
-            return User.sync({ force: true })
-              .then(() => {
-                return User.upsert({ id: 42, username: 'john' }, { returning: true });
-              })
-              .then(([user, created]) => {
-                expect(user.get('id')).to.equal(42);
-                expect(user.get('username')).to.equal('john');
-                expect(created).to.be.true;
+            await User.sync({ force: true });
 
-                return User.upsert({ id: 42, username: 'doe' }, { returning: true });
-              })
-              .then(([user, created]) => {
-                expect(user.get('id')).to.equal(42);
-                expect(user.get('username')).to.equal('doe');
-                expect(created).to.be.false;
-              });
+            const [inserted, wasCreated] = await User.upsert({ id: 42, username: 'john' }, { returning: true });
+            expect(inserted.get('id')).to.equal(42);
+            expect(inserted.get('username')).to.equal('john');
+            expect(wasCreated).to.be.true;
+
+            const [user, created] = await User.upsert({ id: 42, username: 'doe' }, { returning: true });
+            expect(user.get('id')).to.equal(42);
+            expect(user.get('username')).to.equal('doe');
+            expect(created).to.be.false;
           });
 
-          it('works for non incrementing primaryKey', function () {
+          it('works for non incrementing primaryKey', async function () {
             const User = this.sequelize.define('User', {
               id: {
                 type: DataTypes.STRING,
@@ -558,22 +484,17 @@ describe(Support.getTestDialectTeaser('Model'), () => {
               }
             });
 
-            return User.sync({ force: true })
-              .then(() => {
-                return User.upsert({ id: 'surya', username: 'john' }, { returning: true });
-              })
-              .then(([user, created]) => {
-                expect(user.get('id')).to.equal('surya');
-                expect(user.get('username')).to.equal('john');
-                expect(created).to.be.true;
+            await User.sync({ force: true });
 
-                return User.upsert({ id: 'surya', username: 'doe' }, { returning: true });
-              })
-              .then(([user, created]) => {
-                expect(user.get('id')).to.equal('surya');
-                expect(user.get('username')).to.equal('doe');
-                expect(created).to.be.false;
-              });
+            const [inserted, wasCreated] = await User.upsert({ id: 'surya', username: 'john' }, { returning: true });
+            expect(inserted.get('id')).to.equal('surya');
+            expect(inserted.get('username')).to.equal('john');
+            expect(wasCreated).to.be.true;
+
+            const [user, created] = await User.upsert({ id: 'surya', username: 'doe' }, { returning: true });
+            expect(user.get('id')).to.equal('surya');
+            expect(user.get('username')).to.equal('doe');
+            expect(created).to.be.false;
           });
         });
       }

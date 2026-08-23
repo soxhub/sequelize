@@ -192,26 +192,24 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             return this.ModelUnderTest.sync({ force: true });
           });
 
-          it('sets the column to not allow null', function () {
-            return this.ModelUnderTest.describe().then((fields) => {
-              expect(fields.identifier).to.include({ allowNull: false });
-            });
+          it('sets the column to not allow null', async function () {
+            const fields = await this.ModelUnderTest.describe();
+            expect(fields.identifier).to.include({ allowNull: false });
           });
         });
 
-        it('should support instance.destroy()', function () {
-          return this.User.create().then((user) => {
-            return user.destroy();
-          });
+        it('should support instance.destroy()', async function () {
+          const user = await this.User.create();
+          await user.destroy();
         });
 
-        it('should support Model.destroy()', function () {
-          return this.User.create().then((user) => {
-            return this.User.destroy({
-              where: {
-                id: user.get('id')
-              }
-            });
+        it('should support Model.destroy()', async function () {
+          const user = await this.User.create();
+
+          await this.User.destroy({
+            where: {
+              id: user.get('id')
+            }
           });
         });
       });
@@ -221,123 +219,102 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           return this.Comment.bulkCreate([{ notes: 'Number one' }, { notes: 'Number two' }]);
         });
 
-        it('bulkCreate should work', function () {
-          return this.Comment.findAll().then((comments) => {
-            expect(comments[0].notes).to.equal('Number one');
-            expect(comments[1].notes).to.equal('Number two');
-          });
+        it('bulkCreate should work', async function () {
+          const comments = await this.Comment.findAll();
+          expect(comments[0].notes).to.equal('Number one');
+          expect(comments[1].notes).to.equal('Number two');
         });
 
-        it('find with where should work', function () {
-          return this.Comment.findAll({ where: { notes: 'Number one' } }).then((comments) => {
-            expect(comments).to.have.length(1);
-            expect(comments[0].notes).to.equal('Number one');
-          });
+        it('find with where should work', async function () {
+          const comments = await this.Comment.findAll({ where: { notes: 'Number one' } });
+          expect(comments).to.have.length(1);
+          expect(comments[0].notes).to.equal('Number one');
         });
 
-        it('reload should work', function () {
-          return this.Comment.findById(1).then((comment) => {
-            return comment.reload();
-          });
+        it('reload should work', async function () {
+          const comment = await this.Comment.findById(1);
+          await comment.reload();
         });
 
-        it('save should work', function () {
-          return this.Comment.create({ notes: 'my note' })
-            .then((comment) => {
-              comment.notes = 'new note';
-              return comment.save();
-            })
-            .then((comment) => {
-              return comment.reload();
-            })
-            .then((comment) => {
-              expect(comment.notes).to.equal('new note');
-            });
+        it('save should work', async function () {
+          const created = await this.Comment.create({ notes: 'my note' });
+          created.notes = 'new note';
+
+          const saved = await created.save();
+          const comment = await saved.reload();
+
+          expect(comment.notes).to.equal('new note');
         });
       });
 
-      it('increment should work', function () {
-        return this.Comment.destroy({ truncate: true })
-          .then(() => this.Comment.create({ note: 'oh boy, here I go again', likes: 23 }))
-          .then((comment) => comment.increment('likes'))
-          .then((comment) => comment.reload())
-          .then((comment) => {
-            expect(comment.likes).to.be.equal(24);
-          });
+      it('increment should work', async function () {
+        await this.Comment.destroy({ truncate: true });
+
+        const created = await this.Comment.create({ note: 'oh boy, here I go again', likes: 23 });
+        const incremented = await created.increment('likes');
+        const comment = await incremented.reload();
+
+        expect(comment.likes).to.be.equal(24);
       });
 
-      it('decrement should work', function () {
-        return this.Comment.destroy({ truncate: true })
-          .then(() => this.Comment.create({ note: 'oh boy, here I go again', likes: 23 }))
-          .then((comment) => comment.decrement('likes'))
-          .then((comment) => comment.reload())
-          .then((comment) => {
-            expect(comment.likes).to.be.equal(22);
-          });
+      it('decrement should work', async function () {
+        await this.Comment.destroy({ truncate: true });
+
+        const created = await this.Comment.create({ note: 'oh boy, here I go again', likes: 23 });
+        const decremented = await created.decrement('likes');
+        const comment = await decremented.reload();
+
+        expect(comment.likes).to.be.equal(22);
       });
 
-      it('sum should work', function () {
-        return this.Comment.destroy({ truncate: true })
-          .then(() => this.Comment.create({ note: 'oh boy, here I go again', likes: 23 }))
-          .then(() => this.Comment.sum('likes'))
-          .then((likes) => {
-            expect(likes).to.be.equal(23);
-          });
+      it('sum should work', async function () {
+        await this.Comment.destroy({ truncate: true });
+        await this.Comment.create({ note: 'oh boy, here I go again', likes: 23 });
+
+        const likes = await this.Comment.sum('likes');
+        expect(likes).to.be.equal(23);
       });
 
-      it('should create, fetch and update with alternative field names from a simple model', function () {
-        const self = this;
-
-        return this.User.create({
+      it('should create, fetch and update with alternative field names from a simple model', async function () {
+        await this.User.create({
           name: 'Foobar'
-        })
-          .then(() => {
-            return self.User.find({
-              limit: 1
-            });
-          })
-          .then((user) => {
-            expect(user.get('name')).to.equal('Foobar');
-            return user.updateAttributes({
-              name: 'Barfoo'
-            });
-          })
-          .then(() => {
-            return self.User.find({
-              limit: 1
-            });
-          })
-          .then((user) => {
-            expect(user.get('name')).to.equal('Barfoo');
-          });
+        });
+
+        const found = await this.User.find({
+          limit: 1
+        });
+        expect(found.get('name')).to.equal('Foobar');
+
+        await found.updateAttributes({
+          name: 'Barfoo'
+        });
+
+        const updated = await this.User.find({
+          limit: 1
+        });
+        expect(updated.get('name')).to.equal('Barfoo');
       });
 
-      it('should bulk update', function () {
+      it('should bulk update', async function () {
         const Entity = this.sequelize.define('Entity', {
           strField: { type: Sequelize.STRING, field: 'str_field' }
         });
 
-        return this.sequelize
-          .sync({ force: true })
-          .then(() => {
-            return Entity.create({ strField: 'foo' });
-          })
-          .then(() => {
-            return Entity.update({ strField: 'bar' }, { where: { strField: 'foo' } });
-          })
-          .then(() => {
-            return Entity.findOne({
-              where: {
-                strField: 'bar'
-              }
-            }).then((entity) => {
-              expect(entity).to.be.ok;
-              expect(entity.get('strField')).to.equal('bar');
-            });
-          });
+        await this.sequelize.sync({ force: true });
+        await Entity.create({ strField: 'foo' });
+        await Entity.update({ strField: 'bar' }, { where: { strField: 'foo' } });
+
+        const entity = await Entity.findOne({
+          where: {
+            strField: 'bar'
+          }
+        });
+
+        expect(entity).to.be.ok;
+        expect(entity.get('strField')).to.equal('bar');
       });
 
-      it('should not contain the field properties after create', function () {
+      it('should not contain the field properties after create', async function () {
         const Model = this.sequelize.define(
           'test',
           {
@@ -363,131 +340,108 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        return Model.sync({ force: true }).then(() => {
-          return Model.create({ title: 'test' }).then((data) => {
-            expect(data.get('test_title')).to.be.an('undefined');
-            expect(data.get('test_id')).to.be.an('undefined');
-          });
-        });
+        await Model.sync({ force: true });
+
+        const data = await Model.create({ title: 'test' });
+        expect(data.get('test_title')).to.be.an('undefined');
+        expect(data.get('test_id')).to.be.an('undefined');
       });
 
-      it('should make the aliased auto incremented primary key available after create', function () {
-        return this.User.create({
+      it('should make the aliased auto incremented primary key available after create', async function () {
+        const user = await this.User.create({
           name: 'Barfoo'
-        }).then((user) => {
-          expect(user.get('id')).to.be.ok;
         });
+
+        expect(user.get('id')).to.be.ok;
       });
 
-      it('should work with where on includes for find', function () {
-        const self = this;
-
-        return this.User.create({
+      it('should work with where on includes for find', async function () {
+        const user = await this.User.create({
           name: 'Barfoo'
-        })
-          .then((user) => {
-            return user.createTask({
-              title: 'DatDo'
-            });
-          })
-          .then((task) => {
-            return task.createComment({
-              text: 'Comment'
-            });
-          })
-          .then(() => {
-            return self.Task.find({
-              include: [{ model: self.Comment }, { model: self.User }],
-              where: { title: 'DatDo' }
-            });
-          })
-          .then((task) => {
-            expect(task.get('title')).to.equal('DatDo');
-            expect(task.get('comments')[0].get('text')).to.equal('Comment');
-            expect(task.get('user')).to.be.ok;
-          });
+        });
+
+        const createdTask = await user.createTask({
+          title: 'DatDo'
+        });
+
+        await createdTask.createComment({
+          text: 'Comment'
+        });
+
+        const task = await this.Task.find({
+          include: [{ model: this.Comment }, { model: this.User }],
+          where: { title: 'DatDo' }
+        });
+
+        expect(task.get('title')).to.equal('DatDo');
+        expect(task.get('comments')[0].get('text')).to.equal('Comment');
+        expect(task.get('user')).to.be.ok;
       });
 
-      it('should work with where on includes for findAll', function () {
-        const self = this;
-
-        return this.User.create({
+      it('should work with where on includes for findAll', async function () {
+        const created = await this.User.create({
           name: 'Foobar'
-        })
-          .then((user) => {
-            return user.createTask({
-              title: 'DoDat'
-            });
-          })
-          .then((task) => {
-            return task.createComment({
-              text: 'Comment'
-            });
-          })
-          .then(() => {
-            return self.User.findAll({
-              include: [{ model: self.Task, where: { title: 'DoDat' }, include: [{ model: self.Comment }] }]
-            });
-          })
-          .then((users) => {
-            users.forEach((user) => {
-              expect(user.get('name')).to.be.ok;
-              expect(user.get('tasks')[0].get('title')).to.equal('DoDat');
-              expect(user.get('tasks')[0].get('comments')).to.be.ok;
-            });
-          });
-      });
+        });
 
-      it('should work with increment', function () {
-        return this.User.create().then((user) => {
-          return user.increment('taskCount');
+        const task = await created.createTask({
+          title: 'DoDat'
+        });
+
+        await task.createComment({
+          text: 'Comment'
+        });
+
+        const users = await this.User.findAll({
+          include: [{ model: this.Task, where: { title: 'DoDat' }, include: [{ model: this.Comment }] }]
+        });
+
+        users.forEach((user) => {
+          expect(user.get('name')).to.be.ok;
+          expect(user.get('tasks')[0].get('title')).to.equal('DoDat');
+          expect(user.get('tasks')[0].get('comments')).to.be.ok;
         });
       });
 
-      it('should work with a simple where', function () {
-        const self = this;
-
-        return this.User.create({
-          name: 'Foobar'
-        })
-          .then(() => {
-            return self.User.find({
-              where: {
-                name: 'Foobar'
-              }
-            });
-          })
-          .then((user) => {
-            expect(user).to.be.ok;
-          });
+      it('should work with increment', async function () {
+        const user = await this.User.create();
+        await user.increment('taskCount');
       });
 
-      it('should work with a where or', function () {
-        const self = this;
-
-        return this.User.create({
+      it('should work with a simple where', async function () {
+        await this.User.create({
           name: 'Foobar'
-        })
-          .then(() => {
-            return self.User.find({
-              where: self.sequelize.or(
-                {
-                  name: 'Foobar'
-                },
-                {
-                  name: 'Lollerskates'
-                }
-              )
-            });
-          })
-          .then((user) => {
-            expect(user).to.be.ok;
-          });
+        });
+
+        const user = await this.User.find({
+          where: {
+            name: 'Foobar'
+          }
+        });
+
+        expect(user).to.be.ok;
       });
 
-      it('should work with bulkCreate and findAll', function () {
-        const self = this;
-        return this.User.bulkCreate([
+      it('should work with a where or', async function () {
+        await this.User.create({
+          name: 'Foobar'
+        });
+
+        const user = await this.User.find({
+          where: this.sequelize.or(
+            {
+              name: 'Foobar'
+            },
+            {
+              name: 'Lollerskates'
+            }
+          )
+        });
+
+        expect(user).to.be.ok;
+      });
+
+      it('should work with bulkCreate and findAll', async function () {
+        await this.User.bulkCreate([
           {
             name: 'Abc'
           },
@@ -497,109 +451,90 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           {
             name: 'Cde'
           }
-        ])
-          .then(() => {
-            return self.User.findAll();
-          })
-          .then((users) => {
-            users.forEach((user) => {
-              expect(['Abc', 'Bcd', 'Cde'].indexOf(user.get('name')) !== -1).to.be.true;
-            });
-          });
+        ]);
+
+        const users = await this.User.findAll();
+        users.forEach((user) => {
+          expect(['Abc', 'Bcd', 'Cde'].indexOf(user.get('name')) !== -1).to.be.true;
+        });
       });
 
-      it('should support renaming of sequelize method fields', function () {
+      it('should support renaming of sequelize method fields', async function () {
         const Test = this.sequelize.define('test', {
           someProperty: Sequelize.VIRTUAL // Since we specify the AS part as a part of the literal string, not with sequelize syntax, we have to tell sequelize about the field
         });
 
-        return this.sequelize
-          .sync({ force: true })
-          .then(() => {
-            return Test.create({});
-          })
-          .then(() => {
-            const findAttributes = [
-              Sequelize.literal('EXISTS(SELECT 1) AS "someProperty"'),
-              [Sequelize.literal('EXISTS(SELECT 1)'), 'someProperty2']
-            ];
+        await this.sequelize.sync({ force: true });
+        await Test.create({});
 
-            return Test.findAll({
-              attributes: findAttributes
-            });
-          })
-          .then((tests) => {
-            expect(tests[0].get('someProperty')).to.be.ok;
-            expect(tests[0].get('someProperty2')).to.be.ok;
-          });
-      });
+        const findAttributes = [
+          Sequelize.literal('EXISTS(SELECT 1) AS "someProperty"'),
+          [Sequelize.literal('EXISTS(SELECT 1)'), 'someProperty2']
+        ];
 
-      it('should sync foreign keys with custom field names', function () {
-        return this.sequelize.sync({ force: true }).then(() => {
-          const attrs = this.Task.tableAttributes;
-          expect(attrs.user_id.references.model).to.equal('users');
-          expect(attrs.user_id.references.key).to.equal('userId');
+        const tests = await Test.findAll({
+          attributes: findAttributes
         });
+
+        expect(tests[0].get('someProperty')).to.be.ok;
+        expect(tests[0].get('someProperty2')).to.be.ok;
       });
 
-      it('should find the value of an attribute with a custom field name', function () {
-        return this.User.create({ name: 'test user' })
-          .then(() => {
-            return this.User.find({ where: { name: 'test user' } });
-          })
-          .then((user) => {
-            expect(user.name).to.equal('test user');
-          });
+      it('should sync foreign keys with custom field names', async function () {
+        await this.sequelize.sync({ force: true });
+
+        const attrs = this.Task.tableAttributes;
+        expect(attrs.user_id.references.model).to.equal('users');
+        expect(attrs.user_id.references.key).to.equal('userId');
       });
 
-      it('field names that are the same as property names should create, update, and read correctly', function () {
-        const self = this;
+      it('should find the value of an attribute with a custom field name', async function () {
+        await this.User.create({ name: 'test user' });
 
-        return this.Comment.create({
+        const user = await this.User.find({ where: { name: 'test user' } });
+        expect(user.name).to.equal('test user');
+      });
+
+      it('field names that are the same as property names should create, update, and read correctly', async function () {
+        await this.Comment.create({
           notes: 'Foobar'
-        })
-          .then(() => {
-            return self.Comment.find({
-              limit: 1
-            });
-          })
-          .then((comment) => {
-            expect(comment.get('notes')).to.equal('Foobar');
-            return comment.updateAttributes({
-              notes: 'Barfoo'
-            });
-          })
-          .then(() => {
-            return self.Comment.find({
-              limit: 1
-            });
-          })
-          .then((comment) => {
-            expect(comment.get('notes')).to.equal('Barfoo');
-          });
+        });
+
+        const found = await this.Comment.find({
+          limit: 1
+        });
+        expect(found.get('notes')).to.equal('Foobar');
+
+        await found.updateAttributes({
+          notes: 'Barfoo'
+        });
+
+        const updated = await this.Comment.find({
+          limit: 1
+        });
+        expect(updated.get('notes')).to.equal('Barfoo');
       });
 
-      it('should work with a belongsTo association getter', function () {
+      it('should work with a belongsTo association getter', async function () {
         const userId = Math.floor(Math.random() * 100000);
-        return Promise.all([
+
+        const [userA, task] = await Promise.all([
           this.User.create({
             id: userId
           }),
           this.Task.create({
             user_id: userId
           })
-        ])
-          .then(([user, task]) => {
-            return Promise.all([user, task.getUser()]);
-          })
-          .then(([userA, userB]) => {
-            expect(userA.get('id')).to.equal(userB.get('id'));
-            expect(userA.get('id')).to.equal(userId);
-            expect(userB.get('id')).to.equal(userId);
-          });
+        ]);
+
+        const userB = await task.getUser();
+
+        expect(userA.get('id')).to.equal(userB.get('id'));
+        expect(userA.get('id')).to.equal(userId);
+        expect(userB.get('id')).to.equal(userId);
       });
 
-      it('should work with paranoid instance.destroy()', function () {
+      it('should work with paranoid instance.destroy()', async function () {
         const User = this.sequelize.define(
           'User',
           {
@@ -614,23 +549,18 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        return User.sync({ force: true })
-          .then(() => {
-            return User.create();
-          })
-          .then((user) => {
-            return user.destroy();
-          })
-          .then(() => {
-            this.clock.tick(1000);
-            return User.findAll();
-          })
-          .then((users) => {
-            expect(users.length).to.equal(0);
-          });
+        await User.sync({ force: true });
+
+        const user = await User.create();
+        await user.destroy();
+
+        this.clock.tick(1000);
+
+        const users = await User.findAll();
+        expect(users.length).to.equal(0);
       });
 
-      it('should work with paranoid Model.destroy()', function () {
+      it('should work with paranoid Model.destroy()', async function () {
         const User = this.sequelize.define(
           'User',
           {
@@ -645,33 +575,31 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        return User.sync({ force: true }).then(() => {
-          return User.create()
-            .then((user) => {
-              return User.destroy({ where: { id: user.get('id') } });
-            })
-            .then(() => {
-              return User.findAll().then((users) => {
-                expect(users.length).to.equal(0);
-              });
-            });
+        await User.sync({ force: true });
+
+        const user = await User.create();
+        await User.destroy({ where: { id: user.get('id') } });
+
+        const users = await User.findAll();
+        expect(users.length).to.equal(0);
+      });
+
+      it('should work with `belongsToMany` association `count`', async function () {
+        const user = await this.User.create({
+          name: 'John'
         });
+
+        const commentCount = await user.countComments();
+        expect(commentCount).to.equal(0);
       });
 
-      it('should work with `belongsToMany` association `count`', function () {
-        return this.User.create({
+      it('should work with `hasMany` association `count`', async function () {
+        const user = await this.User.create({
           name: 'John'
-        })
-          .then((user) => user.countComments())
-          .then((commentCount) => expect(commentCount).to.equal(0));
-      });
+        });
 
-      it('should work with `hasMany` association `count`', function () {
-        return this.User.create({
-          name: 'John'
-        })
-          .then((user) => user.countTasks())
-          .then((taskCount) => expect(taskCount).to.equal(0));
+        const taskCount = await user.countTasks();
+        expect(taskCount).to.equal(0);
       });
     });
   });

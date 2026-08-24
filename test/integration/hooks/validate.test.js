@@ -70,7 +70,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         expect(resaved.mood).to.equal('sad');
         expect(resaved.username).to.equal('Samorost 3');
 
-        const fetched = await this.User.findById(resaved.id);
+        const fetched = await this.User.findByPk(resaved.id);
         expect(fetched.mood).to.equal('sad');
         expect(fetched.username).to.equal('Samorost 3');
 
@@ -81,7 +81,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         expect(fetchedSaved.mood).to.equal('neutral');
         expect(fetchedSaved.username).to.equal('New Game is Needed');
 
-        const refetched = await this.User.findById(fetchedSaved.id);
+        const refetched = await this.User.findByPk(fetchedSaved.id);
         expect(refetched.mood).to.equal('neutral');
         expect(refetched.username).to.equal('New Game is Needed');
 

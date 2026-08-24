@@ -349,7 +349,7 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
       real: -Infinity
     });
 
-    const user = await Model.find({ where: { id: 1 } });
+    const user = await Model.findOne({ where: { id: 1 } });
     expect(user.get('float')).to.be.NaN;
     expect(user.get('double')).to.eq(Infinity);
     expect(user.get('real')).to.eq(-Infinity);
@@ -376,7 +376,7 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
     await Model.sync({ force: true });
     await Model.create(sampleData);
 
-    const user = await Model.findById(1);
+    const user = await Model.findByPk(1);
 
     /**
      * MYSQL default precision is 10 and scale is 0
@@ -404,7 +404,7 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
     await Model.sync({ force: true });
     await Model.create(sampleData);
 
-    const user = await Model.findById(1);
+    const user = await Model.findByPk(1);
     expect(user.get('jewelPurity')).to.be.eql(sampleData.jewelPurity);
     expect(user.get('jewelPurity')).to.be.string;
   });
@@ -451,7 +451,7 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
     expect(typeof created.stamp).to.be.eql('string');
     expect(created.stamp).to.be.eql(testDate);
 
-    const found = await Model.findById(created.id);
+    const found = await Model.findByPk(created.id);
     expect(typeof found.stamp).to.be.eql('string');
     expect(found.stamp).to.be.eql(testDate);
 
@@ -484,7 +484,7 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
     expect(typeof created.stamp).to.be.eql('string');
     expect(created.stamp).to.be.eql(testDate);
 
-    const found = await Model.findById(created.id);
+    const found = await Model.findByPk(created.id);
     expect(typeof found.stamp).to.be.eql('string');
     expect(found.stamp).to.be.eql(testDate);
 
@@ -526,7 +526,7 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
     });
     expect(byte.byteToBool).to.be.ok;
 
-    const bool = await BoolModel.findById(byte.id);
+    const bool = await BoolModel.findByPk(byte.id);
     expect(bool.byteToBool).to.be.true;
   });
 });

@@ -102,7 +102,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           await Post.bulkCreate([{ text: 'text1' }, { text: 'text2' }]);
 
           const boolQuery = 'EXISTS(SELECT 1) AS "someBoolean"';
-          const post = await Post.find({ attributes: ['id', 'text', Sequelize.literal(boolQuery)] });
+          const post = await Post.findOne({ attributes: ['id', 'text', Sequelize.literal(boolQuery)] });
 
           expect(post.get('someBoolean')).to.be.ok;
           expect(post.get().someBoolean).to.be.ok;
@@ -118,7 +118,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           expect(created.virtualWithDefault).to.equal('cake');
           expect(created.storage).to.equal('something');
 
-          const updated = await created.updateAttributes(
+          const updated = await created.update(
             {
               field1: 'something else'
             },

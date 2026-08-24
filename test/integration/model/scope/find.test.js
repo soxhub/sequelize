@@ -73,7 +73,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
 
     it('should be able to use a defaultScope if declared', async function () {
-      const users = await this.ScopeMe.all();
+      const users = await this.ScopeMe.findAll();
 
       expect(users).to.have.length(2);
       expect([10, 5].indexOf(users[0].access_level) !== -1).to.be.true;

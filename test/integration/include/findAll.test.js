@@ -814,7 +814,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
 
       await User.create({ username: 'John', addressId: address.id });
 
-      const john = await User.find({
+      const john = await User.findOne({
         where: { username: 'John' },
         include: [
           {
@@ -1257,7 +1257,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
 
       await parent.addChild1(child);
 
-      await Child1.find({
+      await Child1.findOne({
         include: [
           {
             model: Parent,

@@ -869,7 +869,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         }
       );
 
-      const foundUser = await this.User.findById(user.id);
+      const foundUser = await this.User.findByPk(user.id);
 
       expect(foundUser.intVal).to.equal(1);
       expect(match).to.equal(true);
@@ -892,7 +892,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         }
       );
 
-      const foundUser = await this.User.findById(user.id);
+      const foundUser = await this.User.findByPk(user.id);
 
       expect(foundUser.intVal).to.equal(-1);
       expect(match).to.equal(true);
@@ -903,7 +903,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         intVal: this.sequelize.literal('CAST(1-2 AS INTEGER)')
       });
 
-      const foundUser = await this.User.findById(user.id);
+      const foundUser = await this.User.findByPk(user.id);
 
       expect(foundUser.intVal).to.equal(-1);
     });
@@ -913,7 +913,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         secretValue: this.sequelize.fn('upper', 'sequelize')
       });
 
-      const foundUser = await this.User.findById(user.id);
+      const foundUser = await this.User.findByPk(user.id);
 
       expect(foundUser.secretValue).to.equal('SEQUELIZE');
     });
@@ -1153,7 +1153,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       const data = { username: 'Peter', secretValue: '42' };
 
       const user = await this.User.create(data, { fields: ['username'] });
-      const _user = await this.User.findById(user.id);
+      const _user = await this.User.findByPk(user.id);
 
       expect(_user.username).to.equal(data.username);
       expect(_user.secretValue).not.to.equal(data.secretValue);
@@ -1164,7 +1164,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       const data = { username: 'Peter', secretValue: '42' };
 
       const user = await this.User.create(data);
-      const _user = await this.User.findById(user.id);
+      const _user = await this.User.findByPk(user.id);
 
       expect(_user.username).to.equal(data.username);
       expect(_user.secretValue).to.equal(data.secretValue);
@@ -1201,7 +1201,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       const user = await this.User.create({ data: quote });
       expect(user.data).to.equal(quote);
 
-      const foundUser = await this.User.find({ where: { id: user.id } });
+      const foundUser = await this.User.findOne({ where: { id: user.id } });
       expect(foundUser.data).to.equal(quote);
     });
 
@@ -1211,7 +1211,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       const user = await this.User.create({ data: quote });
       expect(user.data).to.equal(quote);
 
-      const foundUser = await this.User.find({ where: { id: user.id } });
+      const foundUser = await this.User.findOne({ where: { id: user.id } });
       expect(foundUser.data).to.equal(quote);
     });
 
@@ -1221,7 +1221,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       const user = await this.User.create({ data: json });
       expect(user.data).to.equal(json);
 
-      const foundUser = await this.User.find({ where: { id: user.id } });
+      const foundUser = await this.User.findOne({ where: { id: user.id } });
       expect(foundUser.data).to.equal(json);
     });
 
@@ -1235,7 +1235,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       const user = await this.User.create({ id: 42 });
       expect(user.id).to.equal(42);
 
-      const foundUser = await this.User.findById(42);
+      const foundUser = await this.User.findByPk(42);
       expect(foundUser).to.exist;
     });
 
@@ -1284,7 +1284,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(user.name).to.be.ok;
       expect(user.email).not.to.be.ok;
 
-      const foundUser = await User.findById(user.id);
+      const foundUser = await User.findByPk(user.id);
 
       expect(foundUser.name).to.be.ok;
       expect(foundUser.email).not.to.be.ok;
@@ -1320,7 +1320,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         await Item.sync({ force: true });
 
         const _item = await Item.create({ state: 'available' });
-        const item = await Item.find({ where: { state: 'available' } });
+        const item = await Item.findOne({ where: { state: 'available' } });
 
         expect(item.id).to.equal(_item.id);
       });

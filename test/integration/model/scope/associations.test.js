@@ -206,7 +206,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
         describe('it should be able to unscope', () => {
           it('hasMany', async function () {
-            const company = await this.Company.findById(1);
+            const company = await this.Company.findByPk(1);
 
             const users = await company.getUsers({ scope: false });
             expect(users).to.have.length(4);
@@ -218,14 +218,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
               userId: 1
             });
 
-            const user = await this.ScopeMe.findById(1);
+            const user = await this.ScopeMe.findByPk(1);
 
             const profile = await user.getProfile({ scope: false });
             expect(profile).to.be.ok;
           });
 
           it('belongsTo', async function () {
-            const user = await this.ScopeMe.unscoped().find({ where: { username: 'bob' } });
+            const user = await this.ScopeMe.unscoped().findOne({ where: { username: 'bob' } });
 
             const company = await user.getCompany({ scope: false });
             expect(company).to.be.ok;
@@ -241,7 +241,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
         describe('it should apply default scope', () => {
           it('hasMany', async function () {
-            const company = await this.Company.findById(1);
+            const company = await this.Company.findByPk(1);
 
             const users = await company.getUsers();
             expect(users).to.have.length(2);
@@ -253,14 +253,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
               userId: 1
             });
 
-            const user = await this.ScopeMe.findById(1);
+            const user = await this.ScopeMe.findByPk(1);
 
             const profile = await user.getProfile();
             expect(profile).not.to.be.ok;
           });
 
           it('belongsTo', async function () {
-            const user = await this.ScopeMe.unscoped().find({ where: { username: 'bob' } });
+            const user = await this.ScopeMe.unscoped().findOne({ where: { username: 'bob' } });
 
             const company = await user.getCompany();
             expect(company).not.to.be.ok;
@@ -277,7 +277,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
         describe('it should be able to apply another scope', () => {
           it('hasMany', async function () {
-            const company = await this.Company.findById(1);
+            const company = await this.Company.findByPk(1);
 
             const users = await company.getUsers({ scope: 'isTony' });
             expect(users).to.have.length(1);
@@ -290,14 +290,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
               userId: 1
             });
 
-            const user = await this.ScopeMe.findById(1);
+            const user = await this.ScopeMe.findByPk(1);
 
             const profile = await user.getProfile({ scope: 'notActive' });
             expect(profile).not.to.be.ok;
           });
 
           it('belongsTo', async function () {
-            const user = await this.ScopeMe.unscoped().find({ where: { username: 'bob' } });
+            const user = await this.ScopeMe.unscoped().findOne({ where: { username: 'bob' } });
 
             const company = await user.getCompany({ scope: 'notActive' });
             expect(company).to.be.ok;
@@ -317,7 +317,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       describe('scope with includes', () => {
         beforeEach(async function () {
           const [c, p1, p2] = await Promise.all([
-            this.Company.findById(1),
+            this.Company.findByPk(1),
             this.Project.create({ id: 1, active: true }),
             this.Project.create({ id: 2, active: false })
           ]);

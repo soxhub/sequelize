@@ -52,10 +52,10 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
 
         await article.setLabels([label], { transaction: t });
 
-        const articles = await this.Article.all({ transaction: t });
+        const articles = await this.Article.findAll({ transaction: t });
         expect(await articles[0].getLabels()).to.have.length(0);
 
-        const transactionArticles = await this.Article.all({ transaction: t });
+        const transactionArticles = await this.Article.findAll({ transaction: t });
         expect(await transactionArticles[0].getLabels({ transaction: t })).to.have.length(1);
 
         await t.rollback();
@@ -63,7 +63,7 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
     }
 
     it('gets all associated objects with all fields', async function () {
-      const john = await this.User.find({ where: { username: 'John' } });
+      const john = await this.User.findOne({ where: { username: 'John' } });
       const tasks = await john.getTasks();
 
       tasks[0].attributes.forEach((attr) => {
@@ -72,13 +72,13 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
     });
 
     it('gets all associated objects when no options are passed', async function () {
-      const john = await this.User.find({ where: { username: 'John' } });
+      const john = await this.User.findOne({ where: { username: 'John' } });
 
       expect(await john.getTasks()).to.have.length(2);
     });
 
     it('only get objects that fulfill the options', async function () {
-      const john = await this.User.find({ where: { username: 'John' } });
+      const john = await this.User.findOne({ where: { username: 'John' } });
 
       const tasks = await john.getTasks({
         where: {
@@ -90,7 +90,7 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
     });
 
     it('supports a where not in', async function () {
-      const john = await this.User.find({
+      const john = await this.User.findOne({
         where: {
           username: 'John'
         }
@@ -108,7 +108,7 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
     });
 
     it('supports a where not in on the primary key', async function () {
-      const john = await this.User.find({
+      const john = await this.User.findOne({
         where: {
           username: 'John'
         }
@@ -126,13 +126,13 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
     });
 
     it('only gets objects that fulfill options with a formatted value', async function () {
-      const john = await this.User.find({ where: { username: 'John' } });
+      const john = await this.User.findOne({ where: { username: 'John' } });
 
       expect(await john.getTasks({ where: { active: true } })).to.have.length(1);
     });
 
     it('get associated objects with an eager load', async function () {
-      const john = await this.User.find({ where: { username: 'John' }, include: [this.Task] });
+      const john = await this.User.findOne({ where: { username: 'John' }, include: [this.Task] });
 
       expect(john.Tasks).to.have.length(2);
     });
@@ -147,7 +147,7 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
 
       await Label.sync({ force: true });
 
-      const john = await User.find({
+      const john = await User.findOne({
         where: { username: 'John' },
         include: [
           { model: Task, required: false, include: [{ model: Label, required: false, where: { isActive: true } }] }
@@ -1531,7 +1531,7 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
 
           await u.addProject(p);
 
-          const up = await this.UserProjects.find({ where: { UserId: u.id, ProjectId: p.id } });
+          const up = await this.UserProjects.findOne({ where: { UserId: u.id, ProjectId: p.id } });
 
           expect(up.status).to.equal('active');
         });

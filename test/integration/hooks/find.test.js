@@ -59,7 +59,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           afterHook = true;
         });
 
-        const user = await this.User.find({ where: { username: 'adam' } });
+        const user = await this.User.findOne({ where: { username: 'adam' } });
 
         expect(user.mood).to.equal('happy');
         expect(beforeHook).to.be.true;
@@ -73,7 +73,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           options.where.username = 'joe';
         });
 
-        const user = await this.User.find({ where: { username: 'adam' } });
+        const user = await this.User.findOne({ where: { username: 'adam' } });
         expect(user.mood).to.equal('sad');
       });
 
@@ -82,7 +82,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           options.where.username = 'joe';
         });
 
-        const user = await this.User.find({ where: { username: 'adam' } });
+        const user = await this.User.findOne({ where: { username: 'adam' } });
         expect(user.mood).to.equal('sad');
       });
 
@@ -91,7 +91,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           options.where.username = 'joe';
         });
 
-        const user = await this.User.find({ where: { username: 'adam' } });
+        const user = await this.User.findOne({ where: { username: 'adam' } });
         expect(user.mood).to.equal('sad');
       });
 
@@ -100,7 +100,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           user.mood = 'sad';
         });
 
-        const user = await this.User.find({ where: { username: 'adam' } });
+        const user = await this.User.findOne({ where: { username: 'adam' } });
         expect(user.mood).to.equal('sad');
       });
     });
@@ -111,7 +111,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           throw new Error('Oops!');
         });
 
-        await expect(this.User.find({ where: { username: 'adam' } })).to.be.rejectedWith('Oops!');
+        await expect(this.User.findOne({ where: { username: 'adam' } })).to.be.rejectedWith('Oops!');
       });
 
       it('in beforeFindAfterExpandIncludeAll hook returns error', async function () {
@@ -119,7 +119,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           throw new Error('Oops!');
         });
 
-        await expect(this.User.find({ where: { username: 'adam' } })).to.be.rejectedWith('Oops!');
+        await expect(this.User.findOne({ where: { username: 'adam' } })).to.be.rejectedWith('Oops!');
       });
 
       it('in beforeFindAfterOptions hook returns error', async function () {
@@ -127,7 +127,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           throw new Error('Oops!');
         });
 
-        await expect(this.User.find({ where: { username: 'adam' } })).to.be.rejectedWith('Oops!');
+        await expect(this.User.findOne({ where: { username: 'adam' } })).to.be.rejectedWith('Oops!');
       });
 
       it('in afterFind hook returns error', async function () {
@@ -135,7 +135,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           throw new Error('Oops!');
         });
 
-        await expect(this.User.find({ where: { username: 'adam' } })).to.be.rejectedWith('Oops!');
+        await expect(this.User.findOne({ where: { username: 'adam' } })).to.be.rejectedWith('Oops!');
       });
     });
   });

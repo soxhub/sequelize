@@ -33,7 +33,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         this.User.afterSave(afterSave);
 
         const user = await this.User.create({ username: 'Toni', mood: 'happy' });
-        const updatedUser = await user.updateAttributes({ username: 'Chong' });
+        const updatedUser = await user.update({ username: 'Chong' });
 
         expect(beforeHook.calledOnce).to.be.true;
         expect(afterHook.calledOnce).to.be.true;
@@ -59,7 +59,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         this.User.afterSave(afterSave);
 
         const user = await this.User.create({ username: 'Toni', mood: 'happy' });
-        await expect(user.updateAttributes({ username: 'Chong' })).to.be.rejected;
+        await expect(user.update({ username: 'Chong' })).to.be.rejected;
 
         expect(beforeHook.calledOnce).to.be.true;
         expect(beforeSave.calledOnce).to.be.true;
@@ -82,7 +82,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         this.User.afterSave(afterSave);
 
         const user = await this.User.create({ username: 'Toni', mood: 'happy' });
-        await expect(user.updateAttributes({ username: 'Chong' })).to.be.rejected;
+        await expect(user.update({ username: 'Chong' })).to.be.rejected;
 
         expect(beforeHook.calledOnce).to.be.true;
         expect(afterHook.calledOnce).to.be.true;
@@ -98,7 +98,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         });
 
         const created = await this.User.create({ username: 'fireninja', mood: 'invalid' });
-        const user = await created.updateAttributes({ username: 'hero' });
+        const user = await created.update({ username: 'hero' });
 
         expect(user.username).to.equal('hero');
         expect(user.mood).to.equal('happy');
@@ -110,7 +110,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         });
 
         const created = await this.User.create({ username: 'fireninja', mood: 'nuetral' });
-        const user = await created.updateAttributes({ username: 'spider' });
+        const user = await created.update({ username: 'spider' });
 
         expect(user.username).to.equal('spider');
         expect(user.mood).to.equal('sad');
@@ -125,7 +125,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         });
 
         const created = await this.User.create({ username: 'fireninja', mood: 'nuetral' });
-        const user = await created.updateAttributes({ username: 'spider', mood: 'sad' });
+        const user = await created.update({ username: 'spider', mood: 'sad' });
 
         expect(user.username).to.equal('spider');
         expect(user.mood).to.equal('happy');
@@ -146,7 +146,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         });
 
         const created = await this.User.create({ username: 'akira' });
-        const user = await created.updateAttributes({ username: 'spider', mood: 'sad' });
+        const user = await created.update({ username: 'spider', mood: 'sad' });
 
         expect(user.mood).to.equal('happy');
         expect(user.username).to.equal('spider');

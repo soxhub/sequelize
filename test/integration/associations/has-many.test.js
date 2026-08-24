@@ -456,10 +456,10 @@ describe(Support.getTestDialectTeaser('HasMany'), () => {
 
           await article.setLabels([label], { transaction: t });
 
-          const articles = await Article.all({ transaction: t });
+          const articles = await Article.findAll({ transaction: t });
           expect(await articles[0].hasLabel(label)).to.be.false;
 
-          const transactionArticles = await Article.all({ transaction: t });
+          const transactionArticles = await Article.findAll({ transaction: t });
           expect(await transactionArticles[0].hasLabel(label, { transaction: t })).to.be.true;
 
           await t.rollback();
@@ -545,7 +545,7 @@ describe(Support.getTestDialectTeaser('HasMany'), () => {
 
           await article.setLabels([label], { transaction: t });
 
-          const articles = await this.Article.all({ transaction: t });
+          const articles = await this.Article.findAll({ transaction: t });
 
           const [hasLabel1, hasLabel2] = await Promise.all([
             articles[0].hasLabels([label]),
@@ -942,13 +942,13 @@ describe(Support.getTestDialectTeaser('HasMany'), () => {
       });
 
       it('gets all associated objects when no options are passed', async function () {
-        const john = await this.User.find({ where: { username: 'John' } });
+        const john = await this.User.findOne({ where: { username: 'John' } });
 
         expect(await john.getTasks()).to.have.length(2);
       });
 
       it('only get objects that fulfill the options', async function () {
-        const john = await this.User.find({ where: { username: 'John' } });
+        const john = await this.User.findOne({ where: { username: 'John' } });
 
         const tasks = await john.getTasks({ where: { active: true }, limit: 10, order: [['id', 'DESC']] });
 
@@ -1378,7 +1378,7 @@ describe(Support.getTestDialectTeaser('HasMany'), () => {
         { title: 'Inactive Task', userEmail: 'john@example.com', taskStatus: 'Inactive' }
       ]);
 
-      const user = await this.User.find({
+      const user = await this.User.findOne({
         include: [
           {
             model: this.Task,

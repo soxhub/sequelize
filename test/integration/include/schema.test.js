@@ -1186,7 +1186,7 @@ describe(Support.getTestDialectTeaser('Includes with schemas'), () => {
       await this.sequelize.createSchema('hero');
       await this.sequelize.sync({ force: true });
 
-      await UserModel.find({
+      await UserModel.findOne({
         where: {
           Id: 1
         },

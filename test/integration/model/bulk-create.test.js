@@ -503,7 +503,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           { state: 'available', name: 'B' }
         ]);
 
-        const item = await Item.find({ where: { state: 'available' } });
+        const item = await Item.findOne({ where: { state: 'available' } });
         expect(item.name).to.equal('B');
       });
     });

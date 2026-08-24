@@ -381,7 +381,7 @@ if (current.dialect.supports.transactions) {
           await User.create({ username: 'jan' });
 
           const t1 = await this.sequelize.transaction();
-          const t1Jan = await User.find({
+          const t1Jan = await User.findOne({
             where: {
               username: 'jan'
             },
@@ -396,7 +396,7 @@ if (current.dialect.supports.transactions) {
           // block until t1 commits.
           await Promise.all([
             (async () => {
-              await User.find({
+              await User.findOne({
                 where: {
                   username: 'jan'
                 },
@@ -409,7 +409,7 @@ if (current.dialect.supports.transactions) {
             })(),
 
             (async () => {
-              await t1Jan.updateAttributes(
+              await t1Jan.update(
                 {
                   awesome: true
                 },
@@ -444,7 +444,7 @@ if (current.dialect.supports.transactions) {
           await john.setTasks([task1]);
 
           await this.sequelize.transaction(async (t1) => {
-            const find = User.find({
+            const find = User.findOne({
               where: {
                 username: 'John'
               },
@@ -485,7 +485,7 @@ if (current.dialect.supports.transactions) {
             await john.setTasks([task1]);
 
             await this.sequelize.transaction(async (t1) => {
-              const t1John = await User.find({
+              const t1John = await User.findOne({
                 where: {
                   username: 'John'
                 },
@@ -532,7 +532,7 @@ if (current.dialect.supports.transactions) {
             await User.create({ username: 'jan' });
 
             const t1 = await this.sequelize.transaction();
-            const t1Jan = await User.find({
+            const t1Jan = await User.findOne({
               where: {
                 username: 'jan'
               },
@@ -545,7 +545,7 @@ if (current.dialect.supports.transactions) {
             // be granted while t1 still holds NO KEY UPDATE.
             await Promise.all([
               (async () => {
-                await User.find({
+                await User.findOne({
                   where: {
                     username: 'jan'
                   },
@@ -587,7 +587,7 @@ if (current.dialect.supports.transactions) {
           await User.create({ username: 'jan' });
 
           const t1 = await this.sequelize.transaction();
-          const t1Jan = await User.find({
+          const t1Jan = await User.findOne({
             where: {
               username: 'jan'
             },
@@ -602,14 +602,14 @@ if (current.dialect.supports.transactions) {
           // while t1 holds the share lock, but its update must wait for t1.
           await Promise.all([
             (async () => {
-              const t2Jan = await User.find({
+              const t2Jan = await User.findOne({
                 where: {
                   username: 'jan'
                 },
                 transaction: t2
               });
               t2FindSpy();
-              await t2Jan.updateAttributes(
+              await t2Jan.update(
                 {
                   awesome: false
                 },
@@ -625,7 +625,7 @@ if (current.dialect.supports.transactions) {
             })(),
 
             (async () => {
-              await t1Jan.updateAttributes(
+              await t1Jan.update(
                 {
                   awesome: true
                 },

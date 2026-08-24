@@ -65,12 +65,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         await student.addCourse(course, { through: { score: 98, test_value: 1000 } });
 
         expect(self.callCount).to.equal(1);
-        const stored = await self.Score.find({ where: { StudentId: 1, CourseId: 100 } });
+        const stored = await self.Score.findOne({ where: { StudentId: 1, CourseId: 100 } });
         expect(stored.test_value).to.equal(1001);
 
         const [courses, score] = await Promise.all([
           self.Student.build({ no: 1 }).getCourses({ where: { no: 100 } }),
-          self.Score.find({ where: { StudentId: 1, CourseId: 100 } })
+          self.Score.findOne({ where: { StudentId: 1, CourseId: 100 } })
         ]);
 
         expect(score.test_value).to.equal(1001);

@@ -50,7 +50,7 @@ describe(Support.getTestDialectTeaser('Paranoid'), () => {
       );
 
     await S.sync({ force: true });
-    await Test.findById(1);
+    await Test.findByPk(1);
   });
 
   it('test if non required is marked as false', async function () {
@@ -65,7 +65,7 @@ describe(Support.getTestDialectTeaser('Paranoid'), () => {
         ]
       };
 
-    await A.find(options);
+    await A.findOne(options);
     expect(options.include[0].required).to.be.equal(false);
   });
 
@@ -81,7 +81,7 @@ describe(Support.getTestDialectTeaser('Paranoid'), () => {
         ]
       };
 
-    await A.find(options);
+    await A.findOne(options);
     expect(options.include[0].required).to.be.equal(true);
   });
 

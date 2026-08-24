@@ -81,12 +81,12 @@ describe(Support.getTestDialectTeaser('BelongsTo'), () => {
 
         await group.setUser(user, { transaction: t });
 
-        const groups = await Group.all();
+        const groups = await Group.findAll();
         const associatedUser = await groups[0].getUser();
 
         expect(associatedUser).to.be.null;
 
-        const transactionGroups = await Group.all({ transaction: t });
+        const transactionGroups = await Group.findAll({ transaction: t });
         const transactionUser = await transactionGroups[0].getUser({ transaction: t });
 
         expect(transactionUser).to.be.not.null;
@@ -169,7 +169,7 @@ describe(Support.getTestDialectTeaser('BelongsTo'), () => {
 
         await group.setUser(user, { transaction: t });
 
-        const groups = await Group.all();
+        const groups = await Group.findAll();
         const associatedUser = await groups[0].getUser();
 
         expect(associatedUser).to.be.null;
@@ -854,7 +854,7 @@ describe('Association', () => {
     // set recipients
     await mail.setRecipients([1]);
 
-    const result = await Entry.findAndCount({
+    const result = await Entry.findAndCountAll({
       offset: 0,
       limit: 10,
       order: [['id', 'DESC']],

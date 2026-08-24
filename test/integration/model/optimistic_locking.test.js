@@ -47,7 +47,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     it('prevents stale instances from being saved', async () => {
       const staleSave = async () => {
         const accountA = await Account.create({ number: 1 });
-        const accountB = await Account.findById(accountA.id);
+        const accountB = await Account.findByPk(accountA.id);
 
         accountA.number += 1;
         await accountA.save();

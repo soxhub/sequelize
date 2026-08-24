@@ -214,13 +214,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         ]);
         await Passports.bulkCreate([{ isActive: true }, { isActive: false }]);
 
-        const user = await User.findById(1);
-        const passport = await Passports.findById(1);
+        const user = await User.findByPk(1);
+        const passport = await Passports.findByPk(1);
 
         await user.setPassports([passport]);
 
-        const _user = await User.findById(2);
-        const _passport = await Passports.findById(2);
+        const _user = await User.findByPk(2);
+        const _passport = await Passports.findByPk(2);
 
         await _user.setPassports([_passport]);
 
@@ -255,13 +255,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         ]);
         await Binary.bulkCreate([{ id: buf1 }, { id: buf2 }]);
 
-        const user = await User.findById(1);
-        const binary = await Binary.findById(buf1);
+        const user = await User.findByPk(1);
+        const binary = await Binary.findByPk(buf1);
 
         await user.setBinary(binary);
 
-        const _user = await User.findById(2);
-        const _binary = await Binary.findById(buf2);
+        const _user = await User.findByPk(2);
+        const _binary = await Binary.findByPk(buf2);
 
         await _user.setBinary(_binary);
 
@@ -356,7 +356,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       it('should be able to find a row using greater than or equal to', async function () {
-        const user = await this.User.find({
+        const user = await this.User.findOne({
           where: {
             intVal: {
               gte: 6
@@ -369,7 +369,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       it('should be able to find a row using greater than', async function () {
-        const user = await this.User.find({
+        const user = await this.User.findOne({
           where: {
             intVal: {
               gt: 5
@@ -382,7 +382,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       it('should be able to find a row using lesser than or equal to', async function () {
-        const user = await this.User.find({
+        const user = await this.User.findOne({
           where: {
             intVal: {
               lte: 5
@@ -395,7 +395,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       it('should be able to find a row using lesser than', async function () {
-        const user = await this.User.find({
+        const user = await this.User.findOne({
           where: {
             intVal: {
               lt: 6
@@ -422,7 +422,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       it('should be able to find a row using not equal to logic', async function () {
-        const user = await this.User.find({
+        const user = await this.User.findOne({
           where: {
             intVal: {
               ne: 10

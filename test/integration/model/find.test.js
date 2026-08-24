@@ -82,13 +82,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       it("doesn't throw an error when entering in a non integer value for a specified primary field", async function () {
-        const user = await this.UserPrimary.findById('a string');
+        const user = await this.UserPrimary.findByPk('a string');
 
         expect(user.specialkey).to.equal('a string');
       });
 
       it('returns a single dao', async function () {
-        const user = await this.User.findById(this.user.id);
+        const user = await this.User.findByPk(this.user.id);
 
         expect(Array.isArray(user)).to.not.be.ok;
         expect(user.id).to.equal(this.user.id);
@@ -96,7 +96,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       it('returns a single dao given a string id', async function () {
-        const user = await this.User.findById(String(this.user.id));
+        const user = await this.User.findByPk(String(this.user.id));
 
         expect(Array.isArray(user)).to.not.be.ok;
         expect(user.id).to.equal(this.user.id);
@@ -186,7 +186,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
         expect(u.id).not.to.exist;
 
-        const u2 = await UserPrimary.findById('an identifier');
+        const u2 = await UserPrimary.findByPk('an identifier');
 
         expect(u2.identifier).to.equal('an identifier');
         expect(u2.name).to.equal('John');
@@ -204,7 +204,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           name: 'Johnno'
         });
 
-        const u2 = await UserPrimary.findById('a string based id');
+        const u2 = await UserPrimary.findByPk('a string based id');
 
         expect(u2.id).to.equal('a string based id');
         expect(u2.name).to.equal('Johnno');
@@ -218,7 +218,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
         await Promise.all(
           permutations.map(async (perm) => {
-            const user = await this.User.findById(perm, {
+            const user = await this.User.findByPk(perm, {
               logging(s) {
                 expect(s.indexOf(0)).not.to.equal(-1);
                 count++;
@@ -241,7 +241,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         await User.sync({ force: true });
         await User.create({ Login: 'foo' });
 
-        const user = await User.findById(1);
+        const user = await User.findByPk(1);
 
         expect(user).to.exist;
         expect(user.ID).to.equal(1);
@@ -846,7 +846,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       it('throws error when record not found by findById', function () {
         return expect(
-          this.User.findById(4732322332323333, {
+          this.User.findByPk(4732322332323333, {
             rejectOnEmpty: true
           })
         ).to.eventually.be.rejectedWith(Sequelize.EmptyResultError);
@@ -854,7 +854,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       it('throws error when record not found by find', function () {
         return expect(
-          this.User.find({
+          this.User.findOne({
             where: {
               username: 'some-username-that-is-not-used-anywhere'
             },
@@ -919,7 +919,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         { username: 'Tony', deletedAt: moment().subtract(30, 'days').format() }
       ]);
 
-      const tobi = await User.find({ where: { username: 'Tobi' } });
+      const tobi = await User.findOne({ where: { username: 'Tobi' } });
       expect(tobi).not.to.be.null;
 
       const users = await User.findAll();

@@ -231,7 +231,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
 
         it('reload should work', async function () {
-          const comment = await this.Comment.findById(1);
+          const comment = await this.Comment.findByPk(1);
           await comment.reload();
         });
 
@@ -279,16 +279,16 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           name: 'Foobar'
         });
 
-        const found = await this.User.find({
+        const found = await this.User.findOne({
           limit: 1
         });
         expect(found.get('name')).to.equal('Foobar');
 
-        await found.updateAttributes({
+        await found.update({
           name: 'Barfoo'
         });
 
-        const updated = await this.User.find({
+        const updated = await this.User.findOne({
           limit: 1
         });
         expect(updated.get('name')).to.equal('Barfoo');
@@ -367,7 +367,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           text: 'Comment'
         });
 
-        const task = await this.Task.find({
+        const task = await this.Task.findOne({
           include: [{ model: this.Comment }, { model: this.User }],
           where: { title: 'DatDo' }
         });
@@ -411,7 +411,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           name: 'Foobar'
         });
 
-        const user = await this.User.find({
+        const user = await this.User.findOne({
           where: {
             name: 'Foobar'
           }
@@ -425,7 +425,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           name: 'Foobar'
         });
 
-        const user = await this.User.find({
+        const user = await this.User.findOne({
           where: this.sequelize.or(
             {
               name: 'Foobar'
@@ -490,7 +490,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       it('should find the value of an attribute with a custom field name', async function () {
         await this.User.create({ name: 'test user' });
 
-        const user = await this.User.find({ where: { name: 'test user' } });
+        const user = await this.User.findOne({ where: { name: 'test user' } });
         expect(user.name).to.equal('test user');
       });
 
@@ -499,16 +499,16 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           notes: 'Foobar'
         });
 
-        const found = await this.Comment.find({
+        const found = await this.Comment.findOne({
           limit: 1
         });
         expect(found.get('notes')).to.equal('Foobar');
 
-        await found.updateAttributes({
+        await found.update({
           notes: 'Barfoo'
         });
 
-        const updated = await this.Comment.find({
+        const updated = await this.Comment.findOne({
           limit: 1
         });
         expect(updated.get('notes')).to.equal('Barfoo');

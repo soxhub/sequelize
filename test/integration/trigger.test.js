@@ -45,7 +45,7 @@ if (current.dialect.supports.tmpTableTrigger) {
           username: 'triggertest'
         });
 
-        await expect(User.find({ username: 'triggertest' }))
+        await expect(User.findOne({ username: 'triggertest' }))
           .to.eventually.have.property('username')
           .which.equals('triggertest');
       });
@@ -58,7 +58,7 @@ if (current.dialect.supports.tmpTableTrigger) {
         user.username = 'usernamechanged';
         await user.save();
 
-        await expect(User.find({ username: 'usernamechanged' }))
+        await expect(User.findOne({ username: 'usernamechanged' }))
           .to.eventually.have.property('username')
           .which.equals('usernamechanged');
       });
@@ -79,7 +79,7 @@ if (current.dialect.supports.tmpTableTrigger) {
           }
         );
 
-        await expect(User.find({ username: 'usernamechanged' }))
+        await expect(User.findOne({ username: 'usernamechanged' }))
           .to.eventually.have.property('username')
           .which.equals('usernamechanged');
       });
@@ -91,7 +91,7 @@ if (current.dialect.supports.tmpTableTrigger) {
 
         await user.destroy();
 
-        await expect(User.find({ username: 'triggertest' })).to.eventually.be.null;
+        await expect(User.findOne({ username: 'triggertest' })).to.eventually.be.null;
       });
     });
   });

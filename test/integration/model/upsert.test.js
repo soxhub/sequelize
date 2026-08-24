@@ -66,7 +66,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         const updated = await this.User.upsert({ id: 42, username: 'doe' });
         expect(updated).not.to.be.ok;
 
-        const user = await this.User.findById(42);
+        const user = await this.User.findByPk(42);
         expect(user.createdAt).to.be.ok;
         expect(user.username).to.equal('doe');
         expect(user.updatedAt).to.be.afterTime(user.createdAt);
@@ -81,7 +81,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         const updated = await this.User.upsert({ foo: 'baz', bar: 19, username: 'doe' });
         expect(updated).not.to.be.ok;
 
-        const user = await this.User.find({ where: { foo: 'baz', bar: 19 } });
+        const user = await this.User.findOne({ where: { foo: 'baz', bar: 19 } });
         expect(user.createdAt).to.be.ok;
         expect(user.username).to.equal('doe');
         expect(user.updatedAt).to.be.afterTime(user.createdAt);
@@ -136,12 +136,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         const updated = await User.upsert({ a: 'a', b: 'b', username: 'doe' });
         expect(updated).not.to.be.ok;
 
-        const user1 = await User.find({ where: { a: 'a', b: 'b' } });
+        const user1 = await User.findOne({ where: { a: 'a', b: 'b' } });
         expect(user1.createdAt).to.be.ok;
         expect(user1.username).to.equal('doe');
         expect(user1.updatedAt).to.be.afterTime(user1.createdAt);
 
-        const user2 = await User.find({ where: { a: 'a', b: 'a' } });
+        const user2 = await User.findOne({ where: { a: 'a', b: 'a' } });
         // The second one should not be updated
         expect(user2.createdAt).to.be.ok;
         expect(user2.username).to.equal('curt');
@@ -190,7 +190,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         const updated = await this.User.upsert({ id: 42, username: 'doe', blob: new Buffer('andrea') });
         expect(updated).not.to.be.ok;
 
-        const user = await this.User.findById(42);
+        const user = await this.User.findByPk(42);
         expect(user.createdAt).to.be.ok;
         expect(user.username).to.equal('doe');
         expect(user.blob.toString()).to.equal('andrea');
@@ -204,7 +204,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         const updated = await this.User.upsert({ id: 42, baz: 'oof' });
         expect(updated).not.to.be.ok;
 
-        const user = await this.User.findById(42);
+        const user = await this.User.findByPk(42);
         expect(user.baz).to.equal('oof');
       });
 
@@ -238,7 +238,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
         expect(updated).not.to.be.ok;
 
-        const user = await this.User.findById(42);
+        const user = await this.User.findByPk(42);
         expect(user.createdAt).to.be.ok;
         expect(user.username).to.equal('doe');
         expect(user.foo).to.equal('MIXEDCASE2');
@@ -249,14 +249,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
         await this.User.create({ id: 42, username: 'john' });
 
-        const original = await this.User.findById(42);
+        const original = await this.User.findByPk(42);
         const originalCreatedAt = original.createdAt;
         const originalUpdatedAt = original.updatedAt;
 
         clock.tick(5000);
         await this.User.upsert({ id: 42, username: 'doe' });
 
-        const user = await this.User.findById(42);
+        const user = await this.User.findByPk(42);
         expect(user.updatedAt).to.be.gt(originalUpdatedAt);
         expect(user.createdAt).to.deep.equal(originalCreatedAt);
       });
@@ -264,7 +264,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       it('does not update using default values', async function () {
         await this.User.create({ id: 42, username: 'john', baz: 'new baz value' });
 
-        const original = await this.User.findById(42);
+        const original = await this.User.findByPk(42);
         // 'username' should be 'john' since it was set
         expect(original.username).to.equal('john');
         // 'baz' should be 'new baz value' since it was set
@@ -272,7 +272,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
         await this.User.upsert({ id: 42, username: 'doe' });
 
-        const user = await this.User.findById(42);
+        const user = await this.User.findByPk(42);
         // 'username' was updated
         expect(user.username).to.equal('doe');
         // 'baz' should still be 'new baz value' since it was not updated
@@ -282,7 +282,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       it('does not update when setting current values', async function () {
         await this.User.create({ id: 42, username: 'john' });
 
-        const user = await this.User.findById(42);
+        const user = await this.User.findByPk(42);
         const created = await this.User.upsert({ id: user.id, username: user.username });
 
         // After set node-mysql flags = '-FOUND_ROWS' in connection of mysql,

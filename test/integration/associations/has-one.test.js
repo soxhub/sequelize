@@ -80,12 +80,12 @@ describe(Support.getTestDialectTeaser('HasOne'), () => {
 
         await group.setUser(user, { transaction: t });
 
-        const groups = await Group.all();
+        const groups = await Group.findAll();
         const associatedUser = await groups[0].getUser();
 
         expect(associatedUser).to.be.null;
 
-        const transactionGroups = await Group.all({ transaction: t });
+        const transactionGroups = await Group.findAll({ transaction: t });
         const transactionUser = await transactionGroups[0].getUser({ transaction: t });
 
         expect(transactionUser).not.to.be.null;
@@ -134,7 +134,7 @@ describe(Support.getTestDialectTeaser('HasOne'), () => {
 
       await group.setUser(user);
 
-      const groups = await Group.all();
+      const groups = await Group.findAll();
       const associatedUser = await groups[0].getUser();
 
       expect(associatedUser).not.to.be.null;
@@ -166,7 +166,7 @@ describe(Support.getTestDialectTeaser('HasOne'), () => {
 
         await group.setUser(user, { transaction: t });
 
-        const groups = await Group.all();
+        const groups = await Group.findAll();
         const associatedUser = await groups[0].getUser();
 
         expect(associatedUser).to.be.null;
@@ -342,12 +342,12 @@ describe(Support.getTestDialectTeaser('HasOne'), () => {
 
         await user.createGroup({ name: 'testgroup' }, { transaction: t });
 
-        const users = await User.all();
+        const users = await User.findAll();
         const group = await users[0].getGroup();
 
         expect(group).to.be.null;
 
-        const transactionUsers = await User.all({ transaction: t });
+        const transactionUsers = await User.findAll({ transaction: t });
         const transactionGroup = await transactionUsers[0].getGroup({ transaction: t });
 
         expect(transactionGroup).to.be.not.null;

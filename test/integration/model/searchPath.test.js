@@ -95,7 +95,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           expect(found).to.not.be.null;
           expect(found.foo).to.equal('one');
 
-          const byId = await Restaurant.findById(found.id, { searchPath: SEARCH_PATH_ONE });
+          const byId = await Restaurant.findByPk(found.id, { searchPath: SEARCH_PATH_ONE });
           expect(byId).to.not.be.null;
           expect(byId.foo).to.equal('one');
         });
@@ -118,7 +118,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           expect(found).to.not.be.null;
           expect(found.foo).to.equal('two');
 
-          const byId = await Restaurant.findById(found.id, { searchPath: SEARCH_PATH_TWO });
+          const byId = await Restaurant.findByPk(found.id, { searchPath: SEARCH_PATH_TWO });
           expect(byId).to.not.be.null;
           expect(byId.foo).to.equal('two');
         });

@@ -66,7 +66,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       const bio = dialect + '\'"\n'; // Need to add the dialect here so in case of failure I know what DB it failed for
 
       const u1 = await this.User.create({ username: bio });
-      const u2 = await this.User.findById(u1.id);
+      const u2 = await this.User.findByPk(u1.id);
 
       expect(u2.username).to.equal(bio);
     });
@@ -95,7 +95,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       await this.User.create({ username: 'user' });
 
       const user = await this.User.create({ username: 'user' });
-      const foundUser = await this.User.findById(user.id);
+      const foundUser = await this.User.findByPk(user.id);
 
       expect(foundUser.isNewRecord).to.not.be.ok;
     });
@@ -146,7 +146,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
     if (current.dialect.supports.returnValues.returning) {
       it('supports returning', async function () {
-        const user1 = await this.User.findById(1);
+        const user1 = await this.User.findByPk(1);
 
         await user1.increment('aNumber', { by: 2 });
 
@@ -159,64 +159,64 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     }
 
     it('supports where conditions', async function () {
-      const user1 = await this.User.findById(1);
+      const user1 = await this.User.findByPk(1);
 
       await user1.increment(['aNumber'], { by: 2, where: { bNumber: 1 } });
 
-      const user3 = await this.User.findById(1);
+      const user3 = await this.User.findByPk(1);
 
       expect(user3.aNumber).to.be.equal(0);
     });
 
     it('with array', async function () {
-      const user1 = await this.User.findById(1);
+      const user1 = await this.User.findByPk(1);
 
       await user1.increment(['aNumber'], { by: 2 });
 
-      const user3 = await this.User.findById(1);
+      const user3 = await this.User.findByPk(1);
 
       expect(user3.aNumber).to.be.equal(2);
     });
 
     it('with single field', async function () {
-      const user1 = await this.User.findById(1);
+      const user1 = await this.User.findByPk(1);
 
       await user1.increment('aNumber', { by: 2 });
 
-      const user3 = await this.User.findById(1);
+      const user3 = await this.User.findByPk(1);
 
       expect(user3.aNumber).to.be.equal(2);
     });
 
     it('with single field and no value', async function () {
-      const user1 = await this.User.findById(1);
+      const user1 = await this.User.findByPk(1);
 
       await user1.increment('aNumber');
 
-      const user2 = await this.User.findById(1);
+      const user2 = await this.User.findByPk(1);
 
       expect(user2.aNumber).to.be.equal(1);
     });
 
     it('should still work right with other concurrent updates', async function () {
-      const user1 = await this.User.findById(1);
+      const user1 = await this.User.findByPk(1);
 
       // Select the user again (simulating a concurrent query)
-      const user2 = await this.User.findById(1);
+      const user2 = await this.User.findByPk(1);
 
-      await user2.updateAttributes({
+      await user2.update({
         aNumber: user2.aNumber + 1
       });
 
       await user1.increment(['aNumber'], { by: 2 });
 
-      const user5 = await this.User.findById(1);
+      const user5 = await this.User.findByPk(1);
 
       expect(user5.aNumber).to.be.equal(3);
     });
 
     it('should still work right with other concurrent increments', async function () {
-      const user1 = await this.User.findById(1);
+      const user1 = await this.User.findByPk(1);
 
       // The three increments must overlap: this asserts they don't clobber each other.
       await Promise.all([
@@ -225,17 +225,17 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
         user1.increment(['aNumber'], { by: 2 })
       ]);
 
-      const user2 = await this.User.findById(1);
+      const user2 = await this.User.findByPk(1);
 
       expect(user2.aNumber).to.equal(6);
     });
 
     it('with key value pair', async function () {
-      const user1 = await this.User.findById(1);
+      const user1 = await this.User.findByPk(1);
 
       await user1.increment({ aNumber: 1, bNumber: 2 });
 
-      const user3 = await this.User.findById(1);
+      const user3 = await this.User.findByPk(1);
 
       expect(user3.aNumber).to.be.equal(1);
       expect(user3.bNumber).to.be.equal(2);
@@ -280,7 +280,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
       await user.increment('aNumber', { by: 1, silent: true });
 
-      await expect(User.findById(1)).to.eventually.have.property('updatedAt').equalTime(oldDate);
+      await expect(User.findByPk(1)).to.eventually.have.property('updatedAt').equalTime(oldDate);
     });
   });
 
@@ -313,7 +313,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
     if (current.dialect.supports.returnValues.returning) {
       it('supports returning', async function () {
-        const user1 = await this.User.findById(1);
+        const user1 = await this.User.findByPk(1);
 
         await user1.decrement('aNumber', { by: 2 });
 
@@ -326,54 +326,54 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     }
 
     it('with array', async function () {
-      const user1 = await this.User.findById(1);
+      const user1 = await this.User.findByPk(1);
 
       await user1.decrement(['aNumber'], { by: 2 });
 
-      const user3 = await this.User.findById(1);
+      const user3 = await this.User.findByPk(1);
 
       expect(user3.aNumber).to.be.equal(-2);
     });
 
     it('with single field', async function () {
-      const user1 = await this.User.findById(1);
+      const user1 = await this.User.findByPk(1);
 
       await user1.decrement('aNumber', { by: 2 });
 
-      const user3 = await this.User.findById(1);
+      const user3 = await this.User.findByPk(1);
 
       expect(user3.aNumber).to.be.equal(-2);
     });
 
     it('with single field and no value', async function () {
-      const user1 = await this.User.findById(1);
+      const user1 = await this.User.findByPk(1);
 
       await user1.decrement('aNumber');
 
-      const user2 = await this.User.findById(1);
+      const user2 = await this.User.findByPk(1);
 
       expect(user2.aNumber).to.be.equal(-1);
     });
 
     it('should still work right with other concurrent updates', async function () {
-      const user1 = await this.User.findById(1);
+      const user1 = await this.User.findByPk(1);
 
       // Select the user again (simulating a concurrent query)
-      const user2 = await this.User.findById(1);
+      const user2 = await this.User.findByPk(1);
 
-      await user2.updateAttributes({
+      await user2.update({
         aNumber: user2.aNumber + 1
       });
 
       await user1.decrement(['aNumber'], { by: 2 });
 
-      const user5 = await this.User.findById(1);
+      const user5 = await this.User.findByPk(1);
 
       expect(user5.aNumber).to.be.equal(-1);
     });
 
     it('should still work right with other concurrent increments', async function () {
-      const user1 = await this.User.findById(1);
+      const user1 = await this.User.findByPk(1);
 
       // The three decrements must overlap: this asserts they don't clobber each other.
       await Promise.all([
@@ -382,24 +382,24 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
         user1.decrement(['aNumber'], { by: 2 })
       ]);
 
-      const user2 = await this.User.findById(1);
+      const user2 = await this.User.findByPk(1);
 
       expect(user2.aNumber).to.equal(-6);
     });
 
     it('with key value pair', async function () {
-      const user1 = await this.User.findById(1);
+      const user1 = await this.User.findByPk(1);
 
       await user1.decrement({ aNumber: 1, bNumber: 2 });
 
-      const user3 = await this.User.findById(1);
+      const user3 = await this.User.findByPk(1);
 
       expect(user3.aNumber).to.be.equal(-1);
       expect(user3.bNumber).to.be.equal(-2);
     });
 
     it('with negative value', async function () {
-      const user1 = await this.User.findById(1);
+      const user1 = await this.User.findByPk(1);
 
       // Concurrent by design, as in the sibling concurrency test above.
       await Promise.all([
@@ -408,7 +408,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
         user1.decrement({ aNumber: -1, bNumber: -2 })
       ]);
 
-      const user3 = await this.User.findById(1);
+      const user3 = await this.User.findByPk(1);
 
       expect(user3.aNumber).to.be.equal(+5);
       expect(user3.bNumber).to.be.equal(+4);
@@ -432,7 +432,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
       await user.decrement('aNumber', { by: 1 });
 
-      await expect(User.findById(1)).to.eventually.have.property('updatedAt').afterTime(oldDate);
+      await expect(User.findByPk(1)).to.eventually.have.property('updatedAt').afterTime(oldDate);
     });
 
     it('with timestamps set to true and options.silent set to true', async function () {
@@ -453,7 +453,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
       await user.decrement('aNumber', { by: 1, silent: true });
 
-      await expect(User.findById(1)).to.eventually.have.property('updatedAt').equalTime(oldDate);
+      await expect(User.findByPk(1)).to.eventually.have.property('updatedAt').equalTime(oldDate);
     });
   });
 
@@ -485,7 +485,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     it('should return a reference to the same DAO instead of creating a new one', async function () {
       const originalUser = await this.User.create({ username: 'John Doe' });
 
-      await originalUser.updateAttributes({ username: 'Doe John' });
+      await originalUser.update({ username: 'Doe John' });
 
       const updatedUser = await originalUser.reload();
 
@@ -494,9 +494,9 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
     it('should update the values on all references to the DAO', async function () {
       const originalUser = await this.User.create({ username: 'John Doe' });
-      const updater = await this.User.findById(originalUser.id);
+      const updater = await this.User.findByPk(originalUser.id);
 
-      await updater.updateAttributes({ username: 'Doe John' });
+      await updater.update({ username: 'Doe John' });
 
       // We used a different reference when calling updateAttributes, so originalUser is now out of sync
       expect(originalUser.username).to.equal('John Doe');
@@ -541,9 +541,9 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       // Wait for a second, so updatedAt will actually be different
       this.clock.tick(1000);
 
-      const updater = await this.User.findById(originalUser.id);
+      const updater = await this.User.findByPk(originalUser.id);
 
-      this.updatedUser = await updater.updateAttributes({ username: 'Doe John' });
+      this.updatedUser = await updater.update({ username: 'Doe John' });
 
       await this.originalUser.reload();
 
@@ -571,7 +571,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
         include: [Page]
       });
 
-      const updatedPage = await page.updateAttributes({ content: 'something totally different' });
+      const updatedPage = await page.update({ content: 'something totally different' });
 
       expect(leBook.Pages.length).to.equal(1);
       expect(leBook.Pages[0].content).to.equal('om nom nom');
@@ -925,7 +925,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       await user.save({ fields: ['username'] });
 
       // re-select user
-      const user2 = await this.User.findById(user.id);
+      const user2 = await this.User.findByPk(user.id);
 
       // name should have changed
       expect(user2.username).to.equal('fizz');
@@ -1156,13 +1156,13 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       expect(user.id).to.equal(0);
       expect(user.username).to.equal(username);
 
-      const foundUser = await User2.findById(0);
+      const foundUser = await User2.findByPk(0);
 
       expect(foundUser).to.be.ok;
       expect(foundUser.id).to.equal(0);
       expect(foundUser.username).to.equal(username);
 
-      const updatedUser = await foundUser.updateAttributes({ username: newUsername });
+      const updatedUser = await foundUser.update({ username: newUsername });
 
       expect(updatedUser).to.be.ok;
       expect(updatedUser.id).to.equal(0);
@@ -1276,7 +1276,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
       await user.save();
 
-      const user2 = await this.User.findById(user.id);
+      const user2 = await this.User.findByPk(user.id);
 
       expect(user2.username).to.equal('SEQUELIZE');
       expect(user2.bNumber).to.equal(42);
@@ -1403,7 +1403,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     it('should fail a validation when updating', async function () {
       const user = await this.User.create({ aNumber: 0 });
 
-      const err = await expect(user.updateAttributes({ validateTest: 'hello' })).to.be.rejected;
+      const err = await expect(user.update({ validateTest: 'hello' })).to.be.rejected;
 
       expect(err).to.be.instanceof(Object);
       expect(err.get('validateTest')).to.exist;
@@ -1430,7 +1430,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       await HistoryLog.sync();
 
       const log = await HistoryLog.create({ someText: 'Some random text', aNumber: 3, aRandomId: 5 });
-      const newLog = await log.updateAttributes({ aNumber: 5 });
+      const newLog = await log.update({ aNumber: 5 });
 
       expect(newLog.aNumber).to.equal(5);
     });
@@ -1722,7 +1722,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       await this.ParanoidUser.create({ username: 'fnord' });
 
       const users = await this.ParanoidUser.findAll();
-      const user = await users[0].updateAttributes({ username: 'newFnord' });
+      const user = await users[0].update({ username: 'newFnord' });
 
       expect(user.deletedAt).not.to.exist;
     });

@@ -20,7 +20,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       await this.sequelize.sync({ force: true });
       await User.create();
 
-      const user = await User.find({
+      const user = await User.findOne({
         include: [{ model: Company, as: 'Employer' }]
       });
 
@@ -73,7 +73,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       await this.sequelize.sync({ force: true });
       await Company.create();
 
-      const company = await Company.find({
+      const company = await Company.findOne({
         include: [{ model: Person, as: 'CEO' }]
       });
 
@@ -88,7 +88,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       await this.sequelize.sync({ force: true });
       await Company.create();
 
-      const user = await Company.find({
+      const user = await Company.findOne({
         include: [CEO]
       });
 
@@ -109,7 +109,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
 
       await person.setEmployer(company);
 
-      const found = await Person.find({
+      const found = await Person.findOne({
         include: [Person.relation.Employer]
       });
 
@@ -129,7 +129,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       const created = await User.create();
       await created.createTask();
 
-      const user = await User.find({
+      const user = await User.findOne({
         include: [Tasks]
       });
 
@@ -157,7 +157,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         })
       ]);
 
-      const user = await User.find({
+      const user = await User.findOne({
         include: [{ association: Tasks, where: { title: 'trivial' } }]
       });
 
@@ -178,7 +178,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       const created = await User.create();
       await created.createGroup();
 
-      const user = await User.find({
+      const user = await User.findOne({
         include: [Groups]
       });
 
@@ -235,7 +235,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         }
       );
 
-      const task = await Task.find({
+      const task = await Task.findOne({
         where: {
           id: created.id
         },
@@ -267,7 +267,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         }
       );
 
-      const group = await Group.find({
+      const group = await Group.findOne({
         where: {
           id: user.Group.id
         },
@@ -298,7 +298,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         }
       );
 
-      const user = await User.find({
+      const user = await User.findOne({
         where: {
           id: created.id
         },
@@ -334,7 +334,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         }
       );
 
-      const worker = await Worker.find({
+      const worker = await Worker.findOne({
         where: {
           id: project.Workers[0].id
         },
@@ -386,7 +386,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         products[2].setTags([tags[0], tags[1], tags[2]])
       ]);
 
-      const user = await User.find({
+      const user = await User.findOne({
         where: {
           id: 1
         },
@@ -488,7 +488,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         product1.setCategory(tags[1])
       ]);
 
-      const user = await User.find({
+      const user = await User.findOne({
         where: { id: 1 },
         include: [
           { model: GroupMember, as: 'Memberships', include: [Group, Rank] },
@@ -602,7 +602,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
 
       await groups[0].setOutsourcingCompanies(groups.slice(1));
 
-      const group = await Group.find({
+      const group = await Group.findOne({
         where: {
           id: groups[0].id
         },
@@ -640,7 +640,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
 
       await createdUser.addGroup(group);
 
-      const user = await User.find({
+      const user = await User.findOne({
         where: {
           id: createdUser.id
         },

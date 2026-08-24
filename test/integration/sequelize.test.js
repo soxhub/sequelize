@@ -1399,7 +1399,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
           const user = await User.create({ username: 'foo' }, { transaction: t1 });
           const t2 = await this.sequelizeWithTransaction.transaction({ transaction: t1 });
 
-          await user.updateAttributes({ username: 'bar' }, { transaction: t2 });
+          await user.update({ username: 'bar' }, { transaction: t2 });
           await t2.commit();
 
           const newUser = await user.reload({ transaction: t1 });
@@ -1539,7 +1539,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
           const user = await User.create({ username: 'foo' }, { transaction: t1 });
           const t2 = await this.sequelizeWithTransaction.transaction({ transaction: t1 });
 
-          await user.updateAttributes({ username: 'bar' }, { transaction: t2 });
+          await user.update({ username: 'bar' }, { transaction: t2 });
           await t2.rollback();
 
           const newUser = await user.reload({ transaction: t1 });
@@ -1558,7 +1558,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
           const user = await User.create({ username: 'foo' }, { transaction: t1 });
           const t2 = await this.sequelizeWithTransaction.transaction({ transaction: t1 });
 
-          await user.updateAttributes({ username: 'bar' }, { transaction: t2 });
+          await user.update({ username: 'bar' }, { transaction: t2 });
           await t1.rollback();
 
           const users = await User.findAll();
@@ -1613,7 +1613,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       expect(destroyedUser.deletedAt).to.exist;
       expect(Number(destroyedUser.deletedAt)).not.to.equal(epoch);
 
-      const fetchedDestroyedUser = await User.findById(destroyedUser.id, { paranoid: false });
+      const fetchedDestroyedUser = await User.findByPk(destroyedUser.id, { paranoid: false });
       expect(fetchedDestroyedUser.deletedAt).to.exist;
       expect(Number(fetchedDestroyedUser.deletedAt)).not.to.equal(epoch);
 

@@ -57,17 +57,17 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       it('supports where conditions', async function () {
-        await this.User.findById(1);
+        await this.User.findByPk(1);
         await this.User[method](['aNumber'], { by: 2, where: { id: 1 } });
 
-        const user3 = await this.User.findById(2);
+        const user3 = await this.User.findByPk(2);
         expect(user3.aNumber).to.be.equal(this.assert(0, 0));
       });
 
       it('uses correct column names for where conditions', async function () {
         await this.User[method](['aNumber'], { by: 2, where: { cNumber: 0 } });
 
-        const user4 = await this.User.findById(4);
+        const user4 = await this.User.findByPk(4);
         expect(user4.aNumber).to.be.equal(this.assert(2, -2));
       });
 
@@ -155,7 +155,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         this.clock.tick(1000);
         await User[method]('aNumber', { by: 1, where: {} });
 
-        await expect(User.findById(1)).to.eventually.have.property('updatedAt').afterTime(oldDate);
+        await expect(User.findByPk(1)).to.eventually.have.property('updatedAt').afterTime(oldDate);
       });
 
       it('with timestamps set to true and options.silent set to true', async function () {
@@ -174,7 +174,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         this.clock.tick(1000);
         await User[method]('aNumber', { by: 1, silent: true, where: {} });
 
-        await expect(User.findById(1)).to.eventually.have.property('updatedAt').equalTime(oldDate);
+        await expect(User.findByPk(1)).to.eventually.have.property('updatedAt').equalTime(oldDate);
       });
 
       it('should work with scopes', async function () {

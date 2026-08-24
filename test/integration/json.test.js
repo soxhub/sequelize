@@ -81,7 +81,7 @@ describe('model', () => {
         const created = await this.User.create({ username: 'swen', emergency_contact: emergencyContact });
         expect(created.emergency_contact).to.eql(emergencyContact);
 
-        const user = await this.User.find({ where: { username: 'swen' }, attributes: ['emergency_contact'] });
+        const user = await this.User.findOne({ where: { username: 'swen' }, attributes: ['emergency_contact'] });
         expect(user.emergency_contact).to.eql(emergencyContact);
       });
 
@@ -91,7 +91,7 @@ describe('model', () => {
         const created = await this.User.create({ username: 'swen', emergency_contact: emergencyContact });
         expect(created.emergency_contact).to.eql(emergencyContact);
 
-        const user = await this.User.find({
+        const user = await this.User.findOne({
           where: { username: 'swen' },
           attributes: [[Sequelize.json('emergency_contact.phones[1]'), 'firstEmergencyNumber']]
         });
@@ -105,7 +105,7 @@ describe('model', () => {
         const created = await this.User.create({ username: 'swen', emergency_contact: emergencyContact });
         expect(created.emergency_contact).to.eql(emergencyContact);
 
-        const user = await this.User.find({
+        const user = await this.User.findOne({
           where: { username: 'swen' },
           attributes: [[Sequelize.json('emergency_contact.kate'), 'katesNumber']]
         });
@@ -119,13 +119,13 @@ describe('model', () => {
         const created = await this.User.create({ username: 'swen', emergency_contact: emergencyContact });
         expect(created.emergency_contact).to.eql(emergencyContact);
 
-        const byEmail = await this.User.find({
+        const byEmail = await this.User.findOne({
           where: { username: 'swen' },
           attributes: [[Sequelize.json('emergency_contact.kate.email'), 'katesEmail']]
         });
         expect(byEmail.getDataValue('katesEmail')).to.equal('kate@kate.com');
 
-        const byPhone = await this.User.find({
+        const byPhone = await this.User.findOne({
           where: { username: 'swen' },
           attributes: [[Sequelize.json('emergency_contact.kate.phones[1]'), 'katesFirstPhone']]
         });
@@ -138,7 +138,7 @@ describe('model', () => {
           this.User.create({ username: 'anna', emergency_contact: { name: 'joe' } })
         ]);
 
-        const user = await this.User.find({
+        const user = await this.User.findOne({
           where: Sequelize.json('emergency_contact.name', 'kate'),
           attributes: ['username', 'emergency_contact']
         });
@@ -152,7 +152,7 @@ describe('model', () => {
           this.User.create({ username: 'anna', emergency_contact: { name: 'joe' } })
         ]);
 
-        const user = await this.User.find({
+        const user = await this.User.findOne({
           where: Sequelize.json({ emergency_contact: { name: 'kate' } })
         });
 
@@ -165,7 +165,7 @@ describe('model', () => {
           this.User.create({ username: 'anna', emergency_contact: { name: 'joe' } })
         ]);
 
-        const user = await this.User.find({ where: Sequelize.json('emergency_contact.name', 'joe') });
+        const user = await this.User.findOne({ where: Sequelize.json('emergency_contact.name', 'joe') });
         expect(user.emergency_contact.name).to.equal('joe');
       });
 
@@ -175,7 +175,7 @@ describe('model', () => {
           this.User.create({ username: 'anna', emergencyContact: { name: 'joe' } })
         ]);
 
-        const user = await this.User.find({
+        const user = await this.User.findOne({
           attributes: [[Sequelize.json('emergencyContact.name'), 'contactName']],
           where: Sequelize.json('emergencyContact.name', 'joe')
         });
@@ -189,10 +189,10 @@ describe('model', () => {
           this.User.create({ username: 'anna', emergency_contact: [{ name: 'joe' }] })
         ]);
 
-        const byIndex = await this.User.find({ where: Sequelize.json('emergency_contact.0', 'kate') });
+        const byIndex = await this.User.findOne({ where: Sequelize.json('emergency_contact.0', 'kate') });
         expect(byIndex.username).to.equal('swen');
 
-        const byPath = await this.User.find({ where: Sequelize.json('emergency_contact[0].name', 'joe') });
+        const byPath = await this.User.findOne({ where: Sequelize.json('emergency_contact[0].name', 'joe') });
         expect(byPath.username).to.equal('anna');
       });
 
@@ -205,9 +205,9 @@ describe('model', () => {
         });
         expect(created.isNewRecord).to.equal(false);
 
-        await this.User.find({ where: { username: 'swen' } });
+        await this.User.findOne({ where: { username: 'swen' } });
 
-        const user = await this.User.find({ where: Sequelize.json('emergency_contact.value', text) });
+        const user = await this.User.findOne({ where: Sequelize.json('emergency_contact.value', text) });
         expect(user.username).to.equal('swen');
       });
 
@@ -220,9 +220,9 @@ describe('model', () => {
         });
         expect(!created.isNewRecord).to.equal(true);
 
-        await this.User.find({ where: { username: 'swen' } });
+        await this.User.findOne({ where: { username: 'swen' } });
 
-        const user = await this.User.find({ where: Sequelize.json('emergency_contact.value', text) });
+        const user = await this.User.findOne({ where: Sequelize.json('emergency_contact.value', text) });
         expect(user.username).to.equal('swen');
       });
 

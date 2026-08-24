@@ -169,7 +169,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(savedProduct.Tags[1].createOptions.myOption).to.be.equal('option');
         expect(savedProduct.Tags[1].createOptions.parentRecord).to.be.equal(savedProduct);
 
-        const persistedProduct = await Product.find({
+        const persistedProduct = await Product.findOne({
           where: { id: savedProduct.id },
           include: [Tag]
         });
@@ -204,7 +204,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        const persistedProduct = await Product.find({
+        const persistedProduct = await Product.findOne({
           where: { id: savedProduct.id },
           include: [Categories]
         });
@@ -238,7 +238,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        const persistedUser = await User.find({
+        const persistedUser = await User.findOne({
           where: { id: savedUser.id },
           include: [Task]
         });
@@ -271,7 +271,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        const persistedUser = await User.find({
+        const persistedUser = await User.findOne({
           where: { id: savedUser.id },
           include: [Job]
         });
@@ -342,7 +342,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(savedUser.Tasks[1].createOptions.myOption).to.be.equal('option');
         expect(savedUser.Tasks[1].createOptions.parentRecord).to.be.equal(savedUser);
 
-        const persistedUser = await User.find({
+        const persistedUser = await User.findOne({
           where: { id: savedUser.id },
           include: [Task]
         });
@@ -494,7 +494,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        const persistedUser = await User.find({
+        const persistedUser = await User.findOne({
           where: { id: savedUser.id },
           include: [Jobs]
         });

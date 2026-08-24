@@ -25,7 +25,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
       const user = await User.create({ username: 'bob', email: 'hello@world.com' });
       await User.update({ username: 'toni' }, { where: { id: user.id } });
 
-      const updatedUser = await User.findById(1);
+      const updatedUser = await User.findByPk(1);
       expect(updatedUser.username).to.equal('toni');
     });
 
@@ -44,7 +44,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
 
       const model = await Model.create({ name: 'World' });
 
-      const err = await expect(model.updateAttributes({ name: '' })).to.be.rejected;
+      const err = await expect(model.update({ name: '' })).to.be.rejected;
       expect(err).to.be.an.instanceOf(Error);
       expect(err.get('name')[0].message).to.equal('Validation notEmpty on name failed');
     });

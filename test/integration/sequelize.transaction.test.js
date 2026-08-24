@@ -78,7 +78,7 @@ if (current.dialect.supports.transactions) {
           await this.sequelize.query(query, { transaction: t });
           await t.commit();
 
-          const users = await this.User.all();
+          const users = await this.User.findAll();
           expect(users.length).to.equal(1);
           expect(users[0].name).to.equal('foo');
         });

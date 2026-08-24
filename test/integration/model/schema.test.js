@@ -195,7 +195,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           expect(found).to.not.be.null;
           expect(found.foo).to.equal('one');
 
-          const byId = await this.RestaurantOne.findById(found.id);
+          const byId = await this.RestaurantOne.findByPk(found.id);
           expect(byId).to.not.be.null;
           expect(byId.foo).to.equal('one');
 
@@ -215,7 +215,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           expect(found).to.not.be.null;
           expect(found.foo).to.equal('two');
 
-          const byId = await this.RestaurantTwo.findById(found.id);
+          const byId = await this.RestaurantTwo.findByPk(found.id);
           expect(byId).to.not.be.null;
           expect(byId.foo).to.equal('two');
 

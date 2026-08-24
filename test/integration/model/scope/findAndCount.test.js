@@ -50,35 +50,35 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       it('should apply defaultScope', async function () {
-        const result = await this.ScopeMe.findAndCount();
+        const result = await this.ScopeMe.findAndCountAll();
         expect(result.count).to.equal(2);
         expect(result.rows.length).to.equal(2);
       });
 
       it('should be able to override default scope', async function () {
-        const result = await this.ScopeMe.findAndCount({ where: { access_level: { gt: 5 } } });
+        const result = await this.ScopeMe.findAndCountAll({ where: { access_level: { gt: 5 } } });
         expect(result.count).to.equal(1);
         expect(result.rows.length).to.equal(1);
       });
 
       it('should be able to unscope', async function () {
-        const result = await this.ScopeMe.unscoped().findAndCount({ limit: 1 });
+        const result = await this.ScopeMe.unscoped().findAndCountAll({ limit: 1 });
         expect(result.count).to.equal(4);
         expect(result.rows.length).to.equal(1);
       });
 
       it('should be able to apply other scopes', async function () {
-        const result = await this.ScopeMe.scope('lowAccess').findAndCount();
+        const result = await this.ScopeMe.scope('lowAccess').findAndCountAll();
         expect(result.count).to.equal(3);
       });
 
       it('should be able to merge scopes with where', async function () {
-        const result = await this.ScopeMe.scope('lowAccess').findAndCount({ where: { username: 'dan' } });
+        const result = await this.ScopeMe.scope('lowAccess').findAndCountAll({ where: { username: 'dan' } });
         expect(result.count).to.equal(1);
       });
 
       it('should ignore the order option if it is found within the scope', async function () {
-        const result = await this.ScopeMe.scope('withOrder').findAndCount();
+        const result = await this.ScopeMe.scope('withOrder').findAndCountAll();
         expect(result.count).to.equal(4);
       });
     });

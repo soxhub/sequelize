@@ -19,8 +19,8 @@ describe(Support.getTestDialectTeaser('Alias'), () => {
     expect(createdTask.getOwner).to.be.ok;
 
     const [user, task] = await Promise.all([
-      User.find({ where: { id: 1 }, include: [{ model: Task, as: 'assignments' }] }),
-      Task.find({ where: { id: 1 }, include: [{ model: User, as: 'owner' }] })
+      User.findOne({ where: { id: 1 }, include: [{ model: Task, as: 'assignments' }] }),
+      Task.findOne({ where: { id: 1 }, include: [{ model: User, as: 'owner' }] })
     ]);
 
     expect(user.assignments).to.be.ok;
@@ -43,8 +43,8 @@ describe(Support.getTestDialectTeaser('Alias'), () => {
     expect(createdTask.getOWNER).to.be.ok;
 
     const [user, task] = await Promise.all([
-      User.find({ where: { id: 1 }, include: [{ model: Task, as: 'ASSIGNMENTS' }] }),
-      Task.find({ where: { id: 1 }, include: [{ model: User, as: 'OWNER' }] })
+      User.findOne({ where: { id: 1 }, include: [{ model: Task, as: 'ASSIGNMENTS' }] }),
+      Task.findOne({ where: { id: 1 }, include: [{ model: User, as: 'OWNER' }] })
     ]);
 
     expect(user.ASSIGNMENTS).to.be.ok;
@@ -64,7 +64,7 @@ describe(Support.getTestDialectTeaser('Alias'), () => {
     expect(created.addTask).to.be.ok;
     expect(created.addTaskz).to.be.ok;
 
-    const user = await User.find({ where: { id: 1 }, include: [{ model: Task, as: 'taskz' }] });
+    const user = await User.findOne({ where: { id: 1 }, include: [{ model: Task, as: 'taskz' }] });
     expect(user.taskz).to.be.ok;
   });
 
@@ -90,7 +90,7 @@ describe(Support.getTestDialectTeaser('Alias'), () => {
     expect(created.addAssignment).to.be.ok;
     expect(created.addAssignments).to.be.ok;
 
-    const user = await User.find({ where: { id: 1 }, include: [Task] });
+    const user = await User.findOne({ where: { id: 1 }, include: [Task] });
     expect(user.assignments).to.be.ok;
   });
 });

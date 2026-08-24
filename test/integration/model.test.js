@@ -740,14 +740,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
         await User.create({ username: 'foo' }, { transaction: t });
 
-        const [user1] = await User.findOrInitialize({
+        const [user1] = await User.findOrBuild({
           where: { username: 'foo' }
         });
-        const [user2] = await User.findOrInitialize({
+        const [user2] = await User.findOrBuild({
           where: { username: 'foo' },
           transaction: t
         });
-        const [user3] = await User.findOrInitialize({
+        const [user3] = await User.findOrBuild({
           where: { username: 'foo' },
           defaults: { foo: 'asd' },
           transaction: t
@@ -765,7 +765,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       it('with a single find field', async function () {
         const user = await this.User.create({ username: 'Username' });
 
-        const [_user, initialized] = await this.User.findOrInitialize({
+        const [_user, initialized] = await this.User.findOrBuild({
           where: { username: user.username }
         });
 
@@ -777,7 +777,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       it('with multiple find fields', async function () {
         const user = await this.User.create({ username: 'Username', data: 'data' });
 
-        const [_user, initialized] = await this.User.findOrInitialize({
+        const [_user, initialized] = await this.User.findOrBuild({
           where: {
             username: user.username,
             data: user.data
@@ -798,7 +798,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             data: 'ThisIsData'
           };
 
-        const [user, initialized] = await this.User.findOrInitialize({
+        const [user, initialized] = await this.User.findOrBuild({
           where: data,
           defaults: default_values
         });
@@ -863,7 +863,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       const user = await User.create({ username: 'Peter', secretValue: '42' });
 
-      await user.updateAttributes(
+      await user.update(
         { secretValue: '43' },
         {
           fields: ['secretValue'],
@@ -895,7 +895,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       expect(u).to.exist;
 
-      await u.updateAttributes(
+      await u.update(
         { name: 'brian' },
         {
           logging(sql) {
@@ -1091,7 +1091,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       await this.User.update({ data: 'test' }, { where: { id: user.id }, individualHooks: true });
 
-      const userUpdated = await this.User.findById(user.id);
+      const userUpdated = await this.User.findByPk(user.id);
 
       expect(userUpdated.intVal).to.be.equal(1);
     });
@@ -1437,7 +1437,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         { username: 'Max', secretValue: '42' }
       ]);
 
-      const user = await User.findById(1);
+      const user = await User.findByPk(1);
 
       await user.destroy();
       await user.reload({ paranoid: false });
@@ -1463,11 +1463,11 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         await User.sync({ force: true });
         await User.bulkCreate([{ username: 'Toni' }, { username: 'Tobi' }, { username: 'Max' }]);
 
-        const user = await User.findById(1);
+        const user = await User.findByPk(1);
 
         await user.destroy();
 
-        const deletedUser = await User.findById(1);
+        const deletedUser = await User.findByPk(1);
 
         expect(deletedUser).to.be.null;
 
@@ -1494,15 +1494,15 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         await User.sync({ force: true });
         await User.bulkCreate([{ username: 'Toni' }, { username: 'Tobi' }, { username: 'Max' }]);
 
-        const user = await User.findById(1);
+        const user = await User.findByPk(1);
 
         await user.destroy();
 
-        const deletedUser = await User.find({ where: 1, paranoid: false });
+        const deletedUser = await User.findOne({ where: 1, paranoid: false });
 
         expect(deletedUser).to.exist;
 
-        const missingUser = await User.findById(1);
+        const missingUser = await User.findByPk(1);
 
         expect(missingUser).to.be.null;
 
@@ -1543,13 +1543,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         { name: 'Fifi', UserId: user.id }
       ]);
 
-      const pet = await Pet.findById(1);
+      const pet = await Pet.findByPk(1);
 
       await pet.destroy();
 
       const [userWithPets, userWithDeletedPets] = await Promise.all([
-        User.find({ where: { id: user.id }, include: Pet }),
-        User.find({
+        User.findOne({ where: { id: user.id }, include: Pet }),
+        User.findOne({
           where: { id: user.id },
           include: [{ model: Pet, paranoid: false }]
         })
@@ -1574,13 +1574,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       await User.bulkCreate([{ username: 'Bob' }, { username: 'Tobi' }, { username: 'Max' }, { username: 'Tony' }]);
 
-      const bob = await User.find({ where: { username: 'Bob' } });
+      const bob = await User.findOne({ where: { username: 'Bob' } });
 
       await bob.destroy({ force: true });
 
-      await expect(User.find({ where: { username: 'Bob' } })).to.eventually.be.null;
+      await expect(User.findOne({ where: { username: 'Bob' } })).to.eventually.be.null;
 
-      const tobi = await User.find({ where: { username: 'Tobi' } });
+      const tobi = await User.findOne({ where: { username: 'Tobi' } });
 
       await tobi.destroy();
 
@@ -1703,7 +1703,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       await ParanoidUser.destroy({ where: { secretValue: '42' } });
       await ParanoidUser.restore({ where: { secretValue: '42' } });
 
-      const user = await ParanoidUser.find({ where: { secretValue: '42' } });
+      const user = await ParanoidUser.findOne({ where: { secretValue: '42' } });
 
       expect(user).to.be.ok;
       expect(user.username).to.equal('Peter');
@@ -2318,7 +2318,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         }
       );
 
-      await UserSpecial.updateAttributes(
+      await UserSpecial.update(
         { age: 5 },
         {
           logging(user) {
@@ -2431,7 +2431,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           data: new Buffer('Sequelize')
         });
 
-        const foundUser = await this.BlobUser.findById(user.id);
+        const foundUser = await this.BlobUser.findByPk(user.id);
 
         expect(foundUser.data).to.be.an.instanceOf(Buffer);
         expect(foundUser.data.toString()).to.have.string('Sequelize');
@@ -2442,7 +2442,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           // create a null column
         });
 
-        const foundUser = await this.BlobUser.findById(user.id);
+        const foundUser = await this.BlobUser.findByPk(user.id);
 
         expect(foundUser.data).to.be.null;
       });
@@ -2467,7 +2467,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           data: 'Sequelize'
         });
 
-        const foundUser = await this.BlobUser.findById(user.id);
+        const foundUser = await this.BlobUser.findByPk(user.id);
 
         expect(foundUser.data).to.be.an.instanceOf(Buffer);
         expect(foundUser.data.toString()).to.have.string('Sequelize');

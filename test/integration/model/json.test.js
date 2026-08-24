@@ -120,7 +120,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             }
           );
 
-          const event = await this.Event.findById(2);
+          const event = await this.Event.findByPk(2);
           expect(event.get('data')).to.eql({
             name: {
               first: 'Rick',
@@ -175,7 +175,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             }
           );
 
-          const event = await this.Event.findById(2);
+          const event = await this.Event.findByPk(2);
           expect(event.get('data')).to.eql({
             name: {
               first: 'Rick',

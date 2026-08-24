@@ -167,7 +167,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
           isAdmin: true
         });
 
-        const user = await this.User.findById(created.get('id'));
+        const user = await this.User.findByPk(created.get('id'));
 
         expect(user.toJSON()).to.deep.equal({
           id: user.get('id'),
@@ -187,7 +187,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
           isUser: false
         });
 
-        const user = await this.User.findById(created.get('id'));
+        const user = await this.User.findByPk(created.get('id'));
 
         expect(JSON.stringify(user)).to.deep.equal(
           `{"id":${user.get('id')},"username":"test.user","age":99,"level":null,"isUser":false,"isAdmin":true}`
@@ -201,7 +201,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
           isAdmin: true
         });
 
-        const user = await this.User.findById(created.get('id'));
+        const user = await this.User.findByPk(created.get('id'));
 
         expect(JSON.parse(JSON.stringify(user))).to.deep.equal({
           id: user.get('id'),

@@ -317,7 +317,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
 
         it('should allow dates as a string', () => {
           return expect(
-            User.find({
+            User.findOne({
               where: {
                 date: '2000-12-16'
               }
@@ -389,7 +389,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
       describe('findAll', () => {
         it('should allow $in', () => {
           return expect(
-            User.all({
+            User.findAll({
               where: {
                 name: {
                   $like: {
@@ -403,7 +403,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
 
         it('should allow $like for uuid', () => {
           return expect(
-            User.all({
+            User.findAll({
               where: {
                 uid: {
                   $like: '12345678%'

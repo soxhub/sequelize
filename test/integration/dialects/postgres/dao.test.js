@@ -97,7 +97,7 @@ describe('[POSTGRES Specific] DAO', () => {
         this.User.create({ username: 'anna', emergency_contact: { name: 'joe' } })
       ]);
 
-      const user = await this.User.find({
+      const user = await this.User.findOne({
         where: sequelize.json("emergency_contact->>'name'", 'kate'),
         attributes: ['username', 'emergency_contact']
       });
@@ -111,7 +111,7 @@ describe('[POSTGRES Specific] DAO', () => {
         this.User.create({ username: 'anna', emergency_contact: { name: 'joe' } })
       ]);
 
-      const user = await this.User.find({
+      const user = await this.User.findOne({
         where: sequelize.json({ emergency_contact: { name: 'kate' } })
       });
 
@@ -124,7 +124,7 @@ describe('[POSTGRES Specific] DAO', () => {
         this.User.create({ username: 'anna', emergency_contact: { name: 'joe' } })
       ]);
 
-      const user = await this.User.find({ where: sequelize.json('emergency_contact.name', 'joe') });
+      const user = await this.User.findOne({ where: sequelize.json('emergency_contact.name', 'joe') });
 
       expect(user.emergency_contact.name).to.equal('joe');
     });
@@ -135,7 +135,7 @@ describe('[POSTGRES Specific] DAO', () => {
         this.User.create({ username: 'anna', emergencyContact: { name: 'joe' } })
       ]);
 
-      const user = await this.User.find({
+      const user = await this.User.findOne({
         attributes: [[sequelize.json('emergencyContact.name'), 'contactName']],
         where: sequelize.json('emergencyContact.name', 'joe')
       });
@@ -149,9 +149,9 @@ describe('[POSTGRES Specific] DAO', () => {
       const created = await this.User.create({ username: 'swen', emergency_contact: { value: text } });
       expect(created.isNewRecord).to.equal(false);
 
-      await this.User.find({ where: { username: 'swen' } });
+      await this.User.findOne({ where: { username: 'swen' } });
 
-      const user = await this.User.find({ where: sequelize.json('emergency_contact.value', text) });
+      const user = await this.User.findOne({ where: sequelize.json('emergency_contact.value', text) });
 
       expect(user.username).to.equal('swen');
     });
@@ -165,9 +165,9 @@ describe('[POSTGRES Specific] DAO', () => {
       });
       expect(created.isNewRecord).to.equal(false);
 
-      await this.User.find({ where: { username: 'swen' } });
+      await this.User.findOne({ where: { username: 'swen' } });
 
-      const user = await this.User.find({ where: sequelize.json('emergency_contact.value', text) });
+      const user = await this.User.findOne({ where: sequelize.json('emergency_contact.value', text) });
 
       expect(user.username).to.equal('swen');
     });
@@ -482,7 +482,7 @@ describe('[POSTGRES Specific] DAO', () => {
         const user = await User.create({ aNumber: 2147483647 });
         expect(user.aNumber).to.equal(2147483647);
 
-        const _user = await User.find({ where: { aNumber: 2147483647 } });
+        const _user = await User.findOne({ where: { aNumber: 2147483647 } });
         expect(_user.aNumber).to.equal(2147483647);
       });
 
@@ -492,7 +492,7 @@ describe('[POSTGRES Specific] DAO', () => {
         const user = await User.create({ aNumber: -2147483647 });
         expect(user.aNumber).to.equal(-2147483647);
 
-        const _user = await User.find({ where: { aNumber: -2147483647 } });
+        const _user = await User.findOne({ where: { aNumber: -2147483647 } });
         expect(_user.aNumber).to.equal(-2147483647);
       });
     });
@@ -512,7 +512,7 @@ describe('[POSTGRES Specific] DAO', () => {
         const user = await User.create({ aNumber: '9223372036854775807' });
         expect(user.aNumber).to.equal('9223372036854775807');
 
-        const _user = await User.find({ where: { aNumber: '9223372036854775807' } });
+        const _user = await User.findOne({ where: { aNumber: '9223372036854775807' } });
         expect(_user.aNumber).to.equal('9223372036854775807');
       });
 
@@ -522,7 +522,7 @@ describe('[POSTGRES Specific] DAO', () => {
         const user = await User.create({ aNumber: '-9223372036854775807' });
         expect(user.aNumber).to.equal('-9223372036854775807');
 
-        const _user = await User.find({ where: { aNumber: '-9223372036854775807' } });
+        const _user = await User.findOne({ where: { aNumber: '-9223372036854775807' } });
         expect(_user.aNumber).to.equal('-9223372036854775807');
       });
     });
@@ -569,7 +569,7 @@ describe('[POSTGRES Specific] DAO', () => {
       expect(newUser.settings).to.deep.equal({ created: '"value"' });
 
       // Check to see if updating an hstore field works
-      const oldUser = await newUser.updateAttributes({ settings: { should: 'update', to: 'this', first: 'place' } });
+      const oldUser = await newUser.update({ settings: { should: 'update', to: 'this', first: 'place' } });
 
       // Postgres always returns keys in alphabetical order (ascending)
       expect(oldUser.settings).to.deep.equal({ first: 'place', should: 'update', to: 'this' });
@@ -589,7 +589,7 @@ describe('[POSTGRES Specific] DAO', () => {
         ]
       });
 
-      const user = await User.findById(1);
+      const user = await User.findByPk(1);
 
       expect(user.phones.length).to.equal(4);
       expect(user.phones[1].number).to.equal('987654321');
@@ -608,7 +608,7 @@ describe('[POSTGRES Specific] DAO', () => {
         }
       ]);
 
-      const user = await User.findById(1);
+      const user = await User.findByPk(1);
 
       expect(user.settings.mailing).to.equal('true');
     });
@@ -657,7 +657,7 @@ describe('[POSTGRES Specific] DAO', () => {
 
       await this.User.create(data);
 
-      const user = await this.User.find({ where: { username: 'user' } });
+      const user = await this.User.findOne({ where: { username: 'user' } });
 
       // Check that the hstore fields are the same when retrieving the user
       expect(user.settings).to.deep.equal(data.settings);
@@ -676,7 +676,7 @@ describe('[POSTGRES Specific] DAO', () => {
       await this.User.create(data);
 
       // Check that the hstore fields are the same when retrieving the user
-      const user = await this.User.find({ where: { username: 'user' } });
+      const user = await this.User.findOne({ where: { username: 'user' } });
 
       expect(user.phones).to.deep.equal(data.phones);
     });
@@ -707,7 +707,7 @@ describe('[POSTGRES Specific] DAO', () => {
 
       await created.setHstoreSubmodels([submodel]);
 
-      const user = await this.User.find({ where: { username: 'user1' }, include: [HstoreSubmodel] });
+      const user = await this.User.findOne({ where: { username: 'user1' }, include: [HstoreSubmodel] });
 
       expect(Object.hasOwn(user, 'hstoreSubmodels')).to.be.ok;
       expect(user.hstoreSubmodels.length).to.equal(1);
@@ -731,7 +731,7 @@ describe('[POSTGRES Specific] DAO', () => {
       expect(newUser.course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
 
       // Check to see if updating a range field works
-      await newUser.updateAttributes({ acceptable_marks: [0.8, 0.9] });
+      await newUser.update({ acceptable_marks: [0.8, 0.9] });
 
       expect(newUser.acceptable_marks.length).to.equal(2);
       expect(newUser.acceptable_marks[0]).to.equal(0.8); // lower bound
@@ -751,7 +751,7 @@ describe('[POSTGRES Specific] DAO', () => {
         holidays
       });
 
-      const user = await User.findById(1);
+      const user = await User.findByPk(1);
 
       expect(user.holidays.length).to.equal(2);
       expect(user.holidays[0].length).to.equal(2);
@@ -778,7 +778,7 @@ describe('[POSTGRES Specific] DAO', () => {
         }
       ]);
 
-      const user = await User.findById(1);
+      const user = await User.findByPk(1);
 
       expect(user.course_period[0] instanceof Date).to.be.ok;
       expect(user.course_period[1] instanceof Date).to.be.ok;
@@ -848,7 +848,7 @@ describe('[POSTGRES Specific] DAO', () => {
 
       await User.create(data);
 
-      const user = await User.find({ where: { username: 'user' } });
+      const user = await User.findOne({ where: { username: 'user' } });
 
       // Check that the range fields are the same when retrieving the user
       expect(user.course_period).to.deep.equal(data.course_period);
@@ -869,7 +869,7 @@ describe('[POSTGRES Specific] DAO', () => {
       await User.create(data);
 
       // Check that the range fields are the same when retrieving the user
-      const user = await User.find({ where: { username: 'user' } });
+      const user = await User.findOne({ where: { username: 'user' } });
 
       expect(user.holidays).to.deep.equal(data.holidays);
     });
@@ -910,7 +910,7 @@ describe('[POSTGRES Specific] DAO', () => {
 
       await created.setHolidayDates([holidayDate]);
 
-      const user = await this.User.find({ where: { username: 'user' }, include: [HolidayDate] });
+      const user = await this.User.findOne({ where: { username: 'user' }, include: [HolidayDate] });
 
       expect(Object.hasOwn(user, 'holidayDates')).to.be.ok;
       expect(user.holidayDates.length).to.equal(1);
@@ -946,7 +946,7 @@ describe('[POSTGRES Specific] DAO', () => {
     const point = { type: 'Point', coordinates: [39.807222, -76.984722] };
 
     const created = await User.create({ username: 'user', email: ['foo@bar.com'], location: point });
-    const user = await User.find({ where: { username: created.username } });
+    const user = await User.findOne({ where: { username: created.username } });
 
     expect(user.location).to.deep.eql(point);
   });
@@ -979,7 +979,7 @@ describe('[POSTGRES Specific] DAO', () => {
         expect(user.fullName).to.equal('John Smith');
 
         // We can query by non-quoted identifiers
-        const user2 = await this.User.find({
+        const user2 = await this.User.findOne({
           where: { fullName: 'John Smith' }
         });
 
@@ -1099,19 +1099,19 @@ describe('[POSTGRES Specific] DAO', () => {
 
         await Promise.all([
           (async () => {
-            const Harry = await this.Student.findById(1);
+            const Harry = await this.Student.findByPk(1);
             return await Harry.setClasses([1, 2, 3]);
           })(),
           (async () => {
-            const Ron = await this.Student.findById(2);
+            const Ron = await this.Student.findByPk(2);
             return await Ron.setClasses([1, 2]);
           })(),
           (async () => {
-            const Ginny = await this.Student.findById(3);
+            const Ginny = await this.Student.findByPk(3);
             return await Ginny.setClasses([2, 3]);
           })(),
           (async () => {
-            const Hermione = await this.Student.findById(4);
+            const Hermione = await this.Student.findByPk(4);
             return await Hermione.setClasses([1, 2, 3]);
           })()
         ]);

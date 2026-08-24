@@ -239,12 +239,12 @@ describe(Support.getTestDialectTeaser('Multiple Level Filters'), () => {
       }
     ]);
 
-    const user = await User.findById(1);
-    const project = await Project.findById(1);
+    const user = await User.findByPk(1);
+    const project = await Project.findByPk(1);
     await user.setProjects([project]);
 
-    const secondUser = await User.findById(2);
-    const secondProject = await Project.findById(2);
+    const secondUser = await User.findByPk(2);
+    const secondProject = await Project.findByPk(2);
     await secondUser.setProjects([secondProject]);
 
     const users = await User.findAll({

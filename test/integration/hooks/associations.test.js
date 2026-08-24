@@ -71,7 +71,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           const task = await this.Tasks.create({ title: 'New Task' });
 
           await project.setTask(task);
-          await project.updateAttributes({ id: 2 });
+          await project.update({ id: 2 });
 
           expect(beforeHook).to.be.true;
           expect(afterHook).to.be.true;
@@ -199,7 +199,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           const task = await this.Tasks.create({ title: 'New Task' });
 
           await project.setTask(task);
-          await project.updateAttributes({ id: 2 });
+          await project.update({ id: 2 });
 
           expect(beforeHook.calledOnce).to.be.true;
           expect(afterHook.calledOnce).to.be.true;

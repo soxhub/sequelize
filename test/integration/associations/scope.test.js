@@ -107,7 +107,7 @@ describe(Support.getTestDialectTeaser('associations'), () => {
         expect(comment.get('commentable')).to.equal('post');
         expect(comment.get('isMain')).to.be.false;
 
-        const withoutMain = await this.Post.scope('withMainComment').findById(this.post.get('id'));
+        const withoutMain = await this.Post.scope('withMainComment').findByPk(this.post.get('id'));
         expect(withoutMain.mainComment).to.be.null;
 
         const mainComment = await withoutMain.createMainComment({
@@ -117,7 +117,7 @@ describe(Support.getTestDialectTeaser('associations'), () => {
         expect(mainComment.get('commentable')).to.equal('post');
         expect(mainComment.get('isMain')).to.be.true;
 
-        const withMain = await this.Post.scope('withMainComment').findById(this.post.id);
+        const withMain = await this.Post.scope('withMainComment').findByPk(this.post.id);
         expect(withMain.mainComment.get('id')).to.equal(this.mainComment.get('id'));
 
         const fetchedMain = await withMain.getMainComment();
@@ -152,7 +152,7 @@ describe(Support.getTestDialectTeaser('associations'), () => {
         expect(created.mainComment.get('commentable')).to.equal('post');
         expect(created.mainComment.get('isMain')).to.be.true;
 
-        const post = await this.Post.scope('withMainComment').findById(created.id);
+        const post = await this.Post.scope('withMainComment').findByPk(created.id);
         expect(post.mainComment.get('commentable')).to.equal('post');
         expect(post.mainComment.get('isMain')).to.be.true;
       });
@@ -222,7 +222,7 @@ describe(Support.getTestDialectTeaser('associations'), () => {
         expect(questionItem).to.be.instanceof(this.Question);
 
         const [includedPost, includedImage, includedQuestion] = await Promise.all([
-          this.Post.find({
+          this.Post.findOne({
             include: [this.Comment]
           }),
           this.Image.findOne({
@@ -289,7 +289,7 @@ describe(Support.getTestDialectTeaser('associations'), () => {
           expect(comment.get('commentable')).to.equal('post');
         }
 
-        const post = await this.Post.scope('withComments').findById(this.post.id);
+        const post = await this.Post.scope('withComments').findByPk(this.post.id);
 
         const comments = await post.getComments();
         for (const comment of comments) {

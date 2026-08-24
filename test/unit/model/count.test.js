@@ -41,7 +41,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           include: [this.Project]
         };
         await this.User.count(queryObject);
-        await this.User.findAndCount(queryObject);
+        await this.User.findAndCountAll(queryObject);
 
         const count = this.stub.getCall(0).args;
         const findAndCount = this.stub.getCall(1).args;
@@ -53,7 +53,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           attributes: ['username']
         };
         await this.User.count(queryObject);
-        await this.User.findAndCount(queryObject);
+        await this.User.findAndCountAll(queryObject);
 
         const count = this.stub.getCall(0).args;
         const findAndCount = this.stub.getCall(1).args;

@@ -35,7 +35,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       it('with errors in count and findAll both', async function () {
-        await expect(this.User.findAndCount({})).to.be.rejected;
+        await expect(this.User.findAndCountAll({})).to.be.rejected;
         expect(this.stub.callCount).to.eql(0);
       });
     });

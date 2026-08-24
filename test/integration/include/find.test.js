@@ -28,7 +28,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
 
       await this.sequelize.sync({ force: true });
 
-      await A.find({
+      await A.findOne({
         include: [{ model: B, required: false, include: [{ model: C, required: false }, { model: D }] }]
       });
     });
@@ -46,7 +46,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
 
       await this.sequelize.sync({ force: true });
 
-      await Model.find({
+      await Model.findOne({
         include: [{ model: Model2, include: [{ model: Model4, where: { something: 2 } }] }]
       });
     });
@@ -78,7 +78,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         { userId: created.get('id'), deletedAt: new Date() }
       ]);
 
-      const user = await User.find({
+      const user = await User.findOne({
         include: [{ model: Task, where: { deletedAt: null }, required: false }]
       });
 
@@ -113,7 +113,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         { userId: created.get('id'), searchString: 'two' }
       ]);
 
-      const user = await User.find({
+      const user = await User.findOne({
         include: [{ model: Task, where: { searchString: 'one' } }]
       });
 
@@ -140,7 +140,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       const [created, b] = await Promise.all([A.create({}), B.create({})]);
       await created.addB(b, { through: { name: 'Foobar' } });
 
-      const a = await A.find({
+      const a = await A.findOne({
         include: [{ model: B, through: { where: { name: 'Foobar' } }, required: true }]
       });
 
@@ -165,7 +165,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         name: 'Foobar'
       });
 
-      const a = await A.find({
+      const a = await A.findOne({
         where: { name: 'Foobar' },
         include: [{ model: B, where: { name: 'idontexist' }, required: false }]
       });
@@ -195,7 +195,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
 
       await this.sequelize.sync({ force: true });
 
-      const a = await A.find({
+      const a = await A.findOne({
         include: [
           {
             model: B,
@@ -224,7 +224,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       const newTask = await Task.create({ title: 'some task' });
       await newTask.setUser(newUser);
 
-      const foundTask = await Task.find({
+      const foundTask = await Task.findOne({
         where: { title: 'some task' },
         include: [{ model: User }]
       });
@@ -285,7 +285,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
 
       await a.setB(b);
 
-      const found = await A.find({
+      const found = await A.findOne({
         include: [
           {
             model: B,
@@ -356,7 +356,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
 
       await this.sequelize.sync({ force: true });
 
-      await User.find({
+      await User.findOne({
         where: { id: 2 },
         include: [{ model: Post, as: 'UserPosts', where: { private: true } }]
       });

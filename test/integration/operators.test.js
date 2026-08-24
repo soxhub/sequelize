@@ -49,7 +49,7 @@ describe(Support.getTestDialectTeaser('Operators'), () => {
           name: 'Foobar'
         });
 
-        const user = await this.User.find({
+        const user = await this.User.findOne({
           where: {
             name: {
               [Op.regexp]: '^Foo'
@@ -65,7 +65,7 @@ describe(Support.getTestDialectTeaser('Operators'), () => {
           name: 'Foobar'
         });
 
-        const user = await this.User.find({
+        const user = await this.User.findOne({
           where: {
             name: {
               [Op.notRegexp]: '^Foo'
@@ -113,7 +113,7 @@ describe(Support.getTestDialectTeaser('Operators'), () => {
           name: 'Foobar'
         });
 
-        const user = await this.User.find({
+        const user = await this.User.findOne({
           where: {
             name: {
               [Op.iRegexp]: '^foo'
@@ -129,7 +129,7 @@ describe(Support.getTestDialectTeaser('Operators'), () => {
           name: 'Foobar'
         });
 
-        const user = await this.User.find({
+        const user = await this.User.findOne({
           where: {
             name: {
               [Op.notIRegexp]: '^foo'

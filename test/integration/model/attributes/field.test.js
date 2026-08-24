@@ -1,3 +1,4 @@
+import { describe, it, before, after, beforeEach } from 'mocha';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import Sequelize from '../../../../index.js';

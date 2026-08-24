@@ -1,3 +1,4 @@
+import { describe, it } from 'mocha';
 import { expect } from 'chai';
 import DataTypes from '../../../../lib/data-types.js';
 import * as range from '../../../../lib/dialects/postgres/range.js';

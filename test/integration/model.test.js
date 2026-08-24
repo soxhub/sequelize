@@ -1,3 +1,4 @@
+import { describe, it, before, after, beforeEach, afterEach } from 'mocha';
 import { mapWithConcurrency } from '../../lib/utils/promise-helpers.js';
 import { expect } from 'chai';
 import Sequelize from '../../index.js';

@@ -1,3 +1,4 @@
+import { describe, it } from 'mocha';
 import { expect } from 'chai';
 import * as hstore from '../../../../lib/dialects/postgres/hstore.js';
 

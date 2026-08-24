@@ -1,3 +1,4 @@
+import { describe, it } from 'mocha';
 import { expect, should } from 'chai';
 import Sequelize from '../../index.js';
 import Support from './support.js';

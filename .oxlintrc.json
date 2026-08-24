@@ -6,7 +6,6 @@
   },
   "env": {
     "node": true,
-    "mocha": true,
     "es2023": true
   },
   "rules": {
@@ -65,8 +64,6 @@
     "no-shadow": "warn",
     "prefer-object-has-own": "error",
     "no-prototype-builtins": "error",
-    // Computed access into a namespace import is intentional in a few places
-    // (iterating the error exports); the rule cannot validate those.
     "import/namespace": ["error", { "allowComputed": true }],
     "no-promise-executor-return": "error",
     "prefer-promise-reject-errors": "error",

@@ -8,7 +8,7 @@ import _ from 'lodash';
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser('Model'), () => {
-  let sequelize, SharedUser, Account, Student;
+  let sequelize, SharedUser;
 
   beforeEach(async () => {
     sequelize = await Support.prepareTransactionTest(current);
@@ -25,10 +25,11 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       aBool: DataTypes.BOOLEAN,
       uniqueName: { type: DataTypes.STRING, unique: true }
     });
-    Account = sequelize.define('Account', {
+    // Registered only so sync() creates their tables; no test references them directly.
+    sequelize.define('Account', {
       accountName: DataTypes.STRING
     });
-    Student = sequelize.define('Student', {
+    sequelize.define('Student', {
       no: { type: DataTypes.INTEGER, primaryKey: true },
       name: { type: DataTypes.STRING, allowNull: false }
     });

@@ -184,14 +184,14 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
             '" for the validation "' +
             validator +
             '"',
-          async function () {
+          async () => {
             const validations = {},
               message = validator + '(' + failingValue + ')';
 
             validations[validator] = validatorDetails.spec || {};
             validations[validator].msg = message;
 
-            const UserFail = this.sequelize.define('User' + config.rand(), {
+            const UserFail = current.define('User' + config.rand(), {
               name: {
                 type: Sequelize.STRING,
                 validate: validations
@@ -214,7 +214,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
             '" for the validation "' +
             validator +
             '"',
-          function () {
+          () => {
             const validations = {},
               message = validator + '(' + succeedingValue + ')';
 
@@ -229,7 +229,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
               validations[validator] = true;
             }
 
-            const UserSuccess = this.sequelize.define('User' + config.rand(), {
+            const UserSuccess = current.define('User' + config.rand(), {
               name: {
                 type: Sequelize.STRING,
                 validate: validations
@@ -285,16 +285,18 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
       date: Sequelize.DATE
     });
 
-    before(function () {
-      this.stub = sinon.stub(typeValidating, 'query').callsFake(() => {
+    let queryStub;
+
+    before(() => {
+      queryStub = sinon.stub(typeValidating, 'query').callsFake(() => {
         return new Promise((resolve) => {
           resolve([User.build({}), 1]);
         });
       });
     });
 
-    after(function () {
-      this.stub.restore();
+    after(() => {
+      queryStub.restore();
     });
 
     describe('should not throw', () => {
@@ -490,12 +492,14 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
       }
     );
 
-    before(function () {
-      this.stub = sinon.stub(current, 'query').returns(Promise.resolve([User.build(), 1]));
+    let queryStub;
+
+    before(() => {
+      queryStub = sinon.stub(current, 'query').returns(Promise.resolve([User.build(), 1]));
     });
 
-    after(function () {
-      this.stub.restore();
+    after(() => {
+      queryStub.restore();
     });
 
     describe('should not throw', () => {
@@ -588,12 +592,14 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
       }
     );
 
-    before(function () {
-      this.stub = sinon.stub(current, 'query').returns(Promise.resolve([User.build(), 1]));
+    let queryStub;
+
+    before(() => {
+      queryStub = sinon.stub(current, 'query').returns(Promise.resolve([User.build(), 1]));
     });
 
-    after(function () {
-      this.stub.restore();
+    after(() => {
+      queryStub.restore();
     });
 
     describe('should not throw', () => {

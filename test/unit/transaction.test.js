@@ -6,37 +6,39 @@ import Support from './support.js';
 const dialect = Support.getTestDialect();
 const current = Support.sequelize;
 
-describe('Transaction', function () {
-  before(function () {
-    this.stub = sinon.stub(current, 'query').returns(Promise.resolve({}));
+describe('Transaction', () => {
+  let queryStub, stubConnection, stubRelease;
 
-    this.stubConnection = sinon.stub(current.connectionManager, 'getConnection').returns(
+  before(() => {
+    queryStub = sinon.stub(current, 'query').returns(Promise.resolve({}));
+
+    stubConnection = sinon.stub(current.connectionManager, 'getConnection').returns(
       Promise.resolve({
         uuid: 'ssfdjd-434fd-43dfg23-2d',
         close() {}
       })
     );
 
-    this.stubRelease = sinon.stub(current.connectionManager, 'releaseConnection').returns(Promise.resolve());
+    stubRelease = sinon.stub(current.connectionManager, 'releaseConnection').returns(Promise.resolve());
   });
 
-  beforeEach(function () {
-    this.stub.resetHistory();
-    this.stubConnection.resetHistory();
-    this.stubRelease.resetHistory();
+  beforeEach(() => {
+    queryStub.resetHistory();
+    stubConnection.resetHistory();
+    stubRelease.resetHistory();
   });
 
-  after(function () {
-    this.stub.restore();
-    this.stubConnection.restore();
+  after(() => {
+    queryStub.restore();
+    stubConnection.restore();
   });
 
-  it('should run auto commit query only when needed', function () {
+  it('should run auto commit query only when needed', () => {
     const expectations = {
       all: ['START TRANSACTION;']
     };
     return current.transaction(() => {
-      expect(this.stub.args.map((arg) => arg[0])).to.deep.equal(expectations[dialect] || expectations.all);
+      expect(queryStub.args.map((arg) => arg[0])).to.deep.equal(expectations[dialect] || expectations.all);
       return Promise.resolve();
     });
   });

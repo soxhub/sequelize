@@ -17,8 +17,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       delete current.constructor._cls;
     });
 
-    beforeEach(function () {
-      this.User = current.define(
+    let User, transactionStub, clsStub;
+
+    beforeEach(() => {
+      User = current.define(
         'User',
         {},
         {
@@ -26,31 +28,31 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         }
       );
 
-      this.transactionStub = stub(this.User.sequelize, 'transaction');
-      this.transactionStub.returns(new Promise(() => {}));
+      transactionStub = stub(User.sequelize, 'transaction');
+      transactionStub.returns(new Promise(() => {}));
 
-      this.clsStub = stub(current.constructor._cls, 'get');
-      this.clsStub.returns({ id: 123 });
+      clsStub = stub(current.constructor._cls, 'get');
+      clsStub.returns({ id: 123 });
     });
 
-    afterEach(function () {
-      this.transactionStub.restore();
-      this.clsStub.restore();
+    afterEach(() => {
+      transactionStub.restore();
+      clsStub.restore();
     });
 
-    it('should use transaction from cls if available', function () {
+    it('should use transaction from cls if available', () => {
       const options = {
         where: {
           name: 'John'
         }
       };
 
-      this.User.findOrCreate(options);
+      User.findOrCreate(options);
 
-      expect(this.clsStub.calledOnce).to.equal(true, 'expected to ask for transaction');
+      expect(clsStub.calledOnce).to.equal(true, 'expected to ask for transaction');
     });
 
-    it('should not use transaction from cls if provided as argument', function () {
+    it('should not use transaction from cls if provided as argument', () => {
       const options = {
         where: {
           name: 'John'
@@ -58,9 +60,9 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         transaction: { id: 123 }
       };
 
-      this.User.findOrCreate(options);
+      User.findOrCreate(options);
 
-      expect(this.clsStub.called).to.equal(false);
+      expect(clsStub.called).to.equal(false);
     });
   });
 });

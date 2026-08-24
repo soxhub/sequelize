@@ -9,19 +9,20 @@ const current = Support.sequelize;
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('findCreateFind', () => {
     const Model = current.define('Model', {});
+    let sandbox;
 
-    beforeEach(function () {
-      this.sinon = sinon.createSandbox();
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
     });
 
-    afterEach(function () {
-      this.sinon.restore();
+    afterEach(() => {
+      sandbox.restore();
     });
 
-    it('should return the result of the first find call if not empty', async function () {
+    it('should return the result of the first find call if not empty', async () => {
       const result = {},
         where = { prop: Math.random().toString() },
-        findSpy = this.sinon.stub(Model, 'findOne').returns(Promise.resolve(result));
+        findSpy = sandbox.stub(Model, 'findOne').returns(Promise.resolve(result));
 
       await expect(
         Model.findCreateFind({
@@ -33,12 +34,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(findSpy.getCall(0).args[0].where).to.equal(where);
     });
 
-    it('should create if first find call is empty', async function () {
+    it('should create if first find call is empty', async () => {
       const result = {},
         where = { prop: Math.random().toString() },
-        createSpy = this.sinon.stub(Model, 'create').returns(Promise.resolve(result));
+        createSpy = sandbox.stub(Model, 'create').returns(Promise.resolve(result));
 
-      this.sinon.stub(Model, 'findOne').returns(Promise.resolve(null));
+      sandbox.stub(Model, 'findOne').returns(Promise.resolve(null));
 
       await expect(
         Model.findCreateFind({
@@ -49,12 +50,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(createSpy.calledWith(where), 'createSpy should have been called with expected arguments').to.be.true;
     });
 
-    it('should do a second find if create failed do to unique constraint', async function () {
+    it('should do a second find if create failed do to unique constraint', async () => {
       const result = {},
         where = { prop: Math.random().toString() },
-        findSpy = this.sinon.stub(Model, 'findOne');
+        findSpy = sandbox.stub(Model, 'findOne');
 
-      this.sinon.stub(Model, 'create').callsFake(() => {
+      sandbox.stub(Model, 'create').callsFake(() => {
         return Promise.reject(new UniqueConstraintError());
       });
 

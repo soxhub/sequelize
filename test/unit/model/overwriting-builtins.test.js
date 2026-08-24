@@ -3,10 +3,12 @@ import { expect } from 'chai';
 import Support from '../../support.js';
 import DataTypes from '../../../lib/data-types.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('not breaking built-ins', () => {
-    it('it should not break instance.set by defining a model set attribute', function () {
-      const User = this.sequelize.define('OverWrittenKeys', {
+    it('it should not break instance.set by defining a model set attribute', () => {
+      const User = current.define('OverWrittenKeys', {
         set: DataTypes.STRING
       });
 

@@ -9,46 +9,43 @@ const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('method update', () => {
-    before(function () {
-      this.User = current.define('User', {
+    let User, stubUpdate, updates, cloneUpdates;
+
+    before(() => {
+      User = current.define('User', {
         name: DataTypes.STRING,
         secretValue: DataTypes.INTEGER
       });
     });
 
-    beforeEach(function () {
-      this.stubUpdate = sinon.stub(current.getQueryInterface(), 'bulkUpdate').returns(Promise.resolve([]));
-      this.updates = { name: 'Batman', secretValue: '7' };
-      this.cloneUpdates = _.clone(this.updates);
+    beforeEach(() => {
+      stubUpdate = sinon.stub(current.getQueryInterface(), 'bulkUpdate').returns(Promise.resolve([]));
+      updates = { name: 'Batman', secretValue: '7' };
+      cloneUpdates = _.clone(updates);
     });
 
-    afterEach(function () {
-      this.stubUpdate.restore();
-    });
-
-    afterEach(function () {
-      delete this.updates;
-      delete this.cloneUpdates;
+    afterEach(() => {
+      stubUpdate.restore();
     });
 
     describe('properly clones input values', () => {
-      it('with default options', async function () {
-        await this.User.update(this.updates, { where: { secretValue: '1' } });
-        expect(this.updates).to.be.deep.eql(this.cloneUpdates);
+      it('with default options', async () => {
+        await User.update(updates, { where: { secretValue: '1' } });
+        expect(updates).to.be.deep.eql(cloneUpdates);
       });
 
-      it('when using fields option', async function () {
-        await this.User.update(this.updates, { where: { secretValue: '1' }, fields: ['name'] });
-        expect(this.updates).to.be.deep.eql(this.cloneUpdates);
+      it('when using fields option', async () => {
+        await User.update(updates, { where: { secretValue: '1' }, fields: ['name'] });
+        expect(updates).to.be.deep.eql(cloneUpdates);
       });
     });
 
-    it('can detect complexe objects', function () {
+    it('can detect complexe objects', () => {
       const Where = function () {
         this.secretValue = '1';
       };
 
-      return expect(this.User.update(this.updates, { where: new Where() })).to.be.rejected;
+      return expect(User.update(updates, { where: new Where() })).to.be.rejected;
     });
   });
 });

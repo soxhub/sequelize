@@ -344,6 +344,7 @@ for (const [implementation, createNamespace] of implementations) {
 
         return sequelize.transaction(async () => {
           for (const name of ['first', 'second', 'third']) {
+            // oxlint-disable-next-line no-loop-func -- `sequelize` and `User` are per-test fixtures; each iteration is awaited before the next
             await sequelize.transaction({ logging }, async () => {
               await User.create({ name });
             });

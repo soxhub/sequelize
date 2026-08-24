@@ -4,11 +4,12 @@ import { expect } from 'chai';
 import Op from '../../../../lib/operators.js';
 
 const getQueryGenerator = _getQueryGeneratorMod.getQueryGenerator;
+const current = _getQueryGeneratorMod.sequelize;
 
 describe('QueryGenerator', () => {
   describe('selectQuery', () => {
-    it('should generate correct query using array placeholder', function () {
-      const QG = getQueryGenerator(this.sequelize);
+    it('should generate correct query using array placeholder', () => {
+      const QG = getQueryGenerator(current);
 
       QG.selectQuery('foo', { where: { bar: { [Op.like]: { [Op.any]: ['a', 'b'] } } } }).should.be.equal(
         "SELECT * FROM foo WHERE foo.bar LIKE ANY (ARRAY['a','b']);"
@@ -17,8 +18,8 @@ describe('QueryGenerator', () => {
   });
 
   describe('whereItemQuery', () => {
-    it('should generate correct query for Symbol operators', function () {
-      const QG = getQueryGenerator(this.sequelize);
+    it('should generate correct query for Symbol operators', () => {
+      const QG = getQueryGenerator(current);
       QG.whereItemQuery(Op.or, [
         { test: { [Op.gt]: 5 } },
         { test: { [Op.lt]: 3 } },
@@ -36,8 +37,8 @@ describe('QueryGenerator', () => {
       );
     });
 
-    it('should not parse any strings as aliases  operators', function () {
-      const QG = getQueryGenerator(this.sequelize);
+    it('should not parse any strings as aliases  operators', () => {
+      const QG = getQueryGenerator(current);
       expect(() => QG.whereItemQuery('$or', [{ test: 5 }, { test: 3 }])).to.throw('Invalid value { test: 5 }');
 
       expect(() => QG.whereItemQuery('$and', [{ test: 5 }, { test: 3 }])).to.throw('Invalid value { test: 5 }');
@@ -53,8 +54,8 @@ describe('QueryGenerator', () => {
       expect(() => QG.whereItemQuery('test', { $in: [4] })).to.throw("Invalid value { '$in': [ 4 ] }");
     });
 
-    it('should parse set aliases strings as operators', function () {
-      const QG = getQueryGenerator(this.sequelize),
+    it('should parse set aliases strings as operators', () => {
+      const QG = getQueryGenerator(current),
         aliases = {
           OR: Op.or,
           '!': Op.not,

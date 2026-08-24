@@ -8,8 +8,10 @@ const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('bulkCreate', () => {
-    before(function () {
-      this.Model = current.define(
+    let Model, bulkInsertStub;
+
+    before(() => {
+      Model = current.define(
         'model',
         {
           accountId: {
@@ -21,21 +23,21 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         { timestamps: false }
       );
 
-      this.stub = sinon.stub(current.getQueryInterface(), 'bulkInsert').returns(Promise.resolve([]));
+      bulkInsertStub = sinon.stub(current.getQueryInterface(), 'bulkInsert').returns(Promise.resolve([]));
     });
 
-    afterEach(function () {
-      this.stub.resetHistory();
+    afterEach(() => {
+      bulkInsertStub.resetHistory();
     });
 
-    after(function () {
-      this.stub.restore();
+    after(() => {
+      bulkInsertStub.restore();
     });
 
     describe('validations', () => {
-      it('should not fail for renamed fields', async function () {
-        await this.Model.bulkCreate([{ accountId: 42 }], { validate: true });
-        expect(this.stub.getCall(0).args[1]).to.deep.equal([{ account_id: 42, id: null }]);
+      it('should not fail for renamed fields', async () => {
+        await Model.bulkCreate([{ accountId: 42 }], { validate: true });
+        expect(bulkInsertStub.getCall(0).args[1]).to.deep.equal([{ account_id: 42, id: null }]);
       });
     });
   });

@@ -311,14 +311,14 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
           }
         );
 
-        it('sequelize.or({group_id: 1}, {user_id: 2})', function () {
-          expectsql(sql.whereItemQuery(undefined, this.sequelize.or({ group_id: 1 }, { user_id: 2 })), {
+        it('sequelize.or({group_id: 1}, {user_id: 2})', () => {
+          expectsql(sql.whereItemQuery(undefined, current.or({ group_id: 1 }, { user_id: 2 })), {
             default: '([group_id] = 1 OR [user_id] = 2)'
           });
         });
 
-        it("sequelize.or({group_id: 1}, {user_id: 2, role: 'admin'})", function () {
-          expectsql(sql.whereItemQuery(undefined, this.sequelize.or({ group_id: 1 }, { user_id: 2, role: 'admin' })), {
+        it("sequelize.or({group_id: 1}, {user_id: 2, role: 'admin'})", () => {
+          expectsql(sql.whereItemQuery(undefined, current.or({ group_id: 1 }, { user_id: 2, role: 'admin' })), {
             default: "([group_id] = 1 OR ([user_id] = 2 AND [role] = 'admin'))"
           });
         });
@@ -335,8 +335,8 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
           }
         );
 
-        it('sequelize.or()', function () {
-          expectsql(sql.whereItemQuery(undefined, this.sequelize.or()), {
+        it('sequelize.or()', () => {
+          expectsql(sql.whereItemQuery(undefined, current.or()), {
             default: '0 = 1'
           });
         });
@@ -399,12 +399,9 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
           }
         );
 
-        it('sequelize.and({shared: 1, sequelize.or({group_id: 1}, {user_id: 2}))', function () {
+        it('sequelize.and({shared: 1, sequelize.or({group_id: 1}, {user_id: 2}))', () => {
           expectsql(
-            sql.whereItemQuery(
-              undefined,
-              this.sequelize.and({ shared: 1 }, this.sequelize.or({ group_id: 1 }, { user_id: 2 }))
-            ),
+            sql.whereItemQuery(undefined, current.and({ shared: 1 }, current.or({ group_id: 1 }, { user_id: 2 }))),
             {
               default: '([shared] = 1 AND ([group_id] = 1 OR [user_id] = 2))'
             }
@@ -1051,25 +1048,16 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
 
     if (current.dialect.supports.JSON) {
       describe('JSON', () => {
-        it('sequelize.json("profile.id"), sequelize.cast(2, \'text\')")', function () {
-          expectsql(
-            sql.whereItemQuery(
-              undefined,
-              this.sequelize.json('profile.id', this.sequelize.cast('12346-78912', 'text'))
-            ),
-            {
-              postgres: "(\"profile\"#>>'{id}') = CAST('12346-78912' AS TEXT)"
-            }
-          );
+        it('sequelize.json("profile.id"), sequelize.cast(2, \'text\')")', () => {
+          expectsql(sql.whereItemQuery(undefined, current.json('profile.id', current.cast('12346-78912', 'text'))), {
+            postgres: "(\"profile\"#>>'{id}') = CAST('12346-78912' AS TEXT)"
+          });
         });
 
-        it('sequelize.json({profile: {id: "12346-78912", name: "test"}})', function () {
-          expectsql(
-            sql.whereItemQuery(undefined, this.sequelize.json({ profile: { id: '12346-78912', name: 'test' } })),
-            {
-              postgres: "(\"profile\"#>>'{id}') = '12346-78912' AND (\"profile\"#>>'{name}') = 'test'"
-            }
-          );
+        it('sequelize.json({profile: {id: "12346-78912", name: "test"}})', () => {
+          expectsql(sql.whereItemQuery(undefined, current.json({ profile: { id: '12346-78912', name: 'test' } })), {
+            postgres: "(\"profile\"#>>'{id}') = '12346-78912' AND (\"profile\"#>>'{name}') = 'test'"
+          });
         });
 
         testsql(
@@ -1453,8 +1441,8 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
     }
 
     describe('fn', () => {
-      it("{name: this.sequelize.fn('LOWER', 'DERP')}", function () {
-        expectsql(sql.whereQuery({ name: this.sequelize.fn('LOWER', 'DERP') }), {
+      it("{name: current.fn('LOWER', 'DERP')}", () => {
+        expectsql(sql.whereQuery({ name: current.fn('LOWER', 'DERP') }), {
           default: "WHERE [name] = LOWER('DERP')"
         });
       });

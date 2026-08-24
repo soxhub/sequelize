@@ -124,14 +124,16 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     });
 
     describe('custom setter', () => {
-      before(function () {
-        this.stubCreate = sinon.stub(current.getQueryInterface(), 'insert').callsFake((instance) => {
+      let stubCreate;
+
+      before(() => {
+        stubCreate = sinon.stub(current.getQueryInterface(), 'insert').callsFake((instance) => {
           return Promise.resolve([instance, 1]);
         });
       });
 
-      after(function () {
-        this.stubCreate.restore();
+      after(() => {
+        stubCreate.restore();
       });
 
       const User = current.define('User', {

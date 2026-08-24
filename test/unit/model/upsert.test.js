@@ -9,8 +9,10 @@ const current = Support.sequelize;
 describe(Support.getTestDialectTeaser('Model'), () => {
   if (current.dialect.supports.upserts) {
     describe('method upsert', () => {
-      before(function () {
-        this.User = current.define('User', {
+      let User, UserNoTime, sandbox, upsertStub;
+
+      before(() => {
+        User = current.define('User', {
           name: DataTypes.STRING,
           virtualValue: {
             type: DataTypes.VIRTUAL,
@@ -32,7 +34,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         });
 
-        this.UserNoTime = current.define(
+        UserNoTime = current.define(
           'UserNoTime',
           {
             name: DataTypes.STRING
@@ -43,49 +45,49 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         );
       });
 
-      beforeEach(function () {
-        this.sinon = sinon.createSandbox();
+      beforeEach(() => {
+        sandbox = sinon.createSandbox();
 
-        this.query = this.sinon.stub(current, 'query').returns(Promise.resolve());
-        this.stub = this.sinon.stub(current.getQueryInterface(), 'upsert').returns(Promise.resolve([true, undefined]));
+        sandbox.stub(current, 'query').returns(Promise.resolve());
+        upsertStub = sandbox.stub(current.getQueryInterface(), 'upsert').returns(Promise.resolve([true, undefined]));
       });
 
-      afterEach(function () {
-        this.sinon.restore();
+      afterEach(() => {
+        sandbox.restore();
       });
 
-      it('skip validations for missing fields', function () {
+      it('skip validations for missing fields', () => {
         return expect(
-          this.User.upsert({
+          User.upsert({
             name: 'Grumpy Cat'
           })
         ).not.to.be.rejectedWith(current.ValidationError);
       });
 
-      it('creates new record with correct field names', async function () {
-        await this.User.upsert({
+      it('creates new record with correct field names', async () => {
+        await User.upsert({
           name: 'Young Cat',
           virtualValue: 999
         });
 
-        expect(Object.keys(this.stub.getCall(0).args[1])).to.deep.equal(['name', 'value', 'created_at', 'updatedAt']);
+        expect(Object.keys(upsertStub.getCall(0).args[1])).to.deep.equal(['name', 'value', 'created_at', 'updatedAt']);
       });
 
-      it('creates new record with timestamps disabled', async function () {
-        await this.UserNoTime.upsert({
+      it('creates new record with timestamps disabled', async () => {
+        await UserNoTime.upsert({
           name: 'Young Cat'
         });
 
-        expect(Object.keys(this.stub.getCall(0).args[1])).to.deep.equal(['name']);
+        expect(Object.keys(upsertStub.getCall(0).args[1])).to.deep.equal(['name']);
       });
 
-      it('updates all changed fields by default', async function () {
-        await this.User.upsert({
+      it('updates all changed fields by default', async () => {
+        await User.upsert({
           name: 'Old Cat',
           virtualValue: 111
         });
 
-        expect(Object.keys(this.stub.getCall(0).args[2])).to.deep.equal(['name', 'value', 'updatedAt']);
+        expect(Object.keys(upsertStub.getCall(0).args[2])).to.deep.equal(['name', 'value', 'updatedAt']);
       });
     });
   }

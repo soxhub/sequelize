@@ -27,24 +27,26 @@ describe(Support.getTestDialectTeaser('hasMany'), () => {
         id: 16
       });
 
-    beforeEach(function () {
-      this.findAll = stub(Task, 'findAll').returns(Promise.resolve([]));
-      this.update = stub(Task, 'update').returns(Promise.resolve([]));
+    let findAllStub, updateStub;
+
+    beforeEach(() => {
+      findAllStub = stub(Task, 'findAll').returns(Promise.resolve([]));
+      updateStub = stub(Task, 'update').returns(Promise.resolve([]));
     });
 
-    afterEach(function () {
-      this.findAll.restore();
-      this.update.restore();
+    afterEach(() => {
+      findAllStub.restore();
+      updateStub.restore();
     });
 
-    it('uses one update statement for addition', async function () {
+    it('uses one update statement for addition', async () => {
       await user.setTasks([task1, task2]);
-      expect(this.findAll.calledOnce).to.be.true;
-      expect(this.update.calledOnce).to.be.true;
+      expect(findAllStub.calledOnce).to.be.true;
+      expect(updateStub.calledOnce).to.be.true;
     });
 
-    it('uses one delete from statement', async function () {
-      this.findAll
+    it('uses one delete from statement', async () => {
+      findAllStub
         .onFirstCall()
         .returns(Promise.resolve([]))
         .onSecondCall()
@@ -57,11 +59,11 @@ describe(Support.getTestDialectTeaser('hasMany'), () => {
 
       await user.setTasks([task1, task2]);
 
-      this.update.resetHistory();
+      updateStub.resetHistory();
       await user.setTasks(null);
 
-      expect(this.findAll.calledTwice).to.be.true;
-      expect(this.update.calledOnce).to.be.true;
+      expect(findAllStub.calledTwice).to.be.true;
+      expect(updateStub.calledOnce).to.be.true;
     });
   });
 
@@ -87,7 +89,7 @@ describe(Support.getTestDialectTeaser('hasMany'), () => {
       expect(obj[association.accessors.count]).to.be.an('function');
     });
 
-    it('should not override custom methods', function () {
+    it('should not override custom methods', () => {
       const methods = {
         getTasks: 'get',
         countTasks: 'count',

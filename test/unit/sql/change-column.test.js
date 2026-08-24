@@ -24,18 +24,20 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
       { timestamps: false }
     );
 
-    before(function () {
-      this.stub = sinon.stub(current, 'query').callsFake((sql) => {
+    let queryStub;
+
+    before(() => {
+      queryStub = sinon.stub(current, 'query').callsFake((sql) => {
         return Promise.resolve(sql);
       });
     });
 
-    beforeEach(function () {
-      this.stub.resetHistory();
+    beforeEach(() => {
+      queryStub.resetHistory();
     });
 
-    after(function () {
-      this.stub.restore();
+    after(() => {
+      queryStub.restore();
     });
 
     it('properly generate alter queries', async () => {

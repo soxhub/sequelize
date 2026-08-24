@@ -21,12 +21,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
   });
 
   describe('_validateIncludedElements', () => {
-    beforeEach(function () {
-      this.User = this.sequelize.define('User');
-      this.Task = this.sequelize.define('Task', {
+    let User, Task, Company;
+
+    beforeEach(() => {
+      User = current.define('User');
+      Task = current.define('Task', {
         title: Sequelize.STRING
       });
-      this.Company = this.sequelize.define('Company', {
+      Company = current.define('Company', {
         id: {
           type: Sequelize.INTEGER,
           primaryKey: true,
@@ -36,19 +38,19 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         name: Sequelize.STRING
       });
 
-      this.User.Tasks = this.User.hasMany(this.Task);
-      this.User.Company = this.User.belongsTo(this.Company);
-      this.Company.Employees = this.Company.hasMany(this.User);
-      this.Company.Owner = this.Company.belongsTo(this.User, { as: 'Owner', foreignKey: 'ownerId' });
+      User.Tasks = User.hasMany(Task);
+      User.Company = User.belongsTo(Company);
+      Company.Employees = Company.hasMany(User);
+      Company.Owner = Company.belongsTo(User, { as: 'Owner', foreignKey: 'ownerId' });
     });
 
     describe('attributes', () => {
-      it("should not inject the aliased PK again, if it's already there", function () {
+      it("should not inject the aliased PK again, if it's already there", () => {
         let options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
+          model: User,
           include: [
             {
-              model: this.Company,
+              model: Company,
               attributes: ['name']
             }
           ]
@@ -63,12 +65,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       describe('include / exclude', () => {
-        it('allows me to include additional attributes', function () {
+        it('allows me to include additional attributes', () => {
           const options = Sequelize.Model._validateIncludedElements({
-            model: this.User,
+            model: User,
             include: [
               {
-                model: this.Company,
+                model: Company,
                 attributes: {
                   include: ['foobar']
                 }
@@ -86,12 +88,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           ]);
         });
 
-        it('allows me to exclude attributes', function () {
+        it('allows me to exclude attributes', () => {
           const options = Sequelize.Model._validateIncludedElements({
-            model: this.User,
+            model: User,
             include: [
               {
-                model: this.Company,
+                model: Company,
                 attributes: {
                   exclude: ['name']
                 }
@@ -107,12 +109,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           ]);
         });
 
-        it('include takes precendence over exclude', function () {
+        it('include takes precendence over exclude', () => {
           const options = Sequelize.Model._validateIncludedElements({
-            model: this.User,
+            model: User,
             include: [
               {
-                model: this.Company,
+                model: Company,
                 attributes: {
                   exclude: ['name'],
                   include: ['name']
@@ -133,8 +135,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
 
     describe('scope', () => {
-      beforeEach(function () {
-        this.Project = this.sequelize.define(
+      let Project;
+
+      beforeEach(() => {
+        Project = current.define(
           'project',
           {
             bar: {
@@ -168,61 +172,61 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        this.User.hasMany(this.Project);
+        User.hasMany(Project);
 
-        this.User.hasMany(this.Project.scope('this'), { as: 'thisProject' });
+        User.hasMany(Project.scope('this'), { as: 'thisProject' });
       });
 
-      it('adds the default scope to where', function () {
+      it('adds the default scope to where', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
-          include: [{ model: this.Project }]
+          model: User,
+          include: [{ model: Project }]
         });
 
         expect(options.include[0]).to.have.property('where').which.deep.equals({ active: true });
       });
 
-      it('adds the where from a scoped model', function () {
+      it('adds the where from a scoped model', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
-          include: [{ model: this.Project.scope('that') }]
+          model: User,
+          include: [{ model: Project.scope('that') }]
         });
 
         expect(options.include[0]).to.have.property('where').which.deep.equals({ that: false });
         expect(options.include[0]).to.have.property('limit').which.equals(12);
       });
 
-      it('adds the attributes from a scoped model', function () {
+      it('adds the attributes from a scoped model', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
-          include: [{ model: this.Project.scope('attr') }]
+          model: User,
+          include: [{ model: Project.scope('attr') }]
         });
 
         expect(options.include[0]).to.have.property('attributes').which.deep.equals(['baz']);
       });
 
-      it('merges where with the where from a scoped model', function () {
+      it('merges where with the where from a scoped model', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
-          include: [{ where: { active: false }, model: this.Project.scope('that') }]
+          model: User,
+          include: [{ where: { active: false }, model: Project.scope('that') }]
         });
 
         expect(options.include[0]).to.have.property('where').which.deep.equals({ active: false, that: false });
       });
 
-      it('add the where from a scoped associated model', function () {
+      it('add the where from a scoped associated model', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
-          include: [{ model: this.Project, as: 'thisProject' }]
+          model: User,
+          include: [{ model: Project, as: 'thisProject' }]
         });
 
         expect(options.include[0]).to.have.property('where').which.deep.equals({ this: true });
       });
 
-      it('handles a scope with an aliased column (.field)', function () {
+      it('handles a scope with an aliased column (.field)', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
-          include: [{ model: this.Project.scope('foobar') }]
+          model: User,
+          include: [{ model: Project.scope('foobar') }]
         });
 
         expect(options.include[0]).to.have.property('where').which.deep.equals({ foo: 42 });
@@ -230,19 +234,19 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
 
     describe('duplicating', () => {
-      it('should tag a hasMany association as duplicating: true if undefined', function () {
+      it('should tag a hasMany association as duplicating: true if undefined', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
-          include: [this.User.Tasks]
+          model: User,
+          include: [User.Tasks]
         });
 
         expect(options.include[0].duplicating).to.equal(true);
       });
 
-      it('should respect include.duplicating for a hasMany', function () {
+      it('should respect include.duplicating for a hasMany', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
-          include: [{ association: this.User.Tasks, duplicating: false }]
+          model: User,
+          include: [{ association: User.Tasks, duplicating: false }]
         });
 
         expect(options.include[0].duplicating).to.equal(false);
@@ -250,20 +254,20 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
 
     describe('_conformInclude: string alias', () => {
-      it('should expand association from string alias', function () {
+      it('should expand association from string alias', () => {
         const options = {
           include: ['Owner']
         };
-        Sequelize.Model._conformOptions(options, this.Company);
+        Sequelize.Model._conformOptions(options, Company);
 
         expect(options.include[0]).to.deep.equal({
-          model: this.User,
-          association: this.Company.Owner,
+          model: User,
+          association: Company.Owner,
           as: 'Owner'
         });
       });
 
-      it('should expand string association', function () {
+      it('should expand string association', () => {
         const options = {
           include: [
             {
@@ -272,11 +276,11 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             }
           ]
         };
-        Sequelize.Model._conformOptions(options, this.Company);
+        Sequelize.Model._conformOptions(options, Company);
 
         expect(options.include[0]).to.deep.equal({
-          model: this.User,
-          association: this.Company.Owner,
+          model: User,
+          association: Company.Owner,
           attributes: ['id'],
           as: 'Owner'
         });
@@ -284,67 +288,67 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
 
     describe('_getIncludedAssociation', () => {
-      it('returns an association when there is a single unaliased association', function () {
-        expect(this.User._getIncludedAssociation(this.Task)).to.equal(this.User.Tasks);
+      it('returns an association when there is a single unaliased association', () => {
+        expect(User._getIncludedAssociation(Task)).to.equal(User.Tasks);
       });
 
-      it('returns an association when there is a single aliased association', function () {
-        const User = this.sequelize.define('User');
-        const Task = this.sequelize.define('Task');
-        const Tasks = Task.belongsTo(User, { as: 'owner' });
-        expect(Task._getIncludedAssociation(User, 'owner')).to.equal(Tasks);
+      it('returns an association when there is a single aliased association', () => {
+        const AliasUser = current.define('User');
+        const AliasTask = current.define('Task');
+        const Tasks = AliasTask.belongsTo(AliasUser, { as: 'owner' });
+        expect(AliasTask._getIncludedAssociation(AliasUser, 'owner')).to.equal(Tasks);
       });
 
-      it('returns an association when there are multiple aliased associations', function () {
-        expect(this.Company._getIncludedAssociation(this.User, 'Owner')).to.equal(this.Company.Owner);
+      it('returns an association when there are multiple aliased associations', () => {
+        expect(Company._getIncludedAssociation(User, 'Owner')).to.equal(Company.Owner);
       });
     });
 
     describe('subQuery', () => {
-      it('should be true if theres a duplicating association', function () {
+      it('should be true if theres a duplicating association', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
-          include: [{ association: this.User.Tasks }],
+          model: User,
+          include: [{ association: User.Tasks }],
           limit: 3
         });
 
         expect(options.subQuery).to.equal(true);
       });
 
-      it('should be false if theres a duplicating association but no limit', function () {
+      it('should be false if theres a duplicating association but no limit', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
-          include: [{ association: this.User.Tasks }],
+          model: User,
+          include: [{ association: User.Tasks }],
           limit: null
         });
 
         expect(options.subQuery).to.equal(false);
       });
 
-      it('should be true if theres a nested duplicating association', function () {
+      it('should be true if theres a nested duplicating association', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
-          include: [{ association: this.User.Company, include: [this.Company.Employees] }],
+          model: User,
+          include: [{ association: User.Company, include: [Company.Employees] }],
           limit: 3
         });
 
         expect(options.subQuery).to.equal(true);
       });
 
-      it('should be false if theres a nested duplicating association but no limit', function () {
+      it('should be false if theres a nested duplicating association but no limit', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
-          include: [{ association: this.User.Company, include: [this.Company.Employees] }],
+          model: User,
+          include: [{ association: User.Company, include: [Company.Employees] }],
           limit: null
         });
 
         expect(options.subQuery).to.equal(false);
       });
 
-      it('should tag a required hasMany association', function () {
+      it('should tag a required hasMany association', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
-          include: [{ association: this.User.Tasks, required: true }],
+          model: User,
+          include: [{ association: User.Tasks, required: true }],
           limit: 3
         });
 
@@ -353,10 +357,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(options.include[0].subQueryFilter).to.equal(true);
       });
 
-      it('should not tag a required hasMany association with duplicating false', function () {
+      it('should not tag a required hasMany association with duplicating false', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
-          include: [{ association: this.User.Tasks, required: true, duplicating: false }],
+          model: User,
+          include: [{ association: User.Tasks, required: true, duplicating: false }],
           limit: 3
         });
 
@@ -365,10 +369,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(options.include[0].subQueryFilter).to.equal(false);
       });
 
-      it('should tag a hasMany association with where', function () {
+      it('should tag a hasMany association with where', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
-          include: [{ association: this.User.Tasks, where: { title: Math.random().toString() } }],
+          model: User,
+          include: [{ association: User.Tasks, where: { title: Math.random().toString() } }],
           limit: 3
         });
 
@@ -377,10 +381,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(options.include[0].subQueryFilter).to.equal(true);
       });
 
-      it('should not tag a hasMany association with where and duplicating false', function () {
+      it('should not tag a hasMany association with where and duplicating false', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
-          include: [{ association: this.User.Tasks, where: { title: Math.random().toString() }, duplicating: false }],
+          model: User,
+          include: [{ association: User.Tasks, where: { title: Math.random().toString() }, duplicating: false }],
           limit: 3
         });
 
@@ -389,10 +393,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(options.include[0].subQueryFilter).to.equal(false);
       });
 
-      it('should tag a required belongsTo alongside a duplicating association', function () {
+      it('should tag a required belongsTo alongside a duplicating association', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
-          include: [{ association: this.User.Company, required: true }, { association: this.User.Tasks }],
+          model: User,
+          include: [{ association: User.Company, required: true }, { association: User.Tasks }],
           limit: 3
         });
 
@@ -400,12 +404,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(options.include[0].subQuery).to.equal(true);
       });
 
-      it('should not tag a required belongsTo alongside a duplicating association with duplicating false', function () {
+      it('should not tag a required belongsTo alongside a duplicating association with duplicating false', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
+          model: User,
           include: [
-            { association: this.User.Company, required: true },
-            { association: this.User.Tasks, duplicating: false }
+            { association: User.Company, required: true },
+            { association: User.Tasks, duplicating: false }
           ],
           limit: 3
         });
@@ -414,12 +418,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(options.include[0].subQuery).to.equal(false);
       });
 
-      it('should tag a belongsTo association with where alongside a duplicating association', function () {
+      it('should tag a belongsTo association with where alongside a duplicating association', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
+          model: User,
           include: [
-            { association: this.User.Company, where: { name: Math.random().toString() } },
-            { association: this.User.Tasks }
+            { association: User.Company, where: { name: Math.random().toString() } },
+            { association: User.Tasks }
           ],
           limit: 3
         });
@@ -428,10 +432,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(options.include[0].subQuery).to.equal(true);
       });
 
-      it('should tag a required belongsTo association alongside a duplicating association with a nested belongsTo', function () {
+      it('should tag a required belongsTo association alongside a duplicating association with a nested belongsTo', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
-          include: [{ association: this.User.Company, required: true, include: [this.Company.Owner] }, this.User.Tasks],
+          model: User,
+          include: [{ association: User.Company, required: true, include: [Company.Owner] }, User.Tasks],
           limit: 3
         });
 
@@ -441,12 +445,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(options.include[0].include[0].parent.subQuery).to.equal(true);
       });
 
-      it('should tag a belongsTo association with where alongside a duplicating association with duplicating false', function () {
+      it('should tag a belongsTo association with where alongside a duplicating association with duplicating false', () => {
         const options = Sequelize.Model._validateIncludedElements({
-          model: this.User,
+          model: User,
           include: [
-            { association: this.User.Company, where: { name: Math.random().toString() } },
-            { association: this.User.Tasks, duplicating: false }
+            { association: User.Company, where: { name: Math.random().toString() } },
+            { association: User.Tasks, duplicating: false }
           ],
           limit: 3
         });

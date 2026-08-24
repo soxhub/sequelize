@@ -10,32 +10,34 @@ const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('warnOnInvalidOptions', () => {
-    beforeEach(function () {
-      this.loggerSpy = sinon.spy(Utils.getLogger(), 'warn');
+    let loggerSpy;
+
+    beforeEach(() => {
+      loggerSpy = sinon.spy(Utils.getLogger(), 'warn');
     });
 
-    afterEach(function () {
-      this.loggerSpy.restore();
+    afterEach(() => {
+      loggerSpy.restore();
     });
 
-    it('Warns the user if they use a model attribute without a where clause', function () {
+    it('Warns the user if they use a model attribute without a where clause', () => {
       const User = current.define('User', { firstName: 'string' });
       User.warnOnInvalidOptions({ firstName: 12, order: [] }, ['firstName']);
       const expectedError =
         'Model attributes (firstName) passed into finder method options of model User, but the options.where object is empty. Did you forget to use options.where?';
-      expect(this.loggerSpy.calledWith(expectedError)).to.equal(true);
+      expect(loggerSpy.calledWith(expectedError)).to.equal(true);
     });
 
-    it('Does not warn the user if they use a model attribute without a where clause that shares its name with a query option', function () {
+    it('Does not warn the user if they use a model attribute without a where clause that shares its name with a query option', () => {
       const User = current.define('User', { order: 'string' });
       User.warnOnInvalidOptions({ order: [] }, ['order']);
-      expect(this.loggerSpy.called).to.equal(false);
+      expect(loggerSpy.called).to.equal(false);
     });
 
-    it('Does not warn the user if they use valid query options', function () {
+    it('Does not warn the user if they use valid query options', () => {
       const User = current.define('User', { order: 'string' });
       User.warnOnInvalidOptions({ where: { order: 1 }, order: [] });
-      expect(this.loggerSpy.called).to.equal(false);
+      expect(loggerSpy.called).to.equal(false);
     });
   });
 
@@ -48,27 +50,29 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       { timestamps: false }
     );
 
-    before(function () {
-      this.stub = sinon.stub(current.getQueryInterface(), 'select').callsFake(() => {
+    let selectStub, warnOnInvalidOptionsStub;
+
+    before(() => {
+      selectStub = sinon.stub(current.getQueryInterface(), 'select').callsFake(() => {
         return Model.build({});
       });
-      this.warnOnInvalidOptionsStub = sinon.stub(Model, 'warnOnInvalidOptions');
+      warnOnInvalidOptionsStub = sinon.stub(Model, 'warnOnInvalidOptions');
     });
 
-    beforeEach(function () {
-      this.stub.resetHistory();
-      this.warnOnInvalidOptionsStub.resetHistory();
+    beforeEach(() => {
+      selectStub.resetHistory();
+      warnOnInvalidOptionsStub.resetHistory();
     });
 
-    after(function () {
-      this.stub.restore();
-      this.warnOnInvalidOptionsStub.restore();
+    after(() => {
+      selectStub.restore();
+      warnOnInvalidOptionsStub.restore();
     });
 
     describe('handles input validation', () => {
-      it('calls warnOnInvalidOptions', function () {
+      it('calls warnOnInvalidOptions', () => {
         Model.findAll();
-        expect(this.warnOnInvalidOptionsStub.calledOnce).to.equal(true);
+        expect(warnOnInvalidOptionsStub.calledOnce).to.equal(true);
       });
 
       it('Throws an error when the attributes option is formatted incorrectly', () => {
@@ -77,27 +81,27 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
 
     describe('attributes include / exclude', () => {
-      it('allows me to include additional attributes', async function () {
+      it('allows me to include additional attributes', async () => {
         await Model.findAll({
           attributes: {
             include: ['foobar']
           }
         });
 
-        expect(this.stub.getCall(0).args[2].attributes).to.deep.equal(['id', 'name', 'foobar']);
+        expect(selectStub.getCall(0).args[2].attributes).to.deep.equal(['id', 'name', 'foobar']);
       });
 
-      it('allows me to exclude attributes', async function () {
+      it('allows me to exclude attributes', async () => {
         await Model.findAll({
           attributes: {
             exclude: ['name']
           }
         });
 
-        expect(this.stub.getCall(0).args[2].attributes).to.deep.equal(['id']);
+        expect(selectStub.getCall(0).args[2].attributes).to.deep.equal(['id']);
       });
 
-      it('include takes precendence over exclude', async function () {
+      it('include takes precendence over exclude', async () => {
         await Model.findAll({
           attributes: {
             exclude: ['name'],
@@ -105,10 +109,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         });
 
-        expect(this.stub.getCall(0).args[2].attributes).to.deep.equal(['id', 'name']);
+        expect(selectStub.getCall(0).args[2].attributes).to.deep.equal(['id', 'name']);
       });
 
-      it('works for models without PK #4607', async function () {
+      it('works for models without PK #4607', async () => {
         const PklessModel = current.define('model', {}, { timestamps: false });
         const Foo = current.define('foo');
         PklessModel.hasOne(Foo);
@@ -122,7 +126,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           include: [Foo]
         });
 
-        expect(this.stub.getCall(0).args[2].attributes).to.deep.equal(['name']);
+        expect(selectStub.getCall(0).args[2].attributes).to.deep.equal(['name']);
       });
     });
   });

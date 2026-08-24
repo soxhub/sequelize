@@ -1,9 +1,8 @@
-import { describe, it, before, after, beforeEach, afterEach } from 'mocha';
+import { describe, it, before, after, beforeEach } from 'mocha';
 import { expect } from 'chai';
 import Support from '../support.js';
 import sinon from 'sinon';
 import DataTypes from '../../../lib/data-types.js';
-import _ from 'lodash';
 
 const current = Support.sequelize;
 
@@ -14,28 +13,23 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       secretValue: DataTypes.INTEGER
     });
 
-    before(function () {
-      this.stubDelete = sinon.stub(current.getQueryInterface(), 'bulkDelete').callsFake(() => {
+    let stubDelete;
+
+    before(() => {
+      stubDelete = sinon.stub(current.getQueryInterface(), 'bulkDelete').callsFake(() => {
         return Promise.resolve([]);
       });
     });
 
-    beforeEach(function () {
-      this.deloptions = { where: { secretValue: '1' } };
-      this.cloneOptions = _.clone(this.deloptions);
-      this.stubDelete.resetHistory();
+    beforeEach(() => {
+      stubDelete.resetHistory();
     });
 
-    afterEach(function () {
-      delete this.deloptions;
-      delete this.cloneOptions;
+    after(() => {
+      stubDelete.restore();
     });
 
-    after(function () {
-      this.stubDelete.restore();
-    });
-
-    it('can detect complexe objects', function () {
+    it('can detect complexe objects', () => {
       const Where = function () {
         this.secretValue = '1';
       };

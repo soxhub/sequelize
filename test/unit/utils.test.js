@@ -1,12 +1,10 @@
-import * as chai from 'chai';
+import { assert, expect } from 'chai';
 import sinon from 'sinon';
 import defaultInflection from 'inflection';
 import Support from './support.js';
 import DataTypes from '../../lib/data-types.js';
 import * as Utils from '../../lib/utils.js';
 import Op from '../../lib/operators.js';
-
-const expect = chai.expect;
 
 describe(Support.getTestDialectTeaser('Utils'), () => {
   describe('merge', () => {
@@ -37,7 +35,7 @@ describe(Support.getTestDialectTeaser('Utils'), () => {
       expect(Utils.toDefaultValue('Test')).to.equal('Test');
     });
     it('return plain object', () => {
-      chai.assert.deepEqual({}, Utils.toDefaultValue({}));
+      assert.deepEqual({}, Utils.toDefaultValue({}));
     });
   });
 

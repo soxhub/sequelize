@@ -1,9 +1,7 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import Sequelize from '../../../index.js';
-
-const expect = chai.expect;
 
 describe(Support.getTestDialectTeaser('associations'), () => {
   describe('Test options.foreignKey', () => {

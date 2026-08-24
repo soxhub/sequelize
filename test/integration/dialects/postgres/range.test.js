@@ -1,10 +1,8 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import DataTypes from '../../../../lib/data-types.js';
 import * as range from '../../../../lib/dialects/postgres/range.js';
 import _ from 'lodash';
 import pg from 'pg';
-
-const expect = chai.expect;
 
 // Don't try to load pg until we know we're running on postgres.
 

@@ -1,9 +1,8 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Query from '../../../../lib/dialects/postgres/base/query.js';
 import Support from '../../support.js';
 
 const current = Support.sequelize;
-const expect = chai.expect;
 
 describe('[ABSTRACT]', () => {
   describe('handleSelectQuery with nest', () => {

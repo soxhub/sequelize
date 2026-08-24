@@ -1,12 +1,10 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Operators from '../../../../lib/operators.js';
 import QueryGenerator from '../../../../lib/dialects/postgres/query-generator.js';
 import Support from '../../support.js';
 import DataTypes from '../../../../lib/data-types.js';
 import moment from 'moment';
 import _ from 'lodash';
-
-const expect = chai.expect;
 
 const current = Support.sequelize;
 

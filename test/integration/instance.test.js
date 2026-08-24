@@ -1,12 +1,10 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Sequelize from '../../index.js';
 import Support from './support.js';
 import DataTypes from '../../lib/data-types.js';
 import config from '../config/config.js';
 import sinon from 'sinon';
 import { validate as validateUUID, version as uuidVersion } from 'uuid';
-
-const expect = chai.expect;
 
 const dialect = Support.getTestDialect();
 

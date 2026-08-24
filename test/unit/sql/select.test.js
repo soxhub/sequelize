@@ -2,9 +2,8 @@ import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import Model from '../../../lib/model.js';
 import { inspect } from 'node:util';
-import * as chai from 'chai';
+import { expect } from 'chai';
 
-const expect = chai.expect;
 const expectsql = Support.expectsql;
 const current = Support.sequelize;
 const sql = current.dialect.QueryGenerator;

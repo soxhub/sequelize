@@ -1,10 +1,8 @@
-import * as chai from 'chai';
+import { expect, should } from 'chai';
 import Sequelize from '../../index.js';
 import Support from './support.js';
 
-const expect = chai.expect;
-
-chai.should();
+should();
 
 describe(Support.getTestDialectTeaser('Vectors'), () => {
   it('should not allow insert backslash', async function () {

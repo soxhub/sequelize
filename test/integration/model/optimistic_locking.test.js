@@ -1,8 +1,6 @@
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
-import * as chai from 'chai';
-
-const expect = chai.expect;
+import { expect } from 'chai';
 
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('optimistic locking', () => {

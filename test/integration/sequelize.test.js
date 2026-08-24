@@ -1,4 +1,4 @@
-import * as chai from 'chai';
+import { assert, expect } from 'chai';
 import Support from './support.js';
 import DataTypes from '../../lib/data-types.js';
 import _ from 'lodash';
@@ -8,9 +8,6 @@ import moment from 'moment';
 import Transaction from '../../lib/transaction.js';
 import * as Utils from '../../lib/utils.js';
 import sinon from 'sinon';
-
-const expect = chai.expect;
-const assert = chai.assert;
 
 const dialect = Support.getTestDialect();
 

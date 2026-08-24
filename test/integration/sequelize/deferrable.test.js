@@ -1,9 +1,7 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Support from '../support.js';
 import Sequelize from '../../../index.js';
 import config from '../../config/config.js';
-
-const expect = chai.expect;
 
 // A top-level `return` guard worked under the CommonJS module wrapper; ESM has no
 // such wrapper, so skip the suite instead.

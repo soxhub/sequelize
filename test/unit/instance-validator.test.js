@@ -1,10 +1,8 @@
 import { ValidationError as SequelizeValidationError } from '../../lib/errors.js';
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Support from './support.js';
 import InstanceValidator from '../../lib/instance-validator.js';
 import sinon from 'sinon';
-
-const expect = chai.expect;
 
 describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
   beforeEach(function () {

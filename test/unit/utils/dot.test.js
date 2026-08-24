@@ -1,7 +1,5 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import * as Dot from '../../../lib/utils/dot.js';
-
-const expect = chai.expect;
 
 describe('Utils.dot', () => {
   describe('get', () => {

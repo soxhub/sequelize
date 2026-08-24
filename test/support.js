@@ -2,17 +2,15 @@ import _ from 'lodash';
 import Sequelize from '../index.js';
 import DataTypes from '../lib/data-types.js';
 import Config from './config/config.js';
-import * as chai from 'chai';
+import { config as chaiConfig, expect, should, use } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import PostgresQueryGenerator from '../lib/dialects/postgres/query-generator.js';
 import chaiDatetime from './support/chai-datetime.js';
 
-const expect = chai.expect;
-
-chai.use(chaiDatetime);
-chai.use(chaiAsPromised);
-chai.config.includeStack = true;
-chai.should();
+use(chaiDatetime);
+use(chaiAsPromised);
+chaiConfig.includeStack = true;
+should();
 
 // Make sure errors get thrown when testing
 process.on('uncaughtException', (err) => {

@@ -1,10 +1,9 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Sequelize from '../../index.js';
 import Support from '../support.js';
 import DataTypes from '../../lib/data-types.js';
 
 const Op = Sequelize.Op;
-const expect = chai.expect;
 
 describe(Support.getTestDialectTeaser('Operators'), () => {
   describe('REGEXP', () => {

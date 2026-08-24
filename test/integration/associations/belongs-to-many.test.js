@@ -1,11 +1,9 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import Sequelize from '../../../index.js';
 import _ from 'lodash';
 import sinon from 'sinon';
-
-const expect = chai.expect;
 
 const current = Support.sequelize;
 

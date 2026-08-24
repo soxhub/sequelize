@@ -1,8 +1,6 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import config from '../../../config/config.js';
 import DataTypes from '../../../../lib/data-types.js';
-
-const expect = chai.expect;
 
 describe('[POSTGRES Specific] associations', () => {
   describe('many-to-many', () => {

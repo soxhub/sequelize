@@ -1,5 +1,5 @@
 import { AssociationError } from '../../../lib/errors.js';
-import * as chai from 'chai';
+import { expect } from 'chai';
 import sinon from 'sinon';
 import _ from 'lodash';
 import Support from '../support.js';
@@ -8,7 +8,6 @@ import BelongsTo from '../../../lib/associations/belongs-to.js';
 import HasMany from '../../../lib/associations/has-many.js';
 import HasOne from '../../../lib/associations/has-one.js';
 
-const expect = chai.expect;
 const stub = sinon.stub;
 
 const current = Support.sequelize;

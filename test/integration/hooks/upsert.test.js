@@ -1,9 +1,7 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import sinon from 'sinon';
-
-const expect = chai.expect;
 
 if (Support.sequelize.dialect.supports.upserts) {
   describe(Support.getTestDialectTeaser('Hooks'), () => {

@@ -1,9 +1,7 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Sequelize from '../../../index.js';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
-
-const expect = chai.expect;
 
 const sortById = function (a, b) {
   return a.id < b.id ? -1 : 1;

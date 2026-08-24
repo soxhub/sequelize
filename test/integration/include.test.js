@@ -5,19 +5,21 @@ import Support from './support.js';
 import DataTypes from '../../lib/data-types.js';
 import _ from 'lodash';
 
+const current = Support.sequelize;
+
 const sortById = function (a, b) {
   return a.id < b.id ? -1 : 1;
 };
 
 describe(Support.getTestDialectTeaser('Include'), () => {
   describe('find', () => {
-    it('should support an empty belongsTo include', async function () {
-      const Company = this.sequelize.define('Company', {}),
-        User = this.sequelize.define('User', {});
+    it('should support an empty belongsTo include', async () => {
+      const Company = current.define('Company', {}),
+        User = current.define('User', {});
 
       User.belongsTo(Company, { as: 'Employer' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
       await User.create();
 
       const user = await User.findOne({
@@ -27,12 +29,12 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(user).to.be.ok;
     });
 
-    it('should support a belongsTo association reference', async function () {
-      const Company = this.sequelize.define('Company', {}),
-        User = this.sequelize.define('User', {}),
+    it('should support a belongsTo association reference', async () => {
+      const Company = current.define('Company', {}),
+        User = current.define('User', {}),
         Employer = User.belongsTo(Company, { as: 'Employer' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
       await User.create();
 
       const user = await User.findOne({
@@ -42,12 +44,12 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(user).to.be.ok;
     });
 
-    it('should support a belongsTo association reference with a where', async function () {
-      const Company = this.sequelize.define('Company', { name: DataTypes.STRING }),
-        User = this.sequelize.define('User', {}),
+    it('should support a belongsTo association reference with a where', async () => {
+      const Company = current.define('Company', { name: DataTypes.STRING }),
+        User = current.define('User', {}),
         Employer = User.belongsTo(Company, { as: 'Employer', foreignKey: 'employerId' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const company = await Company.create({
         name: 'CyberCorp'
@@ -64,13 +66,13 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(user).to.be.ok;
     });
 
-    it('should support a empty hasOne include', async function () {
-      const Company = this.sequelize.define('Company', {}),
-        Person = this.sequelize.define('Person', {});
+    it('should support a empty hasOne include', async () => {
+      const Company = current.define('Company', {}),
+        Person = current.define('Person', {});
 
       Company.hasOne(Person, { as: 'CEO' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
       await Company.create();
 
       const company = await Company.findOne({
@@ -80,12 +82,12 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(company).to.be.ok;
     });
 
-    it('should support a hasOne association reference', async function () {
-      const Company = this.sequelize.define('Company', {}),
-        Person = this.sequelize.define('Person', {}),
+    it('should support a hasOne association reference', async () => {
+      const Company = current.define('Company', {}),
+        Person = current.define('Person', {}),
         CEO = Company.hasOne(Person, { as: 'CEO' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
       await Company.create();
 
       const user = await Company.findOne({
@@ -95,15 +97,15 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(user).to.be.ok;
     });
 
-    it('should support including a belongsTo association rather than a model/as pair', async function () {
-      const Company = this.sequelize.define('Company', {}),
-        Person = this.sequelize.define('Person', {});
+    it('should support including a belongsTo association rather than a model/as pair', async () => {
+      const Company = current.define('Company', {}),
+        Person = current.define('Person', {});
 
       Person.relation = {
         Employer: Person.belongsTo(Company, { as: 'employer' })
       };
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [person, company] = await Promise.all([Person.create(), Company.create()]);
 
@@ -117,14 +119,14 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(found.employer).to.be.ok;
     });
 
-    it('should support a hasMany association reference', async function () {
-      const User = this.sequelize.define('user', {}),
-        Task = this.sequelize.define('task', {}),
+    it('should support a hasMany association reference', async () => {
+      const User = current.define('user', {}),
+        Task = current.define('task', {}),
         Tasks = User.hasMany(Task);
 
       Task.belongsTo(User);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const created = await User.create();
       await created.createTask();
@@ -137,14 +139,14 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(user.tasks).to.be.ok;
     });
 
-    it('should support a hasMany association reference with a where condition', async function () {
-      const User = this.sequelize.define('user', {}),
-        Task = this.sequelize.define('task', { title: DataTypes.STRING }),
+    it('should support a hasMany association reference with a where condition', async () => {
+      const User = current.define('user', {}),
+        Task = current.define('task', { title: DataTypes.STRING }),
         Tasks = User.hasMany(Task);
 
       Task.belongsTo(User);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const created = await User.create();
 
@@ -166,14 +168,14 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(user.tasks.length).to.equal(1);
     });
 
-    it('should support a belongsToMany association reference', async function () {
-      const User = this.sequelize.define('user', {}),
-        Group = this.sequelize.define('group', {}),
+    it('should support a belongsToMany association reference', async () => {
+      const User = current.define('user', {}),
+        Group = current.define('group', {}),
         Groups = User.belongsToMany(Group, { through: 'UserGroup' });
 
       Group.belongsToMany(User, { through: 'UserGroup' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const created = await User.create();
       await created.createGroup();
@@ -186,15 +188,15 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(user.groups).to.be.ok;
     });
 
-    it('should support a simple nested belongsTo -> belongsTo include', async function () {
-      const Task = this.sequelize.define('Task', {}),
-        User = this.sequelize.define('User', {}),
-        Group = this.sequelize.define('Group', {});
+    it('should support a simple nested belongsTo -> belongsTo include', async () => {
+      const Task = current.define('Task', {}),
+        User = current.define('User', {}),
+        Group = current.define('Group', {});
 
       Task.belongsTo(User);
       User.belongsTo(Group);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [createdTask, createdUser, createdGroup] = await Promise.all([
         Task.create(),
@@ -215,15 +217,15 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(task.User.Group).to.be.ok;
     });
 
-    it('should support a simple sibling set of belongsTo include', async function () {
-      const Task = this.sequelize.define('Task', {}),
-        User = this.sequelize.define('User', {}),
-        Group = this.sequelize.define('Group', {});
+    it('should support a simple sibling set of belongsTo include', async () => {
+      const Task = current.define('Task', {}),
+        User = current.define('User', {}),
+        Group = current.define('Group', {});
 
       Task.belongsTo(User);
       Task.belongsTo(Group);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const created = await Task.create(
         {
@@ -246,16 +248,16 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(task.Group).to.be.ok;
     });
 
-    it('should support a simple nested hasOne -> hasOne include', async function () {
-      const Task = this.sequelize.define('Task', {}),
-        User = this.sequelize.define('User', {}),
-        Group = this.sequelize.define('Group', {});
+    it('should support a simple nested hasOne -> hasOne include', async () => {
+      const Task = current.define('Task', {}),
+        User = current.define('User', {}),
+        Group = current.define('Group', {});
 
       User.hasOne(Task);
       Group.hasOne(User);
       User.belongsTo(Group);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const user = await User.create(
         {
@@ -278,15 +280,15 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(group.User.Task).to.be.ok;
     });
 
-    it('should support a simple nested hasMany -> belongsTo include', async function () {
-      const Task = this.sequelize.define('Task', {}),
-        User = this.sequelize.define('User', {}),
-        Project = this.sequelize.define('Project', {});
+    it('should support a simple nested hasMany -> belongsTo include', async () => {
+      const Task = current.define('Task', {}),
+        User = current.define('User', {}),
+        Project = current.define('Project', {});
 
       User.hasMany(Task);
       Task.belongsTo(Project);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
       await Project.bulkCreate([{ id: 1 }, { id: 2 }]);
 
       const created = await User.create(
@@ -313,16 +315,16 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should support a simple nested belongsTo -> hasMany include', async function () {
-      const Task = this.sequelize.define('Task', {}),
-        Worker = this.sequelize.define('Worker', {}),
-        Project = this.sequelize.define('Project', {});
+    it('should support a simple nested belongsTo -> hasMany include', async () => {
+      const Task = current.define('Task', {}),
+        Worker = current.define('Worker', {}),
+        Project = current.define('Project', {});
 
       Worker.belongsTo(Project);
       Project.hasMany(Worker);
       Project.hasMany(Task);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const project = await Project.create(
         {
@@ -346,12 +348,12 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(worker.Project.Tasks.length).to.equal(4);
     });
 
-    it('should support a simple nested hasMany <-> hasMany include', async function () {
-      const User = this.sequelize.define('User', {}),
-        Product = this.sequelize.define('Product', {
+    it('should support a simple nested hasMany <-> hasMany include', async () => {
+      const User = current.define('User', {}),
+        Product = current.define('Product', {
           title: DataTypes.STRING
         }),
-        Tag = this.sequelize.define('Tag', {
+        Tag = current.define('Tag', {
           name: DataTypes.STRING
         });
 
@@ -359,7 +361,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       Product.belongsToMany(Tag, { through: 'product_tag' });
       Tag.belongsToMany(Product, { through: 'product_tag' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [products, tags] = await Promise.all([
         (async () => {
@@ -401,22 +403,22 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(user.Products[3].Tags.length).to.equal(0);
     });
 
-    it('should support an include with multiple different association types', async function () {
-      const User = this.sequelize.define('User', {}),
-        Product = this.sequelize.define('Product', {
+    it('should support an include with multiple different association types', async () => {
+      const User = current.define('User', {}),
+        Product = current.define('Product', {
           title: DataTypes.STRING
         }),
-        Tag = this.sequelize.define('Tag', {
+        Tag = current.define('Tag', {
           name: DataTypes.STRING
         }),
-        Price = this.sequelize.define('Price', {
+        Price = current.define('Price', {
           value: DataTypes.FLOAT
         }),
-        Group = this.sequelize.define('Group', {
+        Group = current.define('Group', {
           name: DataTypes.STRING
         }),
-        GroupMember = this.sequelize.define('GroupMember', {}),
-        Rank = this.sequelize.define('Rank', {
+        GroupMember = current.define('GroupMember', {}),
+        Rank = current.define('Rank', {
           name: DataTypes.STRING,
           canInvite: {
             type: DataTypes.INTEGER,
@@ -444,7 +446,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       GroupMember.belongsTo(Group);
       Group.hasMany(GroupMember, { as: 'Memberships' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [product1, product2, createdUser, tags] = await Promise.all([
         Product.create(
@@ -514,12 +516,12 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(user.Products[1].Prices.length).to.equal(4);
     });
 
-    it('should support specifying attributes', async function () {
-      const Project = this.sequelize.define('Project', {
+    it('should support specifying attributes', async () => {
+      const Project = current.define('Project', {
         title: Sequelize.STRING
       });
 
-      const Task = this.sequelize.define('Task', {
+      const Task = current.define('Task', {
         title: Sequelize.STRING,
         description: Sequelize.TEXT
       });
@@ -527,7 +529,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       Project.hasMany(Task);
       Task.belongsTo(Project);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
       await Task.create(
         {
           title: 'FooBar',
@@ -550,16 +552,16 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(tasks[0].Project.get()).to.deep.equal({ title: 'BarFoo' });
     });
 
-    it('should support Sequelize.literal and renaming of attributes in included model attributes', async function () {
-      const Post = this.sequelize.define('Post', {});
-      const PostComment = this.sequelize.define('PostComment', {
+    it('should support Sequelize.literal and renaming of attributes in included model attributes', async () => {
+      const Post = current.define('Post', {});
+      const PostComment = current.define('PostComment', {
         someProperty: Sequelize.VIRTUAL, // Since we specify the AS part as a part of the literal string, not with sequelize syntax, we have to tell sequelize about the field
         comment_title: Sequelize.STRING
       });
 
       Post.hasMany(PostComment);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const post = await Post.create({});
 
@@ -588,14 +590,14 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(posts[0].PostComments[0].get('commentTitle')).to.equal('WAT');
     });
 
-    it('should support self associated hasMany (with through) include', async function () {
-      const Group = this.sequelize.define('Group', {
+    it('should support self associated hasMany (with through) include', async () => {
+      const Group = current.define('Group', {
         name: DataTypes.STRING
       });
 
       Group.belongsToMany(Group, { through: 'groups_outsourcing_companies', as: 'OutsourcingCompanies' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
       await Group.bulkCreate([{ name: 'SoccerMoms' }, { name: 'Coca Cola' }, { name: 'Dell' }, { name: 'Pepsi' }]);
 
       const groups = await Group.findAll();
@@ -612,15 +614,15 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(group.OutsourcingCompanies).to.have.length(3);
     });
 
-    it('should support including date fields, with the correct timeszone', async function () {
-      const User = this.sequelize.define(
+    it('should support including date fields, with the correct timeszone', async () => {
+      const User = current.define(
           'user',
           {
             dateField: Sequelize.DATE
           },
           { timestamps: false }
         ),
-        Group = this.sequelize.define(
+        Group = current.define(
           'group',
           {
             dateField: Sequelize.DATE
@@ -631,7 +633,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       User.belongsToMany(Group, { through: 'group_user' });
       Group.belongsToMany(User, { through: 'group_user' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [createdUser, group] = await Promise.all([
         User.create({ dateField: Date.UTC(2014, 1, 20) }),
@@ -651,14 +653,14 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(user.groups[0].dateField.getTime()).to.equal(Date.UTC(2014, 1, 20));
     });
 
-    it('should support include when retrieving associated objects', async function () {
-      const User = this.sequelize.define('user', {
+    it('should support include when retrieving associated objects', async () => {
+      const User = current.define('user', {
           name: DataTypes.STRING
         }),
-        Group = this.sequelize.define('group', {
+        Group = current.define('group', {
           name: DataTypes.STRING
         }),
-        UserGroup = this.sequelize.define('user_group', {
+        UserGroup = current.define('user_group', {
           vip: DataTypes.INTEGER
         });
 
@@ -673,7 +675,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         as: 'Members'
       });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [owner, member, group] = await Promise.all([
         User.create({ name: 'Owner' }),
@@ -698,17 +700,14 @@ describe(Support.getTestDialectTeaser('Include'), () => {
     });
   });
 
-  const createUsersAndItems = async function () {
-    const User = this.sequelize.define('User', {}),
-      Item = this.sequelize.define('Item', { test: DataTypes.STRING });
+  const createUsersAndItems = async () => {
+    const User = current.define('User', {}),
+      Item = current.define('Item', { test: DataTypes.STRING });
 
     User.hasOne(Item);
     Item.belongsTo(User);
 
-    this.User = User;
-    this.Item = Item;
-
-    await this.sequelize.sync({ force: true });
+    await current.sync({ force: true });
 
     const [users, items] = await Promise.all([
       (async () => {
@@ -722,28 +721,32 @@ describe(Support.getTestDialectTeaser('Include'), () => {
     ]);
 
     await Promise.all([users[0].setItem(items[0]), users[1].setItem(items[1]), users[2].setItem(items[2])]);
+
+    return { User, Item };
   };
 
   describe('where', () => {
-    beforeEach(function () {
-      return createUsersAndItems.bind(this)();
+    let User, Item;
+
+    beforeEach(async () => {
+      ({ User, Item } = await createUsersAndItems());
     });
 
-    it('should support Sequelize.and()', async function () {
-      const result = await this.User.findAll({
-        include: [{ model: this.Item, where: Sequelize.and({ test: 'def' }) }]
+    it('should support Sequelize.and()', async () => {
+      const result = await User.findAll({
+        include: [{ model: Item, where: Sequelize.and({ test: 'def' }) }]
       });
 
       expect(result.length).to.eql(1);
       expect(result[0].Item.test).to.eql('def');
     });
 
-    it('should support Sequelize.or()', function () {
+    it('should support Sequelize.or()', () => {
       return expect(
-        this.User.findAll({
+        User.findAll({
           include: [
             {
-              model: this.Item,
+              model: Item,
               where: Sequelize.or(
                 {
                   test: 'def'
@@ -760,13 +763,13 @@ describe(Support.getTestDialectTeaser('Include'), () => {
   });
 
   describe('findAndCountAll', () => {
-    it('should include associations to findAndCountAll', async function () {
-      await createUsersAndItems.bind(this)();
+    it('should include associations to findAndCountAll', async () => {
+      const { User, Item } = await createUsersAndItems();
 
-      const result = await this.User.findAndCountAll({
+      const result = await User.findAndCountAll({
         include: [
           {
-            model: this.Item,
+            model: Item,
             where: {
               test: 'def'
             }
@@ -782,10 +785,10 @@ describe(Support.getTestDialectTeaser('Include'), () => {
   });
 
   describe('association getter', () => {
-    it('should support getting an include on a N:M association getter', async function () {
-      const Question = this.sequelize.define('Question', {}),
-        Answer = this.sequelize.define('Answer', {}),
-        Questionnaire = this.sequelize.define('Questionnaire', {});
+    it('should support getting an include on a N:M association getter', async () => {
+      const Question = current.define('Question', {}),
+        Answer = current.define('Answer', {}),
+        Questionnaire = current.define('Questionnaire', {});
 
       Question.belongsToMany(Answer, { through: 'question_answer' });
       Answer.belongsToMany(Question, { through: 'question_answer' });
@@ -793,7 +796,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       Questionnaire.hasMany(Question);
       Question.belongsTo(Questionnaire);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const questionnaire = await Questionnaire.create();
 
@@ -804,20 +807,18 @@ describe(Support.getTestDialectTeaser('Include'), () => {
   });
 
   describe('nested includes', () => {
-    beforeEach(async function () {
-      const Employee = this.sequelize.define('Employee', { name: DataTypes.STRING });
-      const Team = this.sequelize.define('Team', { name: DataTypes.STRING });
-      const Clearence = this.sequelize.define('Clearence', { level: DataTypes.INTEGER });
+    let Employee, Team, Clearence;
+
+    beforeEach(async () => {
+      Employee = current.define('Employee', { name: DataTypes.STRING });
+      Team = current.define('Team', { name: DataTypes.STRING });
+      Clearence = current.define('Clearence', { level: DataTypes.INTEGER });
 
       Team.Members = Team.hasMany(Employee, { as: 'members' });
       Employee.Clearence = Employee.hasOne(Clearence, { as: 'clearence' });
       Clearence.Employee = Clearence.belongsTo(Employee, { as: 'employee' });
 
-      this.Employee = Employee;
-      this.Team = Team;
-      this.Clearence = Clearence;
-
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const instances = await Promise.all([
         Team.create({ name: 'TeamA' }),
@@ -838,15 +839,15 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       ]);
     });
 
-    it('should not ripple grandchild required to top level find when required of child is set to false', async function () {
-      const teams = await this.Team.findAll({
+    it('should not ripple grandchild required to top level find when required of child is set to false', async () => {
+      const teams = await Team.findAll({
         include: [
           {
-            association: this.Team.Members,
+            association: Team.Members,
             required: false,
             include: [
               {
-                association: this.Employee.Clearence,
+                association: Employee.Clearence,
                 required: true
               }
             ]
@@ -857,14 +858,14 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(teams).to.have.length(2);
     });
 
-    it('should not ripple grandchild required to top level find when required of child is not given (implicitly false)', async function () {
-      const teams = await this.Team.findAll({
+    it('should not ripple grandchild required to top level find when required of child is not given (implicitly false)', async () => {
+      const teams = await Team.findAll({
         include: [
           {
-            association: this.Team.Members,
+            association: Team.Members,
             include: [
               {
-                association: this.Employee.Clearence,
+                association: Employee.Clearence,
                 required: true
               }
             ]
@@ -875,15 +876,15 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(teams).to.have.length(2);
     });
 
-    it('should ripple grandchild required to top level find when required of child is set to true as well', async function () {
-      const teams = await this.Team.findAll({
+    it('should ripple grandchild required to top level find when required of child is set to true as well', async () => {
+      const teams = await Team.findAll({
         include: [
           {
-            association: this.Team.Members,
+            association: Team.Members,
             required: true,
             include: [
               {
-                association: this.Employee.Clearence,
+                association: Employee.Clearence,
                 required: true
               }
             ]

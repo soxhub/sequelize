@@ -8,23 +8,25 @@ const Sequelize = Support.Sequelize;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser('QueryInterface'), () => {
-  beforeEach(function () {
-    this.sequelize.options.quoteIdenifiers = true;
-    this.queryInterface = this.sequelize.getQueryInterface();
+  let queryInterface;
+
+  beforeEach(() => {
+    current.options.quoteIdenifiers = true;
+    queryInterface = current.getQueryInterface();
   });
 
-  afterEach(function () {
-    return this.sequelize.dropAllSchemas();
+  afterEach(() => {
+    return current.dropAllSchemas();
   });
 
   describe('renameTable', () => {
-    it('should rename table', async function () {
-      await this.queryInterface.createTable('myTestTable', {
+    it('should rename table', async () => {
+      await queryInterface.createTable('myTestTable', {
         name: DataTypes.STRING
       });
-      await this.queryInterface.renameTable('myTestTable', 'myTestTableNew');
+      await queryInterface.renameTable('myTestTable', 'myTestTableNew');
 
-      const tableNames = await this.queryInterface.showAllTables();
+      const tableNames = await queryInterface.showAllTables();
 
       expect(tableNames).to.contain('myTestTableNew');
       expect(tableNames).to.not.contain('myTestTable');
@@ -32,53 +34,53 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
   });
 
   describe('dropAllTables', () => {
-    it('should drop all tables', async function () {
+    it('should drop all tables', async () => {
       const filterMSSQLDefault = (tableNames) => tableNames.filter((t) => t.tableName !== 'spt_values');
 
-      await this.queryInterface.dropAllTables();
+      await queryInterface.dropAllTables();
 
       // MSSQL include spt_values table which is system defined, hence cant be dropped
-      const tableNames = await this.queryInterface.showAllTables();
+      const tableNames = await queryInterface.showAllTables();
       expect(filterMSSQLDefault(tableNames)).to.be.empty;
 
-      await this.queryInterface.createTable('table', { name: DataTypes.STRING });
+      await queryInterface.createTable('table', { name: DataTypes.STRING });
 
-      const tableNamesAfterCreate = await this.queryInterface.showAllTables();
+      const tableNamesAfterCreate = await queryInterface.showAllTables();
       expect(filterMSSQLDefault(tableNamesAfterCreate)).to.have.length(1);
 
-      await this.queryInterface.dropAllTables();
+      await queryInterface.dropAllTables();
 
       // MSSQL include spt_values table which is system defined, hence cant be dropped
-      const tableNamesAfterDrop = await this.queryInterface.showAllTables();
+      const tableNamesAfterDrop = await queryInterface.showAllTables();
       expect(filterMSSQLDefault(tableNamesAfterDrop)).to.be.empty;
     });
 
-    it('should be able to skip given tables', async function () {
-      await this.queryInterface.createTable('skipme', {
+    it('should be able to skip given tables', async () => {
+      await queryInterface.createTable('skipme', {
         name: DataTypes.STRING
       });
-      await this.queryInterface.dropAllTables({ skip: ['skipme'] });
+      await queryInterface.dropAllTables({ skip: ['skipme'] });
 
-      const tableNames = await this.queryInterface.showAllTables();
+      const tableNames = await queryInterface.showAllTables();
 
       expect(tableNames).to.contain('skipme');
     });
   });
 
   describe('indexes', () => {
-    beforeEach(async function () {
-      await this.queryInterface.dropTable('Group');
-      await this.queryInterface.createTable('Group', {
+    beforeEach(async () => {
+      await queryInterface.dropTable('Group');
+      await queryInterface.createTable('Group', {
         username: DataTypes.STRING,
         isAdmin: DataTypes.BOOLEAN,
         from: DataTypes.STRING
       });
     });
 
-    it('adds, reads and removes an index to the table', async function () {
-      await this.queryInterface.addIndex('Group', ['username', 'isAdmin']);
+    it('adds, reads and removes an index to the table', async () => {
+      await queryInterface.addIndex('Group', ['username', 'isAdmin']);
 
-      const indexes = await this.queryInterface.showIndex('Group');
+      const indexes = await queryInterface.showIndex('Group');
       const indexColumns = _.uniq(
         indexes.map((index) => {
           return index.name;
@@ -86,9 +88,9 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       );
       expect(indexColumns).to.include('group_username_is_admin');
 
-      await this.queryInterface.removeIndex('Group', ['username', 'isAdmin']);
+      await queryInterface.removeIndex('Group', ['username', 'isAdmin']);
 
-      const remainingIndexes = await this.queryInterface.showIndex('Group');
+      const remainingIndexes = await queryInterface.showIndex('Group');
       const remainingIndexColumns = _.uniq(
         remainingIndexes.map((index) => {
           return index.name;
@@ -97,9 +99,9 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       expect(remainingIndexColumns).to.be.empty;
     });
 
-    it('works with schemas', async function () {
-      await this.sequelize.createSchema('schema');
-      await this.queryInterface.createTable(
+    it('works with schemas', async () => {
+      await current.createSchema('schema');
+      await queryInterface.createTable(
         'table',
         {
           name: {
@@ -113,7 +115,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
           schema: 'schema'
         }
       );
-      await this.queryInterface.addIndex(
+      await queryInterface.addIndex(
         {
           schema: 'schema',
           tableName: 'table'
@@ -123,7 +125,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
         'schema_table'
       );
 
-      const indexes = await this.queryInterface.showIndex({
+      const indexes = await queryInterface.showIndex({
         schema: 'schema',
         tableName: 'table'
       });
@@ -133,14 +135,14 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       expect(index.name).to.eq('table_name_is_admin');
     });
 
-    it('does not fail on reserved keywords', function () {
-      return this.queryInterface.addIndex('Group', ['from']);
+    it('does not fail on reserved keywords', () => {
+      return queryInterface.addIndex('Group', ['from']);
     });
   });
 
   describe('describeTable', () => {
-    it('reads the metadata of the table', async function () {
-      const Users = this.sequelize.define(
+    it('reads the metadata of the table', async () => {
+      const Users = current.define(
         '_Users',
         {
           username: DataTypes.STRING,
@@ -156,7 +158,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
 
       await Users.sync({ force: true });
 
-      const metadata = await this.queryInterface.describeTable('_Users');
+      const metadata = await queryInterface.describeTable('_Users');
       const id = metadata.id;
       const username = metadata.username;
       const isAdmin = metadata.isAdmin;
@@ -176,8 +178,8 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       expect(enumVals.special).to.have.length(2);
     });
 
-    it('should correctly determine the primary key columns', async function () {
-      const Country = this.sequelize.define(
+    it('should correctly determine the primary key columns', async () => {
+      const Country = current.define(
         '_Country',
         {
           code: { type: DataTypes.STRING, primaryKey: true },
@@ -185,7 +187,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
         },
         { freezeTableName: true }
       );
-      const Alumni = this.sequelize.define(
+      const Alumni = current.define(
         '_Alumni',
         {
           year: { type: DataTypes.INTEGER, primaryKey: true },
@@ -201,13 +203,13 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
 
       await Country.sync({ force: true });
 
-      const metacountry = await this.queryInterface.describeTable('_Country');
+      const metacountry = await queryInterface.describeTable('_Country');
       expect(metacountry.code.primaryKey).to.eql(true);
       expect(metacountry.name.primaryKey).to.eql(false);
 
       await Alumni.sync({ force: true });
 
-      const metalumni = await this.queryInterface.describeTable('_Alumni');
+      const metalumni = await queryInterface.describeTable('_Alumni');
       expect(metalumni.year.primaryKey).to.eql(true);
       expect(metalumni.num.primaryKey).to.eql(true);
       expect(metalumni.username.primaryKey).to.eql(false);
@@ -220,8 +222,8 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
 
   // FIXME: These tests should make assertions against the created table using describeTable
   describe('createTable', () => {
-    it('should create a auto increment primary key', async function () {
-      await this.queryInterface.createTable('TableWithPK', {
+    it('should create a auto increment primary key', async () => {
+      await queryInterface.createTable('TableWithPK', {
         table_id: {
           type: DataTypes.INTEGER,
           primaryKey: true,
@@ -229,25 +231,20 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
         }
       });
 
-      const results = await this.queryInterface.insert(
-        null,
-        'TableWithPK',
-        {},
-        { raw: true, returning: true, plain: true }
-      );
+      const results = await queryInterface.insert(null, 'TableWithPK', {}, { raw: true, returning: true, plain: true });
       const response = _.head(results);
 
       expect(response.table_id || (typeof response !== 'object' && response)).to.be.ok;
     });
 
-    it('should work with enums (1)', function () {
-      return this.queryInterface.createTable('SomeTable', {
+    it('should work with enums (1)', () => {
+      return queryInterface.createTable('SomeTable', {
         someEnum: DataTypes.ENUM('value1', 'value2', 'value3')
       });
     });
 
-    it('should work with enums (2)', function () {
-      return this.queryInterface.createTable('SomeTable', {
+    it('should work with enums (2)', () => {
+      return queryInterface.createTable('SomeTable', {
         someEnum: {
           type: DataTypes.ENUM,
           values: ['value1', 'value2', 'value3']
@@ -255,8 +252,8 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       });
     });
 
-    it('should work with enums (3)', function () {
-      return this.queryInterface.createTable('SomeTable', {
+    it('should work with enums (3)', () => {
+      return queryInterface.createTable('SomeTable', {
         someEnum: {
           type: DataTypes.ENUM,
           values: ['value1', 'value2', 'value3'],
@@ -265,9 +262,9 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       });
     });
 
-    it('should work with enums (4)', async function () {
-      await this.queryInterface.createSchema('archive');
-      await this.queryInterface.createTable(
+    it('should work with enums (4)', async () => {
+      await queryInterface.createSchema('archive');
+      await queryInterface.createTable(
         'SomeTable',
         {
           someEnum: {
@@ -280,9 +277,9 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       );
     });
 
-    it('should work with schemas', async function () {
-      await this.sequelize.createSchema('hero');
-      await this.queryInterface.createTable(
+    it('should work with schemas', async () => {
+      await current.createSchema('hero');
+      await queryInterface.createTable(
         'User',
         {
           name: {
@@ -297,8 +294,8 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
   });
 
   describe('renameColumn', () => {
-    it('rename a simple column', async function () {
-      const Users = this.sequelize.define(
+    it('rename a simple column', async () => {
+      const Users = current.define(
         '_Users',
         {
           username: DataTypes.STRING
@@ -307,18 +304,18 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       );
 
       await Users.sync({ force: true });
-      await this.queryInterface.renameColumn('_Users', 'username', 'pseudo');
+      await queryInterface.renameColumn('_Users', 'username', 'pseudo');
 
-      const table = await this.queryInterface.describeTable('_Users');
+      const table = await queryInterface.describeTable('_Users');
 
       expect(table).to.have.property('pseudo');
       expect(table).to.not.have.property('username');
     });
 
-    it('works with schemas', async function () {
-      await this.sequelize.createSchema('archive');
+    it('works with schemas', async () => {
+      await current.createSchema('archive');
 
-      const Users = this.sequelize.define(
+      const Users = current.define(
         'User',
         {
           username: DataTypes.STRING
@@ -330,7 +327,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       );
 
       await Users.sync({ force: true });
-      await this.queryInterface.renameColumn(
+      await queryInterface.renameColumn(
         {
           schema: 'archive',
           tableName: 'Users'
@@ -339,7 +336,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
         'pseudo'
       );
 
-      const table = await this.queryInterface.describeTable({
+      const table = await queryInterface.describeTable({
         schema: 'archive',
         tableName: 'Users'
       });
@@ -348,8 +345,8 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       expect(table).to.not.have.property('username');
     });
 
-    it('rename a column non-null without default value', async function () {
-      const Users = this.sequelize.define(
+    it('rename a column non-null without default value', async () => {
+      const Users = current.define(
         '_Users',
         {
           username: {
@@ -361,16 +358,16 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       );
 
       await Users.sync({ force: true });
-      await this.queryInterface.renameColumn('_Users', 'username', 'pseudo');
+      await queryInterface.renameColumn('_Users', 'username', 'pseudo');
 
-      const table = await this.queryInterface.describeTable('_Users');
+      const table = await queryInterface.describeTable('_Users');
 
       expect(table).to.have.property('pseudo');
       expect(table).to.not.have.property('username');
     });
 
-    it('rename a boolean column non-null without default value', async function () {
-      const Users = this.sequelize.define(
+    it('rename a boolean column non-null without default value', async () => {
+      const Users = current.define(
         '_Users',
         {
           active: {
@@ -383,16 +380,16 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       );
 
       await Users.sync({ force: true });
-      await this.queryInterface.renameColumn('_Users', 'active', 'enabled');
+      await queryInterface.renameColumn('_Users', 'active', 'enabled');
 
-      const table = await this.queryInterface.describeTable('_Users');
+      const table = await queryInterface.describeTable('_Users');
 
       expect(table).to.have.property('enabled');
       expect(table).to.not.have.property('active');
     });
 
-    it('renames a column primary key autoIncrement column', async function () {
-      const Fruits = this.sequelize.define(
+    it('renames a column primary key autoIncrement column', async () => {
+      const Fruits = current.define(
         'Fruit',
         {
           fruitId: {
@@ -406,16 +403,16 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       );
 
       await Fruits.sync({ force: true });
-      await this.queryInterface.renameColumn('Fruit', 'fruitId', 'fruit_id');
+      await queryInterface.renameColumn('Fruit', 'fruitId', 'fruit_id');
 
-      const table = await this.queryInterface.describeTable('Fruit');
+      const table = await queryInterface.describeTable('Fruit');
 
       expect(table).to.have.property('fruit_id');
       expect(table).to.not.have.property('fruitId');
     });
 
-    it('shows a reasonable error message when column is missing', async function () {
-      const Users = this.sequelize.define(
+    it('shows a reasonable error message when column is missing', async () => {
+      const Users = current.define(
         '_Users',
         {
           username: DataTypes.STRING
@@ -425,16 +422,16 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
 
       await Users.sync({ force: true });
 
-      await expect(this.queryInterface.renameColumn('_Users', 'email', 'pseudo')).to.be.rejectedWith(
+      await expect(queryInterface.renameColumn('_Users', 'email', 'pseudo')).to.be.rejectedWith(
         "Table _Users doesn't have the column email"
       );
     });
   });
 
   describe('addColumn', () => {
-    beforeEach(async function () {
-      await this.sequelize.createSchema('archive');
-      await this.queryInterface.createTable('users', {
+    beforeEach(async () => {
+      await current.createSchema('archive');
+      await queryInterface.createTable('users', {
         id: {
           type: DataTypes.INTEGER,
           primaryKey: true,
@@ -443,15 +440,15 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       });
     });
 
-    it('should be able to add a foreign key reference', async function () {
-      await this.queryInterface.createTable('level', {
+    it('should be able to add a foreign key reference', async () => {
+      await queryInterface.createTable('level', {
         id: {
           type: DataTypes.INTEGER,
           primaryKey: true,
           autoIncrement: true
         }
       });
-      await this.queryInterface.addColumn('users', 'level_id', {
+      await queryInterface.addColumn('users', 'level_id', {
         type: DataTypes.INTEGER,
         references: {
           model: 'level',
@@ -461,13 +458,13 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
         onDelete: 'set null'
       });
 
-      const table = await this.queryInterface.describeTable('users');
+      const table = await queryInterface.describeTable('users');
 
       expect(table).to.have.property('level_id');
     });
 
-    it('should work with schemas', async function () {
-      await this.queryInterface.createTable(
+    it('should work with schemas', async () => {
+      await queryInterface.createTable(
         {
           tableName: 'users',
           schema: 'archive'
@@ -480,7 +477,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
           }
         }
       );
-      await this.queryInterface.addColumn(
+      await queryInterface.addColumn(
         {
           tableName: 'users',
           schema: 'archive'
@@ -491,7 +488,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
         }
       );
 
-      const table = await this.queryInterface.describeTable({
+      const table = await queryInterface.describeTable({
         tableName: 'users',
         schema: 'archive'
       });
@@ -499,12 +496,12 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       expect(table).to.have.property('level_id');
     });
 
-    it('should work with enums (1)', function () {
-      return this.queryInterface.addColumn('users', 'someEnum', DataTypes.ENUM('value1', 'value2', 'value3'));
+    it('should work with enums (1)', () => {
+      return queryInterface.addColumn('users', 'someEnum', DataTypes.ENUM('value1', 'value2', 'value3'));
     });
 
-    it('should work with enums (2)', function () {
-      return this.queryInterface.addColumn('users', 'someOtherEnum', {
+    it('should work with enums (2)', () => {
+      return queryInterface.addColumn('users', 'someOtherEnum', {
         type: DataTypes.ENUM,
         values: ['value1', 'value2', 'value3']
       });
@@ -512,15 +509,15 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
   });
 
   describe('describeForeignKeys', () => {
-    beforeEach(async function () {
-      await this.queryInterface.createTable('users', {
+    beforeEach(async () => {
+      await queryInterface.createTable('users', {
         id: {
           type: DataTypes.INTEGER,
           primaryKey: true,
           autoIncrement: true
         }
       });
-      await this.queryInterface.createTable('hosts', {
+      await queryInterface.createTable('hosts', {
         id: {
           type: DataTypes.INTEGER,
           primaryKey: true,
@@ -553,9 +550,9 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       });
     });
 
-    it('should get a list of foreign keys for the table', async function () {
-      const sql = this.queryInterface.QueryGenerator.getForeignKeysQuery('hosts', this.sequelize.config.database);
-      const fks = await this.sequelize.query(sql, { type: this.sequelize.QueryTypes.FOREIGNKEYS });
+    it('should get a list of foreign keys for the table', async () => {
+      const sql = queryInterface.QueryGenerator.getForeignKeysQuery('hosts', current.config.database);
+      const fks = await current.query(sql, { type: current.QueryTypes.FOREIGNKEYS });
 
       expect(fks).to.have.length(3);
       const keys = Object.keys(fks[0]),
@@ -567,8 +564,8 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       expect(keys3).to.have.length(7);
     });
 
-    it('should get a list of foreign key references details for the table', async function () {
-      const references = await this.queryInterface.getForeignKeyReferencesForTable('hosts', this.sequelize.options);
+    it('should get a list of foreign key references details for the table', async () => {
+      const references = await queryInterface.getForeignKeyReferencesForTable('hosts', current.options);
 
       expect(references).to.have.length(3);
       const keys = [];
@@ -583,33 +580,34 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
   });
 
   describe('constraints', () => {
-    beforeEach(function () {
-      this.User = this.sequelize.define('users', {
+    beforeEach(() => {
+      // Registered only so sync() creates their tables; the constraint tests use raw table names.
+      current.define('users', {
         username: DataTypes.STRING,
         email: DataTypes.STRING,
         roles: DataTypes.STRING
       });
 
-      this.Post = this.sequelize.define('posts', {
+      current.define('posts', {
         username: DataTypes.STRING
       });
-      return this.sequelize.sync({ force: true });
+      return current.sync({ force: true });
     });
 
     describe('unique', () => {
-      it('should add, read & remove unique constraint', async function () {
-        await this.queryInterface.addConstraint('users', ['email'], {
+      it('should add, read & remove unique constraint', async () => {
+        await queryInterface.addConstraint('users', ['email'], {
           type: 'unique'
         });
 
-        const constraints = (await this.queryInterface.showConstraint('users')).map(
+        const constraints = (await queryInterface.showConstraint('users')).map(
           (constraint) => constraint.constraintName
         );
         expect(constraints).to.include('users_email_uk');
 
-        await this.queryInterface.removeConstraint('users', 'users_email_uk');
+        await queryInterface.removeConstraint('users', 'users_email_uk');
 
-        const remainingConstraints = (await this.queryInterface.showConstraint('users')).map(
+        const remainingConstraints = (await queryInterface.showConstraint('users')).map(
           (constraint) => constraint.constraintName
         );
         expect(remainingConstraints).to.not.include('users_email_uk');
@@ -618,8 +616,8 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
 
     if (current.dialect.supports.constraints.check) {
       describe('check', () => {
-        it('should add, read & remove check constraint', async function () {
-          await this.queryInterface.addConstraint('users', ['roles'], {
+        it('should add, read & remove check constraint', async () => {
+          await queryInterface.addConstraint('users', ['roles'], {
             type: 'check',
             where: {
               roles: ['user', 'admin', 'guest', 'moderator']
@@ -627,14 +625,14 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
             name: 'check_user_roles'
           });
 
-          const constraints = (await this.queryInterface.showConstraint('users')).map(
+          const constraints = (await queryInterface.showConstraint('users')).map(
             (constraint) => constraint.constraintName
           );
           expect(constraints).to.include('check_user_roles');
 
-          await this.queryInterface.removeConstraint('users', 'check_user_roles');
+          await queryInterface.removeConstraint('users', 'check_user_roles');
 
-          const remainingConstraints = (await this.queryInterface.showConstraint('users')).map(
+          const remainingConstraints = (await queryInterface.showConstraint('users')).map(
             (constraint) => constraint.constraintName
           );
           expect(remainingConstraints).to.not.include('check_user_roles');
@@ -644,20 +642,20 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
 
     if (current.dialect.supports.constraints.default) {
       describe('default', () => {
-        it('should add, read & remove default constraint', async function () {
-          await this.queryInterface.addConstraint('users', ['roles'], {
+        it('should add, read & remove default constraint', async () => {
+          await queryInterface.addConstraint('users', ['roles'], {
             type: 'default',
             defaultValue: 'guest'
           });
 
-          const constraints = (await this.queryInterface.showConstraint('users')).map(
+          const constraints = (await queryInterface.showConstraint('users')).map(
             (constraint) => constraint.constraintName
           );
           expect(constraints).to.include('users_roles_df');
 
-          await this.queryInterface.removeConstraint('users', 'users_roles_df');
+          await queryInterface.removeConstraint('users', 'users_roles_df');
 
-          const remainingConstraints = (await this.queryInterface.showConstraint('users')).map(
+          const remainingConstraints = (await queryInterface.showConstraint('users')).map(
             (constraint) => constraint.constraintName
           );
           expect(remainingConstraints).to.not.include('users_roles_df');
@@ -666,24 +664,24 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
     }
 
     describe('primary key', () => {
-      it('should add, read & remove primary key constraint', async function () {
-        await this.queryInterface.removeColumn('users', 'id');
-        await this.queryInterface.changeColumn('users', 'username', {
+      it('should add, read & remove primary key constraint', async () => {
+        await queryInterface.removeColumn('users', 'id');
+        await queryInterface.changeColumn('users', 'username', {
           type: DataTypes.STRING,
           allowNull: false
         });
-        await this.queryInterface.addConstraint('users', ['username'], {
+        await queryInterface.addConstraint('users', ['username'], {
           type: 'PRIMARY KEY'
         });
 
-        const constraints = (await this.queryInterface.showConstraint('users')).map(
+        const constraints = (await queryInterface.showConstraint('users')).map(
           (constraint) => constraint.constraintName
         );
         expect(constraints).to.include('users_username_pk');
 
-        await this.queryInterface.removeConstraint('users', 'users_username_pk');
+        await queryInterface.removeConstraint('users', 'users_username_pk');
 
-        const remainingConstraints = (await this.queryInterface.showConstraint('users')).map(
+        const remainingConstraints = (await queryInterface.showConstraint('users')).map(
           (constraint) => constraint.constraintName
         );
         expect(remainingConstraints).to.not.include('users_username_pk');
@@ -691,17 +689,17 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
     });
 
     describe('foreign key', () => {
-      it('should add, read & remove foreign key constraint', async function () {
-        await this.queryInterface.removeColumn('users', 'id');
-        await this.queryInterface.changeColumn('users', 'username', {
+      it('should add, read & remove foreign key constraint', async () => {
+        await queryInterface.removeColumn('users', 'id');
+        await queryInterface.changeColumn('users', 'username', {
           type: DataTypes.STRING,
           allowNull: false
         });
-        await this.queryInterface.addConstraint('users', {
+        await queryInterface.addConstraint('users', {
           type: 'PRIMARY KEY',
           fields: ['username']
         });
-        await this.queryInterface.addConstraint('posts', ['username'], {
+        await queryInterface.addConstraint('posts', ['username'], {
           references: {
             table: 'users',
             field: 'username'
@@ -711,14 +709,14 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
           type: 'foreign key'
         });
 
-        const constraints = (await this.queryInterface.showConstraint('posts')).map(
+        const constraints = (await queryInterface.showConstraint('posts')).map(
           (constraint) => constraint.constraintName
         );
         expect(constraints).to.include('posts_username_users_fk');
 
-        await this.queryInterface.removeConstraint('posts', 'posts_username_users_fk');
+        await queryInterface.removeConstraint('posts', 'posts_username_users_fk');
 
-        const remainingConstraints = (await this.queryInterface.showConstraint('posts')).map(
+        const remainingConstraints = (await queryInterface.showConstraint('posts')).map(
           (constraint) => constraint.constraintName
         );
         expect(remainingConstraints).to.not.include('posts_username_users_fk');
@@ -726,9 +724,9 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
     });
 
     describe('error handling', () => {
-      it('should throw non existent constraints as UnknownConstraintError', function () {
+      it('should throw non existent constraints as UnknownConstraintError', () => {
         return expect(
-          this.queryInterface.removeConstraint('users', 'unknown__contraint__name', {
+          queryInterface.removeConstraint('users', 'unknown__contraint__name', {
             type: 'unique'
           })
         ).to.eventually.be.rejectedWith(Sequelize.UnknownConstraintError);

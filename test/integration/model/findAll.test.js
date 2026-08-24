@@ -56,8 +56,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
     describe('special where conditions/smartWhere object', () => {
       beforeEach(function () {
-        this.buf = new Buffer(16);
-        this.buf.fill('\x01');
+        this.buf = Buffer.alloc(16, '\x01');
         return this.User.bulkCreate([
           { username: 'boo', intVal: 5, theDate: '2013-01-01 12:00' },
           { username: 'boo2', intVal: 10, theDate: '2013-01-10 12:00', binary: this.buf }
@@ -243,8 +242,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
 
         const buf1 = this.buf;
-        const buf2 = new Buffer(16);
-        buf2.fill('\x02');
+        const buf2 = Buffer.alloc(16, '\x02');
 
         User.belongsTo(Binary, { foreignKey: 'binary' });
 

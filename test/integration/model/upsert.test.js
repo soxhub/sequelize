@@ -182,12 +182,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       it('works with BLOBs', async function () {
-        const created = await this.User.upsert({ id: 42, username: 'john', blob: new Buffer('kaj') });
+        const created = await this.User.upsert({ id: 42, username: 'john', blob: Buffer.from('kaj') });
         expect(created).to.be.ok;
 
         this.clock.tick(1000);
 
-        const updated = await this.User.upsert({ id: 42, username: 'doe', blob: new Buffer('andrea') });
+        const updated = await this.User.upsert({ id: 42, username: 'doe', blob: Buffer.from('andrea') });
         expect(updated).not.to.be.ok;
 
         const user = await this.User.findByPk(42);

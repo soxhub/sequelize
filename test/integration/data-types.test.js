@@ -522,7 +522,7 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
     });
 
     const byte = await ByteModel.create({
-      byteToBool: new Buffer([true])
+      byteToBool: Buffer.from([true])
     });
     expect(byte.byteToBool).to.be.ok;
 

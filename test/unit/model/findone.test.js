@@ -49,7 +49,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         });
 
-        await Model.findOne({ where: { id: new Buffer('foo') } });
+        await Model.findOne({ where: { id: Buffer.from('foo') } });
         expect(this.stub.getCall(0).args[0]).to.be.an('object').not.to.have.property('limit');
       });
     });
@@ -82,7 +82,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         });
 
-        await Model.findOne({ where: { unique: new Buffer('foo') } });
+        await Model.findOne({ where: { unique: Buffer.from('foo') } });
         expect(this.stub.getCall(0).args[0]).to.be.an('object').not.to.have.property('limit');
       });
     });

@@ -563,7 +563,7 @@ describe('[POSTGRES Specific] QueryGenerator', () => {
       },
       {
         title: 'buffer as where argument',
-        arguments: ['myTable', { where: { field: new Buffer('Sequelize') } }],
+        arguments: ['myTable', { where: { field: Buffer.from('Sequelize') } }],
         expectation: 'SELECT * FROM "myTable" WHERE "myTable"."field" = E\'\\\\x53657175656c697a65\';',
         context: QueryGenerator
       },
@@ -742,7 +742,7 @@ describe('[POSTGRES Specific] QueryGenerator', () => {
         expectation: 'INSERT INTO "myTable" ("name","birthday") VALUES (\'foo\',\'2011-03-27 10:01:55.000 +00:00\');'
       },
       {
-        arguments: ['myTable', { data: new Buffer('Sequelize') }],
+        arguments: ['myTable', { data: Buffer.from('Sequelize') }],
         expectation: 'INSERT INTO "myTable" ("data") VALUES (E\'\\\\x53657175656c697a65\');'
       },
       {

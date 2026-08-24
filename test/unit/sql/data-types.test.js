@@ -1246,7 +1246,7 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
           const type = DataTypes.BLOB();
 
           expect(type.validate('foobar')).to.equal(true);
-          expect(type.validate(new Buffer('foobar'))).to.equal(true);
+          expect(type.validate(Buffer.from('foobar'))).to.equal(true);
         });
       });
     });

@@ -1432,7 +1432,7 @@ describe('[POSTGRES Specific] QueryGenerator', () => {
     ]
   };
 
-  _.each(suites, (tests, suiteTitle) => {
+  for (const [suiteTitle, tests] of Object.entries(suites)) {
     describe(suiteTitle, () => {
       afterEach(function () {
         this.sequelize.options.quoteIdentifiers = true;
@@ -1464,5 +1464,5 @@ describe('[POSTGRES Specific] QueryGenerator', () => {
         });
       });
     });
-  });
+  }
 });

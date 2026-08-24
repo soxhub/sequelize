@@ -572,12 +572,12 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
 
       expect(references).to.have.length(3);
       const keys = [];
-      _.each(references, (reference) => {
+      for (const reference of references) {
         expect(reference.tableName).to.eql('hosts');
         expect(reference.referencedColumnName).to.eql('id');
         expect(reference.referencedTableName).to.eql('users');
         keys.push(reference.columnName);
-      });
+      }
       expect(keys).to.have.same.members(['owner', 'operator', 'admin']);
     });
   });

@@ -1,7 +1,6 @@
 import { describe, it, beforeEach, afterEach } from 'mocha';
 import { expect } from 'chai';
 import sinon from 'sinon';
-import _ from 'lodash';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import HasMany from '../../../lib/associations/has-many.js';
@@ -102,21 +101,21 @@ describe(Support.getTestDialectTeaser('hasMany'), () => {
         createTask: 'create'
       };
 
-      _.each(methods, (alias, method) => {
+      for (const [method, alias] of Object.entries(methods)) {
         User.prototype[method] = function () {
           const realMethod = this.constructor.associations.task[alias];
           expect(realMethod).to.be.a('function');
           return realMethod;
         };
-      });
+      }
 
       User.hasMany(Task, { as: 'task' });
 
       const user = User.build();
 
-      _.each(methods, (alias, method) => {
+      for (const method of Object.keys(methods)) {
         expect(user[method]()).to.be.a('function');
-      });
+      }
     });
   });
 

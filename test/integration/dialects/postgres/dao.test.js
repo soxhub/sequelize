@@ -1,8 +1,6 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import DataTypes from '../../../../lib/data-types.js';
 import sequelize from '../../../../lib/sequelize.js';
-
-const expect = chai.expect;
 
 describe('[POSTGRES Specific] DAO', () => {
   beforeEach(function () {

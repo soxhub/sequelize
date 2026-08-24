@@ -1,13 +1,11 @@
 import { each as pEach } from '../../../lib/utils/promise-helpers.js';
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import Sequelize from '../../../index.js';
 import moment from 'moment';
 import sinon from 'sinon';
 import _ from 'lodash';
-
-const expect = chai.expect;
 
 const current = Support.sequelize;
 

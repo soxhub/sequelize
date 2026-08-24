@@ -1,9 +1,7 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import sinon from 'sinon';
 import Support from './support.js';
 import ConnectionManager from '../../lib/dialects/postgres/base/connection-manager.js';
-
-const expect = chai.expect;
 
 describe('connection manager', () => {
   describe('_connect', () => {

@@ -1,8 +1,6 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import sinon from 'sinon';
 import Support from './support.js';
-
-const expect = chai.expect;
 
 const dialect = Support.getTestDialect();
 const current = Support.sequelize;

@@ -1,7 +1,5 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import * as hstore from '../../../../lib/dialects/postgres/hstore.js';
-
-const expect = chai.expect;
 
 describe('[POSTGRES Specific] hstore', () => {
   describe('stringify', () => {

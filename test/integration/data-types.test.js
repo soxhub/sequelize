@@ -1,4 +1,4 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Sequelize from '../../index.js';
 import Support from './support.js';
 import sinon from 'sinon';
@@ -8,8 +8,6 @@ import DataTypes from '../../lib/data-types.js';
 import * as Timezone from '../../lib/utils/timezone.js';
 import BigInt from 'big-integer';
 import semver from 'semver';
-
-const expect = chai.expect;
 
 const current = Support.sequelize;
 

@@ -1,10 +1,8 @@
 import { inspect } from 'node:util';
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import Model from '../../../lib/model.js';
-
-const expect = chai.expect;
 
 const expectsql = Support.expectsql;
 const current = Support.sequelize;

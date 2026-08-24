@@ -1,9 +1,7 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Sequelize from '../../index.js';
 import Support from './support.js';
 import config from '../config/config.js';
-
-const expect = chai.expect;
 
 describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
   describe('#update', () => {

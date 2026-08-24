@@ -1,7 +1,5 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Support from '../support.js';
-
-const expect = chai.expect;
 
 describe(Support.getTestDialectTeaser('Alias'), () => {
   it('should uppercase the first letter in alias getter, but not in eager loading', async function () {

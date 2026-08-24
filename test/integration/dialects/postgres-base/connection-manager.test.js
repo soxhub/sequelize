@@ -1,12 +1,10 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Support from '../../support.js';
 import sinon from 'sinon';
 import Config from '../../../config/config.js';
 import ConnectionManager from '../../../../lib/dialects/postgres/base/connection-manager.js';
 import Pooling from 'generic-pool';
 import _ from 'lodash';
-
-const expect = chai.expect;
 
 const baseConf = Config[Support.getTestDialect()];
 const poolEntry = {
@@ -96,13 +94,13 @@ describe('Connection Manager', () => {
     await _getConnection();
     await _getConnection();
 
-    chai.expect(connectStub.callCount).to.equal(4);
+    expect(connectStub.callCount).to.equal(4);
 
     // First call is the get connection for DB versions - ignore
     const calls = connectStub.getCalls();
-    chai.expect(calls[1].args[0].host).to.eql('slave1');
-    chai.expect(calls[2].args[0].host).to.eql('slave2');
-    chai.expect(calls[3].args[0].host).to.eql('slave1');
+    expect(calls[1].args[0].host).to.eql('slave1');
+    expect(calls[2].args[0].host).to.eql('slave2');
+    expect(calls[3].args[0].host).to.eql('slave1');
   });
 
   it('should allow forced reads from the write pool', async () => {
@@ -138,9 +136,9 @@ describe('Connection Manager', () => {
 
     await connectionManager.getConnection(queryOptions);
 
-    chai.expect(connectStub.calledTwice).to.be.true; // Once to get DB version, and once to actually get the connection.
+    expect(connectStub.calledTwice).to.be.true; // Once to get DB version, and once to actually get the connection.
     const calls = connectStub.getCalls();
-    chai.expect(calls[1].args[0].host).to.eql('the-boss');
+    expect(calls[1].args[0].host).to.eql('the-boss');
   });
 
   it('should clear the pool after draining it', async () => {

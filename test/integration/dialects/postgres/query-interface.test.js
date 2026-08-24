@@ -1,8 +1,6 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import DataTypes from '../../../../lib/data-types.js';
 import _ from 'lodash';
-
-const expect = chai.expect;
 
 describe('[POSTGRES Specific] QueryInterface', () => {
   beforeEach(function () {

@@ -1,8 +1,6 @@
 import _getQueryGeneratorMod from '../../support.js';
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Op from '../../../../lib/operators.js';
-
-const expect = chai.expect;
 
 const getQueryGenerator = _getQueryGeneratorMod.getQueryGenerator;
 

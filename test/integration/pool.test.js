@@ -1,8 +1,6 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Support from './support.js';
 import sinon from 'sinon';
-
-const expect = chai.expect;
 
 const dialect = Support.getTestDialect();
 

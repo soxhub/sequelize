@@ -1,7 +1,5 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import * as Timezone from '../../../lib/utils/timezone.js';
-
-const expect = chai.expect;
 
 describe('Utils.Timezone', () => {
   describe('isIanaZone', () => {

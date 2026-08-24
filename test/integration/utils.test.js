@@ -1,11 +1,9 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import * as Utils from '../../lib/utils.js';
 import Support from './support.js';
 import DataTypes from '../../lib/data-types.js';
 import Sequelize from '../../index.js';
 import queryGenerator from '../../lib/dialects/postgres/query-generator.js';
-
-const expect = chai.expect;
 
 describe(Support.getTestDialectTeaser('Utils'), () => {
   describe('removeCommentsFromFunctionString', () => {

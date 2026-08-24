@@ -1,9 +1,7 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Support from './support.js';
 import DataTypes from '../../lib/data-types.js';
 import sinon from 'sinon';
-
-const expect = chai.expect;
 
 describe(Support.getTestDialectTeaser('Replication'), function () {
   let sandbox;
@@ -40,13 +38,13 @@ describe(Support.getTestDialectTeaser('Replication'), function () {
   });
 
   function expectReadCalls() {
-    chai.expect(readSpy.callCount).least(1);
-    chai.expect(writeSpy.notCalled).eql(true);
+    expect(readSpy.callCount).least(1);
+    expect(writeSpy.notCalled).eql(true);
   }
 
   function expectWriteCalls() {
-    chai.expect(writeSpy.callCount).least(1);
-    chai.expect(readSpy.notCalled).eql(true);
+    expect(writeSpy.callCount).least(1);
+    expect(readSpy.notCalled).eql(true);
   }
 
   it('should be able to make a write', async function () {

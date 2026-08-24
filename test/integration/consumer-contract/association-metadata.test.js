@@ -1,8 +1,6 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
-
-const expect = chai.expect;
 
 /**
  * `common/app-core/src/lib/sequelize-extensions/eager-load.js` does not use `include`. It walks

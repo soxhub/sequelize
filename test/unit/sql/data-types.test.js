@@ -1,6 +1,6 @@
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
-import * as chai from 'chai';
+import { expect } from 'chai';
 import { format } from 'node:util';
 import * as uuid from 'uuid';
 
@@ -8,7 +8,6 @@ const Sequelize = Support.Sequelize;
 
 const expectsql = Support.expectsql;
 const current = Support.sequelize;
-const expect = chai.expect;
 
 // Notice: [] will be replaced by dialect specific tick/quote character when there is not dialect specific expectation but only a default expectation
 

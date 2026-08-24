@@ -1,10 +1,8 @@
 import { delay } from '../../lib/utils/promise-helpers.js';
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Support from './support.js';
 import Transaction from '../../lib/transaction.js';
 import sinon from 'sinon';
-
-const expect = chai.expect;
 
 const current = Support.sequelize;
 

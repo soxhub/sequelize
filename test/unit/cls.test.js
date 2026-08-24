@@ -1,10 +1,8 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import { CLSContext, CLSNamespace, getClsTransactionFor } from '../../lib/cls.js';
 import { delay } from '../../lib/utils/promise-helpers.js';
 import Support from './support.js';
 import { EventEmitter } from 'node:events';
-
-const expect = chai.expect;
 
 const Sequelize = Support.Sequelize;
 

@@ -1,9 +1,7 @@
 import { delay } from '../../lib/utils/promise-helpers.js';
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Support from './support.js';
 import clsHooked from 'cls-hooked';
-
-const expect = chai.expect;
 
 const Sequelize = Support.Sequelize;
 

@@ -1,7 +1,5 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Support from '../support.js';
-
-const expect = chai.expect;
 
 const current = Support.sequelize;
 const Sequelize = Support.Sequelize;

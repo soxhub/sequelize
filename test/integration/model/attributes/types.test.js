@@ -1,8 +1,6 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Sequelize from '../../../../index.js';
 import Support from '../../support.js';
-
-const expect = chai.expect;
 
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('attributes', () => {

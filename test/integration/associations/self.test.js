@@ -1,9 +1,7 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import _ from 'lodash';
-
-const expect = chai.expect;
 
 describe(Support.getTestDialectTeaser('Self'), () => {
   it('supports freezeTableName', async function () {

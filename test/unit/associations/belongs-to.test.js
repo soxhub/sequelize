@@ -1,8 +1,6 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import _ from 'lodash';
 import Support from '../support.js';
-
-const expect = chai.expect;
 
 const current = Support.sequelize;
 

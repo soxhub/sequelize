@@ -12,7 +12,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
   let clock;
 
   before(() => {
-    clock = sinon.useFakeTimers();
+    clock = sinon.useFakeTimers({ toFake: ['Date'] });
   });
   after(() => {
     clock.restore();

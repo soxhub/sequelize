@@ -10,7 +10,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
   let clock;
 
   before(() => {
-    clock = sinon.useFakeTimers();
+    clock = sinon.useFakeTimers({ toFake: ['Date'] });
   });
 
   after(() => {

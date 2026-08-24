@@ -10,7 +10,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
   let clock, SharedUser;
 
   before(() => {
-    clock = sinon.useFakeTimers();
+    clock = sinon.useFakeTimers({ toFake: ['Date'] });
   });
 
   after(() => {

@@ -13,7 +13,7 @@ const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser('Instance'), () => {
   before(function () {
-    this.clock = sinon.useFakeTimers();
+    this.clock = sinon.useFakeTimers({ toFake: ['Date'] });
   });
 
   afterEach(function () {

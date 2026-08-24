@@ -2,11 +2,16 @@ import { describe, it, beforeEach, afterEach } from 'mocha';
 import { expect } from 'chai';
 import DataTypes from '../../../../lib/data-types.js';
 import sequelize from '../../../../lib/sequelize.js';
+import Support from '../../support.js';
+
+const current = Support.sequelize;
 
 describe('[POSTGRES Specific] DAO', () => {
-  beforeEach(function () {
-    this.sequelize.options.quoteIdentifiers = true;
-    this.User = this.sequelize.define('User', {
+  let SharedUser;
+
+  beforeEach(() => {
+    current.options.quoteIdentifiers = true;
+    SharedUser = current.define('User', {
       username: DataTypes.STRING,
       email: { type: DataTypes.ARRAY(DataTypes.TEXT) },
       settings: DataTypes.HSTORE,
@@ -28,15 +33,15 @@ describe('[POSTGRES Specific] DAO', () => {
       holidays: DataTypes.ARRAY(DataTypes.RANGE(DataTypes.DATE)),
       location: DataTypes.GEOMETRY()
     });
-    return this.User.sync({ force: true });
+    return SharedUser.sync({ force: true });
   });
 
-  afterEach(function () {
-    this.sequelize.options.quoteIdentifiers = true;
+  afterEach(() => {
+    current.options.quoteIdentifiers = true;
   });
 
-  it('should be able to search within an array', function () {
-    return this.User.findAll({
+  it('should be able to search within an array', () => {
+    return SharedUser.findAll({
       where: {
         email: ['hello', 'world']
       },
@@ -49,8 +54,8 @@ describe('[POSTGRES Specific] DAO', () => {
     });
   });
 
-  it('should be able to update a field with type ARRAY(JSON)', async function () {
-    const userInstance = await this.User.create({
+  it('should be able to update a field with type ARRAY(JSON)', async () => {
+    const userInstance = await SharedUser.create({
       username: 'bob',
       email: ['myemail@email.com'],
       friends: [
@@ -77,13 +82,13 @@ describe('[POSTGRES Specific] DAO', () => {
     expect(friends[0].name).to.equal('John Smythe');
   });
 
-  it('should be able to find a record while searching in an array', async function () {
-    await this.User.bulkCreate([
+  it('should be able to find a record while searching in an array', async () => {
+    await SharedUser.bulkCreate([
       { username: 'bob', email: ['myemail@email.com'] },
       { username: 'tony', email: ['wrongemail@email.com'] }
     ]);
 
-    const user = await this.User.findAll({ where: { email: ['myemail@email.com'] } });
+    const user = await SharedUser.findAll({ where: { email: ['myemail@email.com'] } });
 
     expect(user).to.be.instanceof(Array);
     expect(user).to.have.length(1);
@@ -91,13 +96,13 @@ describe('[POSTGRES Specific] DAO', () => {
   });
 
   describe('json', () => {
-    it('should be able to retrieve a row with ->> operator', async function () {
+    it('should be able to retrieve a row with ->> operator', async () => {
       await Promise.all([
-        this.User.create({ username: 'swen', emergency_contact: { name: 'kate' } }),
-        this.User.create({ username: 'anna', emergency_contact: { name: 'joe' } })
+        SharedUser.create({ username: 'swen', emergency_contact: { name: 'kate' } }),
+        SharedUser.create({ username: 'anna', emergency_contact: { name: 'joe' } })
       ]);
 
-      const user = await this.User.findOne({
+      const user = await SharedUser.findOne({
         where: sequelize.json("emergency_contact->>'name'", 'kate'),
         attributes: ['username', 'emergency_contact']
       });
@@ -105,37 +110,37 @@ describe('[POSTGRES Specific] DAO', () => {
       expect(user.emergency_contact.name).to.equal('kate');
     });
 
-    it('should be able to query using the nested query language', async function () {
+    it('should be able to query using the nested query language', async () => {
       await Promise.all([
-        this.User.create({ username: 'swen', emergency_contact: { name: 'kate' } }),
-        this.User.create({ username: 'anna', emergency_contact: { name: 'joe' } })
+        SharedUser.create({ username: 'swen', emergency_contact: { name: 'kate' } }),
+        SharedUser.create({ username: 'anna', emergency_contact: { name: 'joe' } })
       ]);
 
-      const user = await this.User.findOne({
+      const user = await SharedUser.findOne({
         where: sequelize.json({ emergency_contact: { name: 'kate' } })
       });
 
       expect(user.emergency_contact.name).to.equal('kate');
     });
 
-    it('should be able to query using dot syntax', async function () {
+    it('should be able to query using dot syntax', async () => {
       await Promise.all([
-        this.User.create({ username: 'swen', emergency_contact: { name: 'kate' } }),
-        this.User.create({ username: 'anna', emergency_contact: { name: 'joe' } })
+        SharedUser.create({ username: 'swen', emergency_contact: { name: 'kate' } }),
+        SharedUser.create({ username: 'anna', emergency_contact: { name: 'joe' } })
       ]);
 
-      const user = await this.User.findOne({ where: sequelize.json('emergency_contact.name', 'joe') });
+      const user = await SharedUser.findOne({ where: sequelize.json('emergency_contact.name', 'joe') });
 
       expect(user.emergency_contact.name).to.equal('joe');
     });
 
-    it('should be able to query using dot syntax with uppercase name', async function () {
+    it('should be able to query using dot syntax with uppercase name', async () => {
       await Promise.all([
-        this.User.create({ username: 'swen', emergencyContact: { name: 'kate' } }),
-        this.User.create({ username: 'anna', emergencyContact: { name: 'joe' } })
+        SharedUser.create({ username: 'swen', emergencyContact: { name: 'kate' } }),
+        SharedUser.create({ username: 'anna', emergencyContact: { name: 'joe' } })
       ]);
 
-      const user = await this.User.findOne({
+      const user = await SharedUser.findOne({
         attributes: [[sequelize.json('emergencyContact.name'), 'contactName']],
         where: sequelize.json('emergencyContact.name', 'joe')
       });
@@ -143,46 +148,46 @@ describe('[POSTGRES Specific] DAO', () => {
       expect(user.get('contactName')).to.equal('joe');
     });
 
-    it('should be able to store values that require JSON escaping', async function () {
+    it('should be able to store values that require JSON escaping', async () => {
       const text = 'Multi-line \'$string\' needing "escaping" for $$ and $1 type values';
 
-      const created = await this.User.create({ username: 'swen', emergency_contact: { value: text } });
+      const created = await SharedUser.create({ username: 'swen', emergency_contact: { value: text } });
       expect(created.isNewRecord).to.equal(false);
 
-      await this.User.findOne({ where: { username: 'swen' } });
+      await SharedUser.findOne({ where: { username: 'swen' } });
 
-      const user = await this.User.findOne({ where: sequelize.json('emergency_contact.value', text) });
+      const user = await SharedUser.findOne({ where: sequelize.json('emergency_contact.value', text) });
 
       expect(user.username).to.equal('swen');
     });
 
-    it('should be able to findOrCreate with values that require JSON escaping', async function () {
+    it('should be able to findOrCreate with values that require JSON escaping', async () => {
       const text = 'Multi-line \'$string\' needing "escaping" for $$ and $1 type values';
 
-      const [created] = await this.User.findOrCreate({
+      const [created] = await SharedUser.findOrCreate({
         where: { username: 'swen' },
         defaults: { emergency_contact: { value: text } }
       });
       expect(created.isNewRecord).to.equal(false);
 
-      await this.User.findOne({ where: { username: 'swen' } });
+      await SharedUser.findOne({ where: { username: 'swen' } });
 
-      const user = await this.User.findOne({ where: sequelize.json('emergency_contact.value', text) });
+      const user = await SharedUser.findOne({ where: sequelize.json('emergency_contact.value', text) });
 
       expect(user.username).to.equal('swen');
     });
   });
 
   describe('hstore', () => {
-    it('should tell me that a column is hstore and not USER-DEFINED', async function () {
-      const table = await this.sequelize.queryInterface.describeTable('Users');
+    it('should tell me that a column is hstore and not USER-DEFINED', async () => {
+      const table = await current.queryInterface.describeTable('Users');
 
       expect(table.settings.type).to.equal('HSTORE');
       expect(table.document.type).to.equal('HSTORE');
     });
 
-    it('should stringify hstore with insert', function () {
-      return this.User.create(
+    it('should stringify hstore with insert', () => {
+      return SharedUser.create(
         {
           username: 'bob',
           email: ['myemail@email.com'],
@@ -198,8 +203,8 @@ describe('[POSTGRES Specific] DAO', () => {
       );
     });
 
-    it('should not rename hstore fields', async function () {
-      const Equipment = this.sequelize.define('Equipment', {
+    it('should not rename hstore fields', async () => {
+      const Equipment = current.define('Equipment', {
         grapplingHook: {
           type: DataTypes.STRING,
           field: 'grappling_hook'
@@ -224,8 +229,8 @@ describe('[POSTGRES Specific] DAO', () => {
       });
     });
 
-    it('should not rename json fields', async function () {
-      const Equipment = this.sequelize.define('Equipment', {
+    it('should not rename json fields', async () => {
+      const Equipment = current.define('Equipment', {
         grapplingHook: {
           type: DataTypes.STRING,
           field: 'grappling_hook'
@@ -252,8 +257,8 @@ describe('[POSTGRES Specific] DAO', () => {
   });
 
   describe('range', () => {
-    it('should tell me that a column is range and not USER-DEFINED', async function () {
-      const table = await this.sequelize.queryInterface.describeTable('Users');
+    it('should tell me that a column is range and not USER-DEFINED', async () => {
+      const table = await current.queryInterface.describeTable('Users');
 
       expect(table.course_period.type).to.equal('TSTZRANGE');
       expect(table.available_amount.type).to.equal('INT4RANGE');
@@ -261,8 +266,8 @@ describe('[POSTGRES Specific] DAO', () => {
   });
 
   describe('enums', () => {
-    it('should be able to ignore enum types that already exist', async function () {
-      const User = this.sequelize.define('UserEnums', {
+    it('should be able to ignore enum types that already exist', async () => {
+      const User = current.define('UserEnums', {
         mood: DataTypes.ENUM('happy', 'sad', 'meh')
       });
 
@@ -270,8 +275,8 @@ describe('[POSTGRES Specific] DAO', () => {
       await User.sync();
     });
 
-    it('should be able to create/drop enums multiple times', async function () {
-      const User = this.sequelize.define('UserEnums', {
+    it('should be able to create/drop enums multiple times', async () => {
+      const User = current.define('UserEnums', {
         mood: DataTypes.ENUM('happy', 'sad', 'meh')
       });
 
@@ -279,8 +284,8 @@ describe('[POSTGRES Specific] DAO', () => {
       await User.sync({ force: true });
     });
 
-    it('should be able to create/drop multiple enums multiple times', async function () {
-      const DummyModel = this.sequelize.define('Dummy-pg', {
+    it('should be able to create/drop multiple enums multiple times', async () => {
+      const DummyModel = current.define('Dummy-pg', {
         username: DataTypes.STRING,
         theEnumOne: {
           type: DataTypes.ENUM,
@@ -299,8 +304,8 @@ describe('[POSTGRES Specific] DAO', () => {
       await DummyModel.sync();
     });
 
-    it('should be able to create/drop multiple enums multiple times with field name (#7812)', async function () {
-      const DummyModel = this.sequelize.define('Dummy-pg', {
+    it('should be able to create/drop multiple enums multiple times with field name (#7812)', async () => {
+      const DummyModel = current.define('Dummy-pg', {
         username: DataTypes.STRING,
         theEnumOne: {
           field: 'oh_my_this_enum_one',
@@ -321,28 +326,28 @@ describe('[POSTGRES Specific] DAO', () => {
       await DummyModel.sync();
     });
 
-    it('should be able to add values to enum types', async function () {
-      let User = this.sequelize.define('UserEnums', {
+    it('should be able to add values to enum types', async () => {
+      let User = current.define('UserEnums', {
         mood: DataTypes.ENUM('happy', 'sad', 'meh')
       });
 
       await User.sync({ force: true });
 
-      User = this.sequelize.define('UserEnums', {
+      User = current.define('UserEnums', {
         mood: DataTypes.ENUM('neutral', 'happy', 'sad', 'ecstatic', 'meh', 'joyful')
       });
 
       await User.sync();
 
-      const enums = await this.sequelize.getQueryInterface().pgListEnums(User.getTableName());
+      const enums = await current.getQueryInterface().pgListEnums(User.getTableName());
 
       expect(enums).to.have.length(1);
       expect(enums[0].enum_value).to.equal('{neutral,happy,sad,ecstatic,meh,joyful}');
     });
 
     describe('ARRAY(ENUM)', () => {
-      it('should be able to ignore enum types that already exist', async function () {
-        const User = this.sequelize.define('UserEnums', {
+      it('should be able to ignore enum types that already exist', async () => {
+        const User = current.define('UserEnums', {
           permissions: DataTypes.ARRAY(DataTypes.ENUM(['access', 'write', 'check', 'delete']))
         });
 
@@ -350,8 +355,8 @@ describe('[POSTGRES Specific] DAO', () => {
         await User.sync();
       });
 
-      it('should be able to create/drop enums multiple times', async function () {
-        const User = this.sequelize.define('UserEnums', {
+      it('should be able to create/drop enums multiple times', async () => {
+        const User = current.define('UserEnums', {
           permissions: DataTypes.ARRAY(DataTypes.ENUM(['access', 'write', 'check', 'delete']))
         });
 
@@ -359,27 +364,27 @@ describe('[POSTGRES Specific] DAO', () => {
         await User.sync({ force: true });
       });
 
-      it('should be able to add values to enum types', async function () {
-        let User = this.sequelize.define('UserEnums', {
+      it('should be able to add values to enum types', async () => {
+        let User = current.define('UserEnums', {
           permissions: DataTypes.ARRAY(DataTypes.ENUM(['access', 'write', 'check', 'delete']))
         });
 
         await User.sync({ force: true });
 
-        User = this.sequelize.define('UserEnums', {
+        User = current.define('UserEnums', {
           permissions: DataTypes.ARRAY(DataTypes.ENUM('view', 'access', 'edit', 'write', 'check', 'delete'))
         });
 
         await User.sync();
 
-        const enums = await this.sequelize.getQueryInterface().pgListEnums(User.getTableName());
+        const enums = await current.getQueryInterface().pgListEnums(User.getTableName());
 
         expect(enums).to.have.length(1);
         expect(enums[0].enum_value).to.equal('{view,access,edit,write,check,delete}');
       });
 
-      it('should be able to insert new record', async function () {
-        const User = this.sequelize.define('UserEnums', {
+      it('should be able to insert new record', async () => {
+        const User = current.define('UserEnums', {
           name: DataTypes.STRING,
           type: DataTypes.ENUM('A', 'B', 'C'),
           owners: DataTypes.ARRAY(DataTypes.STRING),
@@ -401,8 +406,8 @@ describe('[POSTGRES Specific] DAO', () => {
         expect(user.permissions).to.deep.equal(['access', 'write']);
       });
 
-      it('should fail when trying to insert foreign element on ARRAY(ENUM)', async function () {
-        const User = this.sequelize.define('UserEnums', {
+      it('should fail when trying to insert foreign element on ARRAY(ENUM)', async () => {
+        const User = current.define('UserEnums', {
           name: DataTypes.STRING,
           type: DataTypes.ENUM('A', 'B', 'C'),
           owners: DataTypes.ARRAY(DataTypes.STRING),
@@ -421,8 +426,8 @@ describe('[POSTGRES Specific] DAO', () => {
         ).to.be.rejectedWith(/invalid input value for enum "enum_UserEnums_permissions": "cosmic_ray_disk_access"/);
       });
 
-      it('should be able to find records', async function () {
-        const User = this.sequelize.define('UserEnums', {
+      it('should be able to find records', async () => {
+        const User = current.define('UserEnums', {
           name: DataTypes.STRING,
           type: DataTypes.ENUM('A', 'B', 'C'),
           permissions: DataTypes.ARRAY(DataTypes.ENUM(['access', 'write', 'check', 'delete']))
@@ -468,76 +473,68 @@ describe('[POSTGRES Specific] DAO', () => {
 
   describe('integers', () => {
     describe('integer', () => {
-      beforeEach(function () {
-        this.User = this.sequelize.define('User', {
+      beforeEach(() => {
+        SharedUser = current.define('User', {
           aNumber: DataTypes.INTEGER
         });
 
-        return this.User.sync({ force: true });
+        return SharedUser.sync({ force: true });
       });
 
-      it('positive', async function () {
-        const User = this.User;
-
-        const user = await User.create({ aNumber: 2147483647 });
+      it('positive', async () => {
+        const user = await SharedUser.create({ aNumber: 2147483647 });
         expect(user.aNumber).to.equal(2147483647);
 
-        const _user = await User.findOne({ where: { aNumber: 2147483647 } });
+        const _user = await SharedUser.findOne({ where: { aNumber: 2147483647 } });
         expect(_user.aNumber).to.equal(2147483647);
       });
 
-      it('negative', async function () {
-        const User = this.User;
-
-        const user = await User.create({ aNumber: -2147483647 });
+      it('negative', async () => {
+        const user = await SharedUser.create({ aNumber: -2147483647 });
         expect(user.aNumber).to.equal(-2147483647);
 
-        const _user = await User.findOne({ where: { aNumber: -2147483647 } });
+        const _user = await SharedUser.findOne({ where: { aNumber: -2147483647 } });
         expect(_user.aNumber).to.equal(-2147483647);
       });
     });
 
     describe('bigint', () => {
-      beforeEach(function () {
-        this.User = this.sequelize.define('User', {
+      beforeEach(() => {
+        SharedUser = current.define('User', {
           aNumber: DataTypes.BIGINT
         });
 
-        return this.User.sync({ force: true });
+        return SharedUser.sync({ force: true });
       });
 
-      it('positive', async function () {
-        const User = this.User;
-
-        const user = await User.create({ aNumber: '9223372036854775807' });
+      it('positive', async () => {
+        const user = await SharedUser.create({ aNumber: '9223372036854775807' });
         expect(user.aNumber).to.equal('9223372036854775807');
 
-        const _user = await User.findOne({ where: { aNumber: '9223372036854775807' } });
+        const _user = await SharedUser.findOne({ where: { aNumber: '9223372036854775807' } });
         expect(_user.aNumber).to.equal('9223372036854775807');
       });
 
-      it('negative', async function () {
-        const User = this.User;
-
-        const user = await User.create({ aNumber: '-9223372036854775807' });
+      it('negative', async () => {
+        const user = await SharedUser.create({ aNumber: '-9223372036854775807' });
         expect(user.aNumber).to.equal('-9223372036854775807');
 
-        const _user = await User.findOne({ where: { aNumber: '-9223372036854775807' } });
+        const _user = await SharedUser.findOne({ where: { aNumber: '-9223372036854775807' } });
         expect(_user.aNumber).to.equal('-9223372036854775807');
       });
     });
   });
 
   describe('timestamps', () => {
-    beforeEach(function () {
-      this.User = this.sequelize.define('User', {
+    beforeEach(() => {
+      SharedUser = current.define('User', {
         dates: DataTypes.ARRAY(DataTypes.DATE)
       });
-      return this.User.sync({ force: true });
+      return SharedUser.sync({ force: true });
     });
 
-    it('should use postgres "TIMESTAMP WITH TIME ZONE" instead of "DATETIME"', function () {
-      return this.User.create(
+    it('should use postgres "TIMESTAMP WITH TIME ZONE" instead of "DATETIME"', () => {
+      return SharedUser.create(
         {
           dates: []
         },
@@ -551,14 +548,14 @@ describe('[POSTGRES Specific] DAO', () => {
   });
 
   describe('model', () => {
-    it('create handles array correctly', async function () {
-      const oldUser = await this.User.create({ username: 'user', email: ['foo@bar.com', 'bar@baz.com'] });
+    it('create handles array correctly', async () => {
+      const oldUser = await SharedUser.create({ username: 'user', email: ['foo@bar.com', 'bar@baz.com'] });
 
       expect(oldUser.email).to.contain.members(['foo@bar.com', 'bar@baz.com']);
     });
 
-    it('should save hstore correctly', async function () {
-      const newUser = await this.User.create({
+    it('should save hstore correctly', async () => {
+      const newUser = await SharedUser.create({
         username: 'user',
         email: ['foo@bar.com'],
         settings: { created: '"value"' }
@@ -575,10 +572,8 @@ describe('[POSTGRES Specific] DAO', () => {
       expect(oldUser.settings).to.deep.equal({ first: 'place', should: 'update', to: 'this' });
     });
 
-    it('should save hstore array correctly', async function () {
-      const User = this.User;
-
-      await this.User.create({
+    it('should save hstore array correctly', async () => {
+      await SharedUser.create({
         username: 'bob',
         email: ['myemail@email.com'],
         phones: [
@@ -589,7 +584,7 @@ describe('[POSTGRES Specific] DAO', () => {
         ]
       });
 
-      const user = await User.findByPk(1);
+      const user = await SharedUser.findByPk(1);
 
       expect(user.phones.length).to.equal(4);
       expect(user.phones[1].number).to.equal('987654321');
@@ -597,10 +592,8 @@ describe('[POSTGRES Specific] DAO', () => {
       expect(user.phones[3].type).to.equal('"home\n"');
     });
 
-    it('should bulkCreate with hstore property', async function () {
-      const User = this.User;
-
-      await this.User.bulkCreate([
+    it('should bulkCreate with hstore property', async () => {
+      await SharedUser.bulkCreate([
         {
           username: 'bob',
           email: ['myemail@email.com'],
@@ -608,13 +601,13 @@ describe('[POSTGRES Specific] DAO', () => {
         }
       ]);
 
-      const user = await User.findByPk(1);
+      const user = await SharedUser.findByPk(1);
 
       expect(user.settings.mailing).to.equal('true');
     });
 
-    it('should update hstore correctly', async function () {
-      const newUser = await this.User.create({
+    it('should update hstore correctly', async () => {
+      const newUser = await SharedUser.create({
         username: 'user',
         email: ['foo@bar.com'],
         settings: { test: '"value"' }
@@ -625,7 +618,7 @@ describe('[POSTGRES Specific] DAO', () => {
       expect(newUser.settings).to.deep.equal({ test: '"value"' });
 
       // Check to see if updating an hstore field works
-      await this.User.update(
+      await SharedUser.update(
         { settings: { should: 'update', to: 'this', first: 'place' } },
         { where: newUser.where() }
       );
@@ -635,15 +628,15 @@ describe('[POSTGRES Specific] DAO', () => {
       expect(newUser.settings).to.deep.equal({ first: 'place', should: 'update', to: 'this' });
     });
 
-    it('should update hstore correctly and return the affected rows', async function () {
-      const oldUser = await this.User.create({
+    it('should update hstore correctly and return the affected rows', async () => {
+      const oldUser = await SharedUser.create({
         username: 'user',
         email: ['foo@bar.com'],
         settings: { test: '"value"' }
       });
 
       // Update the user and check that the returned object's fields have been parsed by the hstore library
-      const [count, users] = await this.User.update(
+      const [count, users] = await SharedUser.update(
         { settings: { should: 'update', to: 'this', first: 'place' } },
         { where: oldUser.where(), returning: true }
       );
@@ -652,18 +645,18 @@ describe('[POSTGRES Specific] DAO', () => {
       expect(users[0].settings).to.deep.equal({ should: 'update', to: 'this', first: 'place' });
     });
 
-    it('should read hstore correctly', async function () {
+    it('should read hstore correctly', async () => {
       const data = { username: 'user', email: ['foo@bar.com'], settings: { test: '"value"' } };
 
-      await this.User.create(data);
+      await SharedUser.create(data);
 
-      const user = await this.User.findOne({ where: { username: 'user' } });
+      const user = await SharedUser.findOne({ where: { username: 'user' } });
 
       // Check that the hstore fields are the same when retrieving the user
       expect(user.settings).to.deep.equal(data.settings);
     });
 
-    it('should read an hstore array correctly', async function () {
+    it('should read an hstore array correctly', async () => {
       const data = {
         username: 'user',
         email: ['foo@bar.com'],
@@ -673,50 +666,50 @@ describe('[POSTGRES Specific] DAO', () => {
         ]
       };
 
-      await this.User.create(data);
+      await SharedUser.create(data);
 
       // Check that the hstore fields are the same when retrieving the user
-      const user = await this.User.findOne({ where: { username: 'user' } });
+      const user = await SharedUser.findOne({ where: { username: 'user' } });
 
       expect(user.phones).to.deep.equal(data.phones);
     });
 
-    it('should read hstore correctly from multiple rows', async function () {
-      await this.User.create({ username: 'user1', email: ['foo@bar.com'], settings: { test: '"value"' } });
-      await this.User.create({ username: 'user2', email: ['foo2@bar.com'], settings: { another: '"example"' } });
+    it('should read hstore correctly from multiple rows', async () => {
+      await SharedUser.create({ username: 'user1', email: ['foo@bar.com'], settings: { test: '"value"' } });
+      await SharedUser.create({ username: 'user2', email: ['foo2@bar.com'], settings: { another: '"example"' } });
 
       // Check that the hstore fields are the same when retrieving the user
-      const users = await this.User.findAll({ order: ['username'] });
+      const users = await SharedUser.findAll({ order: ['username'] });
 
       expect(users[0].settings).to.deep.equal({ test: '"value"' });
       expect(users[1].settings).to.deep.equal({ another: '"example"' });
     });
 
-    it('should read hstore correctly from included models as well', async function () {
-      const HstoreSubmodel = this.sequelize.define('hstoreSubmodel', {
+    it('should read hstore correctly from included models as well', async () => {
+      const HstoreSubmodel = current.define('hstoreSubmodel', {
         someValue: DataTypes.HSTORE
       });
       const submodelValue = { testing: '"hstore"' };
 
-      this.User.hasMany(HstoreSubmodel);
+      SharedUser.hasMany(HstoreSubmodel);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
-      const created = await this.User.create({ username: 'user1' });
+      const created = await SharedUser.create({ username: 'user1' });
       const submodel = await HstoreSubmodel.create({ someValue: submodelValue });
 
       await created.setHstoreSubmodels([submodel]);
 
-      const user = await this.User.findOne({ where: { username: 'user1' }, include: [HstoreSubmodel] });
+      const user = await SharedUser.findOne({ where: { username: 'user1' }, include: [HstoreSubmodel] });
 
       expect(Object.hasOwn(user, 'hstoreSubmodels')).to.be.ok;
       expect(user.hstoreSubmodels.length).to.equal(1);
       expect(user.hstoreSubmodels[0].someValue).to.deep.equal(submodelValue);
     });
 
-    it('should save range correctly', async function () {
+    it('should save range correctly', async () => {
       const period = [new Date(2015, 0, 1), new Date(2015, 11, 31)];
-      const newUser = await this.User.create({ username: 'user', email: ['foo@bar.com'], course_period: period });
+      const newUser = await SharedUser.create({ username: 'user', email: ['foo@bar.com'], course_period: period });
 
       // Check to see if the default value for a range field works
 
@@ -738,20 +731,19 @@ describe('[POSTGRES Specific] DAO', () => {
       expect(newUser.acceptable_marks[1]).to.equal(0.9); // upper bound
     });
 
-    it('should save range array correctly', async function () {
-      const User = this.User;
+    it('should save range array correctly', async () => {
       const holidays = [
         [new Date(2015, 3, 1), new Date(2015, 3, 15)],
         [new Date(2015, 8, 1), new Date(2015, 9, 15)]
       ];
 
-      await User.create({
+      await SharedUser.create({
         username: 'bob',
         email: ['myemail@email.com'],
         holidays
       });
 
-      const user = await User.findByPk(1);
+      const user = await SharedUser.findByPk(1);
 
       expect(user.holidays.length).to.equal(2);
       expect(user.holidays[0].length).to.equal(2);
@@ -766,11 +758,10 @@ describe('[POSTGRES Specific] DAO', () => {
       expect(user.holidays[1][1]).to.equalTime(holidays[1][1]);
     });
 
-    it('should bulkCreate with range property', async function () {
-      const User = this.User;
+    it('should bulkCreate with range property', async () => {
       const period = [new Date(2015, 0, 1), new Date(2015, 11, 31)];
 
-      await User.bulkCreate([
+      await SharedUser.bulkCreate([
         {
           username: 'bob',
           email: ['myemail@email.com'],
@@ -778,7 +769,7 @@ describe('[POSTGRES Specific] DAO', () => {
         }
       ]);
 
-      const user = await User.findByPk(1);
+      const user = await SharedUser.findByPk(1);
 
       expect(user.course_period[0] instanceof Date).to.be.ok;
       expect(user.course_period[1] instanceof Date).to.be.ok;
@@ -787,11 +778,10 @@ describe('[POSTGRES Specific] DAO', () => {
       expect(user.course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
     });
 
-    it('should update range correctly', async function () {
-      const User = this.User;
+    it('should update range correctly', async () => {
       const period = [new Date(2015, 0, 1), new Date(2015, 11, 31)];
 
-      const newUser = await User.create({ username: 'user', email: ['foo@bar.com'], course_period: period });
+      const newUser = await SharedUser.create({ username: 'user', email: ['foo@bar.com'], course_period: period });
 
       // Check to see if the default value for a range field works
       expect(newUser.acceptable_marks.length).to.equal(2);
@@ -807,7 +797,7 @@ describe('[POSTGRES Specific] DAO', () => {
       const period2 = [new Date(2015, 1, 1), new Date(2015, 10, 30)];
 
       // Check to see if updating a range field works
-      await User.update({ course_period: period2 }, { where: newUser.where() });
+      await SharedUser.update({ course_period: period2 }, { where: newUser.where() });
       await newUser.reload();
 
       expect(newUser.course_period[0] instanceof Date).to.be.ok;
@@ -817,18 +807,20 @@ describe('[POSTGRES Specific] DAO', () => {
       expect(newUser.course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
     });
 
-    it('should update range correctly and return the affected rows', async function () {
-      const User = this.User;
+    it('should update range correctly and return the affected rows', async () => {
       const period = [new Date(2015, 1, 1), new Date(2015, 10, 30)];
 
-      const oldUser = await User.create({
+      const oldUser = await SharedUser.create({
         username: 'user',
         email: ['foo@bar.com'],
         course_period: [new Date(2015, 0, 1), new Date(2015, 11, 31)]
       });
 
       // Update the user and check that the returned object's fields have been parsed by the range parser
-      const [count, users] = await User.update({ course_period: period }, { where: oldUser.where(), returning: true });
+      const [count, users] = await SharedUser.update(
+        { course_period: period },
+        { where: oldUser.where(), returning: true }
+      );
 
       expect(count).to.equal(1);
       expect(users[0].course_period[0] instanceof Date).to.be.ok;
@@ -838,24 +830,21 @@ describe('[POSTGRES Specific] DAO', () => {
       expect(users[0].course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
     });
 
-    it('should read range correctly', async function () {
-      const User = this.User;
-
+    it('should read range correctly', async () => {
       const course_period = [new Date(2015, 1, 1), new Date(2015, 10, 30)];
       course_period.inclusive = [false, false];
 
       const data = { username: 'user', email: ['foo@bar.com'], course_period };
 
-      await User.create(data);
+      await SharedUser.create(data);
 
-      const user = await User.findOne({ where: { username: 'user' } });
+      const user = await SharedUser.findOne({ where: { username: 'user' } });
 
       // Check that the range fields are the same when retrieving the user
       expect(user.course_period).to.deep.equal(data.course_period);
     });
 
-    it('should read range array correctly', async function () {
-      const User = this.User;
+    it('should read range array correctly', async () => {
       const holidays = [
         [new Date(2015, 3, 1, 10), new Date(2015, 3, 15)],
         [new Date(2015, 8, 1), new Date(2015, 9, 15)]
@@ -866,26 +855,25 @@ describe('[POSTGRES Specific] DAO', () => {
 
       const data = { username: 'user', email: ['foo@bar.com'], holidays };
 
-      await User.create(data);
+      await SharedUser.create(data);
 
       // Check that the range fields are the same when retrieving the user
-      const user = await User.findOne({ where: { username: 'user' } });
+      const user = await SharedUser.findOne({ where: { username: 'user' } });
 
       expect(user.holidays).to.deep.equal(data.holidays);
     });
 
-    it('should read range correctly from multiple rows', async function () {
-      const User = this.User;
+    it('should read range correctly from multiple rows', async () => {
       const periods = [
         [new Date(2015, 0, 1), new Date(2015, 11, 31)],
         [new Date(2016, 0, 1), new Date(2016, 11, 31)]
       ];
 
-      await User.create({ username: 'user1', email: ['foo@bar.com'], course_period: periods[0] });
-      await User.create({ username: 'user2', email: ['foo2@bar.com'], course_period: periods[1] });
+      await SharedUser.create({ username: 'user1', email: ['foo@bar.com'], course_period: periods[0] });
+      await SharedUser.create({ username: 'user2', email: ['foo2@bar.com'], course_period: periods[1] });
 
       // Check that the range fields are the same when retrieving the user
-      const users = await User.findAll({ order: ['username'] });
+      const users = await SharedUser.findAll({ order: ['username'] });
 
       expect(users[0].course_period[0]).to.equalTime(periods[0][0]); // lower bound
       expect(users[0].course_period[1]).to.equalTime(periods[0][1]); // upper bound
@@ -895,22 +883,22 @@ describe('[POSTGRES Specific] DAO', () => {
       expect(users[1].course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
     });
 
-    it('should read range correctly from included models as well', async function () {
+    it('should read range correctly from included models as well', async () => {
       const period = [new Date(2016, 0, 1), new Date(2016, 11, 31)];
-      const HolidayDate = this.sequelize.define('holidayDate', {
+      const HolidayDate = current.define('holidayDate', {
         period: DataTypes.RANGE(DataTypes.DATE)
       });
 
-      this.User.hasMany(HolidayDate);
+      SharedUser.hasMany(HolidayDate);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
-      const created = await this.User.create({ username: 'user', email: ['foo@bar.com'] });
+      const created = await SharedUser.create({ username: 'user', email: ['foo@bar.com'] });
       const holidayDate = await HolidayDate.create({ period });
 
       await created.setHolidayDates([holidayDate]);
 
-      const user = await this.User.findOne({ where: { username: 'user' }, include: [HolidayDate] });
+      const user = await SharedUser.findOne({ where: { username: 'user' }, include: [HolidayDate] });
 
       expect(Object.hasOwn(user, 'holidayDates')).to.be.ok;
       expect(user.holidayDates.length).to.equal(1);
@@ -920,20 +908,19 @@ describe('[POSTGRES Specific] DAO', () => {
     });
   });
 
-  it('should save geometry correctly', async function () {
+  it('should save geometry correctly', async () => {
     const point = { type: 'Point', coordinates: [39.807222, -76.984722] };
-    const newUser = await this.User.create({ username: 'user', email: ['foo@bar.com'], location: point });
+    const newUser = await SharedUser.create({ username: 'user', email: ['foo@bar.com'], location: point });
 
     expect(newUser.location).to.deep.eql(point);
   });
 
-  it('should update geometry correctly', async function () {
-    const User = this.User;
+  it('should update geometry correctly', async () => {
     const point1 = { type: 'Point', coordinates: [39.807222, -76.984722] };
     const point2 = { type: 'Point', coordinates: [39.828333, -77.232222] };
 
-    const oldUser = await User.create({ username: 'user', email: ['foo@bar.com'], location: point1 });
-    const [, updatedUsers] = await User.update(
+    const oldUser = await SharedUser.create({ username: 'user', email: ['foo@bar.com'], location: point1 });
+    const [, updatedUsers] = await SharedUser.update(
       { location: point2 },
       { where: { username: oldUser.username }, returning: true }
     );
@@ -941,22 +928,21 @@ describe('[POSTGRES Specific] DAO', () => {
     expect(updatedUsers[0].location).to.deep.eql(point2);
   });
 
-  it('should read geometry correctly', async function () {
-    const User = this.User;
+  it('should read geometry correctly', async () => {
     const point = { type: 'Point', coordinates: [39.807222, -76.984722] };
 
-    const created = await User.create({ username: 'user', email: ['foo@bar.com'], location: point });
-    const user = await User.findOne({ where: { username: created.username } });
+    const created = await SharedUser.create({ username: 'user', email: ['foo@bar.com'], location: point });
+    const user = await SharedUser.findOne({ where: { username: created.username } });
 
     expect(user.location).to.deep.eql(point);
   });
 
   describe('[POSTGRES] Unquoted identifiers', () => {
-    it('can insert and select', async function () {
-      this.sequelize.options.quoteIdentifiers = false;
-      this.sequelize.getQueryInterface().QueryGenerator.options.quoteIdentifiers = false;
+    it('can insert and select', async () => {
+      current.options.quoteIdentifiers = false;
+      current.getQueryInterface().QueryGenerator.options.quoteIdentifiers = false;
 
-      this.User = this.sequelize.define(
+      SharedUser = current.define(
         'Userxs',
         {
           username: DataTypes.STRING,
@@ -968,9 +954,9 @@ describe('[POSTGRES Specific] DAO', () => {
       );
 
       try {
-        await this.User.sync({ force: true });
+        await SharedUser.sync({ force: true });
 
-        const user = await this.User.create({ username: 'user', fullName: 'John Smith' });
+        const user = await SharedUser.create({ username: 'user', fullName: 'John Smith' });
 
         // We can insert into a table with non-quoted identifiers
         expect(user.id).to.exist;
@@ -979,7 +965,7 @@ describe('[POSTGRES Specific] DAO', () => {
         expect(user.fullName).to.equal('John Smith');
 
         // We can query by non-quoted identifiers
-        const user2 = await this.User.findOne({
+        const user2 = await SharedUser.findOne({
           where: { fullName: 'John Smith' }
         });
 
@@ -989,22 +975,22 @@ describe('[POSTGRES Specific] DAO', () => {
         expect(user2.fullName).to.equal('John Smith');
 
         // We can query and aggregate by non-quoted identifiers
-        const count = await this.User.count({
+        const count = await SharedUser.count({
           where: { fullName: 'John Smith' }
         });
 
         expect(count).to.equal(1);
       } finally {
-        this.sequelize.options.quoteIdentifiers = true;
-        this.sequelize.getQueryInterface().QueryGenerator.options.quoteIdentifiers = true;
-        this.sequelize.options.logging = false;
+        current.options.quoteIdentifiers = true;
+        current.getQueryInterface().QueryGenerator.options.quoteIdentifiers = true;
+        current.options.logging = false;
       }
     });
 
-    it('can select nested include', async function () {
-      this.sequelize.options.quoteIdentifiers = false;
-      this.sequelize.getQueryInterface().QueryGenerator.options.quoteIdentifiers = false;
-      this.Professor = this.sequelize.define(
+    it('can select nested include', async () => {
+      current.options.quoteIdentifiers = false;
+      current.getQueryInterface().QueryGenerator.options.quoteIdentifiers = false;
+      const Professor = current.define(
         'Professor',
         {
           fullName: DataTypes.STRING
@@ -1013,7 +999,7 @@ describe('[POSTGRES Specific] DAO', () => {
           quoteIdentifiers: false
         }
       );
-      this.Class = this.sequelize.define(
+      const Class = current.define(
         'Class',
         {
           name: DataTypes.STRING
@@ -1022,7 +1008,7 @@ describe('[POSTGRES Specific] DAO', () => {
           quoteIdentifiers: false
         }
       );
-      this.Student = this.sequelize.define(
+      const Student = current.define(
         'Student',
         {
           fullName: DataTypes.STRING
@@ -1031,7 +1017,7 @@ describe('[POSTGRES Specific] DAO', () => {
           quoteIdentifiers: false
         }
       );
-      this.ClassStudent = this.sequelize.define(
+      const ClassStudent = current.define(
         'ClassStudent',
         {},
         {
@@ -1039,17 +1025,17 @@ describe('[POSTGRES Specific] DAO', () => {
           tableName: 'class_student'
         }
       );
-      this.Professor.hasMany(this.Class);
-      this.Class.belongsTo(this.Professor);
-      this.Class.belongsToMany(this.Student, { through: this.ClassStudent });
-      this.Student.belongsToMany(this.Class, { through: this.ClassStudent });
+      Professor.hasMany(Class);
+      Class.belongsTo(Professor);
+      Class.belongsToMany(Student, { through: ClassStudent });
+      Student.belongsToMany(Class, { through: ClassStudent });
       try {
-        await this.Professor.sync({ force: true });
-        await this.Student.sync({ force: true });
-        await this.Class.sync({ force: true });
-        await this.ClassStudent.sync({ force: true });
+        await Professor.sync({ force: true });
+        await Student.sync({ force: true });
+        await Class.sync({ force: true });
+        await ClassStudent.sync({ force: true });
 
-        await this.Professor.bulkCreate([
+        await Professor.bulkCreate([
           {
             id: 1,
             fullName: 'Albus Dumbledore'
@@ -1060,7 +1046,7 @@ describe('[POSTGRES Specific] DAO', () => {
           }
         ]);
 
-        await this.Class.bulkCreate([
+        await Class.bulkCreate([
           {
             id: 1,
             name: 'Transfiguration',
@@ -1078,7 +1064,7 @@ describe('[POSTGRES Specific] DAO', () => {
           }
         ]);
 
-        await this.Student.bulkCreate([
+        await Student.bulkCreate([
           {
             id: 1,
             fullName: 'Harry Potter'
@@ -1099,35 +1085,35 @@ describe('[POSTGRES Specific] DAO', () => {
 
         await Promise.all([
           (async () => {
-            const Harry = await this.Student.findByPk(1);
+            const Harry = await Student.findByPk(1);
             return await Harry.setClasses([1, 2, 3]);
           })(),
           (async () => {
-            const Ron = await this.Student.findByPk(2);
+            const Ron = await Student.findByPk(2);
             return await Ron.setClasses([1, 2]);
           })(),
           (async () => {
-            const Ginny = await this.Student.findByPk(3);
+            const Ginny = await Student.findByPk(3);
             return await Ginny.setClasses([2, 3]);
           })(),
           (async () => {
-            const Hermione = await this.Student.findByPk(4);
+            const Hermione = await Student.findByPk(4);
             return await Hermione.setClasses([1, 2, 3]);
           })()
         ]);
 
-        const professors = await this.Professor.findAll({
+        const professors = await Professor.findAll({
           include: [
             {
-              model: this.Class,
+              model: Class,
               include: [
                 {
-                  model: this.Student
+                  model: Student
                 }
               ]
             }
           ],
-          order: [['id'], [this.Class, 'id'], [this.Class, this.Student, 'id']]
+          order: [['id'], [Class, 'id'], [Class, Student, 'id']]
         });
 
         expect(professors.length).to.eql(2);
@@ -1135,7 +1121,7 @@ describe('[POSTGRES Specific] DAO', () => {
         expect(professors[0].Classes.length).to.eql(1);
         expect(professors[0].Classes[0].Students.length).to.eql(3);
       } finally {
-        this.sequelize.getQueryInterface().QueryGenerator.options.quoteIdentifiers = true;
+        current.getQueryInterface().QueryGenerator.options.quoteIdentifiers = true;
       }
     });
   });

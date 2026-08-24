@@ -1,8 +1,10 @@
-import { describe, it, beforeEach } from 'mocha';
+import { describe, it } from 'mocha';
 import { expect } from 'chai';
 import Sequelize from '../../../index.js';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
+
+const current = Support.sequelize;
 
 const sortById = function (a, b) {
   return a.id < b.id ? -1 : 1;
@@ -10,169 +12,169 @@ const sortById = function (a, b) {
 
 describe(Support.getTestDialectTeaser('Include'), () => {
   describe('findAll', () => {
-    beforeEach(function () {
-      this.fixtureA = async function () {
-        const User = this.sequelize.define('User', {}),
-          Company = this.sequelize.define('Company', {
-            name: DataTypes.STRING
-          }),
-          Product = this.sequelize.define('Product', {
-            title: DataTypes.STRING
-          }),
-          Tag = this.sequelize.define('Tag', {
-            name: DataTypes.STRING
-          }),
-          Price = this.sequelize.define('Price', {
-            value: DataTypes.FLOAT
-          }),
-          Customer = this.sequelize.define('Customer', {
-            name: DataTypes.STRING
-          }),
-          Group = this.sequelize.define('Group', {
-            name: DataTypes.STRING
-          }),
-          GroupMember = this.sequelize.define('GroupMember', {}),
-          Rank = this.sequelize.define('Rank', {
-            name: DataTypes.STRING,
-            canInvite: {
-              type: DataTypes.INTEGER,
-              defaultValue: 0
-            },
-            canRemove: {
-              type: DataTypes.INTEGER,
-              defaultValue: 0
-            },
-            canPost: {
-              type: DataTypes.INTEGER,
-              defaultValue: 0
-            }
-          });
+    let models;
 
-        this.models = {
-          User,
-          Company,
-          Product,
-          Tag,
-          Price,
-          Customer,
-          Group,
-          GroupMember,
-          Rank
-        };
+    const fixtureA = async () => {
+      const User = current.define('User', {}),
+        Company = current.define('Company', {
+          name: DataTypes.STRING
+        }),
+        Product = current.define('Product', {
+          title: DataTypes.STRING
+        }),
+        Tag = current.define('Tag', {
+          name: DataTypes.STRING
+        }),
+        Price = current.define('Price', {
+          value: DataTypes.FLOAT
+        }),
+        Customer = current.define('Customer', {
+          name: DataTypes.STRING
+        }),
+        Group = current.define('Group', {
+          name: DataTypes.STRING
+        }),
+        GroupMember = current.define('GroupMember', {}),
+        Rank = current.define('Rank', {
+          name: DataTypes.STRING,
+          canInvite: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0
+          },
+          canRemove: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0
+          },
+          canPost: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0
+          }
+        });
 
-        User.hasMany(Product);
-        Product.belongsTo(User);
+      models = {
+        User,
+        Company,
+        Product,
+        Tag,
+        Price,
+        Customer,
+        Group,
+        GroupMember,
+        Rank
+      };
 
-        Product.belongsToMany(Tag, { through: 'product_tag' });
-        Tag.belongsToMany(Product, { through: 'product_tag' });
-        Product.belongsTo(Tag, { as: 'Category' });
-        Product.belongsTo(Company);
+      User.hasMany(Product);
+      Product.belongsTo(User);
 
-        Product.hasMany(Price);
-        Price.belongsTo(Product);
+      Product.belongsToMany(Tag, { through: 'product_tag' });
+      Tag.belongsToMany(Product, { through: 'product_tag' });
+      Product.belongsTo(Tag, { as: 'Category' });
+      Product.belongsTo(Company);
 
-        User.hasMany(GroupMember, { as: 'Memberships' });
-        GroupMember.belongsTo(User);
-        GroupMember.belongsTo(Rank);
-        GroupMember.belongsTo(Group);
-        Group.hasMany(GroupMember, { as: 'Memberships' });
+      Product.hasMany(Price);
+      Price.belongsTo(Product);
 
-        await this.sequelize.sync({ force: true });
+      User.hasMany(GroupMember, { as: 'Memberships' });
+      GroupMember.belongsTo(User);
+      GroupMember.belongsTo(Rank);
+      GroupMember.belongsTo(Group);
+      Group.hasMany(GroupMember, { as: 'Memberships' });
 
-        const [groups, companies, ranks, tags] = await Promise.all([
+      await current.sync({ force: true });
+
+      const [groups, companies, ranks, tags] = await Promise.all([
+        (async () => {
+          await Group.bulkCreate([{ name: 'Developers' }, { name: 'Designers' }, { name: 'Managers' }]);
+          return await Group.findAll();
+        })(),
+        (async () => {
+          await Company.bulkCreate([
+            { name: 'Sequelize' },
+            { name: 'Coca Cola' },
+            { name: 'Bonanza' },
+            { name: 'NYSE' },
+            { name: 'Coshopr' }
+          ]);
+          return await Company.findAll();
+        })(),
+        (async () => {
+          await Rank.bulkCreate([
+            { name: 'Admin', canInvite: 1, canRemove: 1, canPost: 1 },
+            { name: 'Trustee', canInvite: 1, canRemove: 0, canPost: 1 },
+            { name: 'Member', canInvite: 1, canRemove: 0, canPost: 0 }
+          ]);
+          return await Rank.findAll();
+        })(),
+        (async () => {
+          await Tag.bulkCreate([{ name: 'A' }, { name: 'B' }, { name: 'C' }, { name: 'D' }, { name: 'E' }]);
+          return await Tag.findAll();
+        })()
+      ]);
+
+      // Sequential on purpose: each pass re-reads every Product row and indexes
+      // into it as products[i * 5 + n], so the previous pass's rows must already
+      // be committed.
+      for (const i of [0, 1, 2, 3, 4]) {
+        const [user, products] = await Promise.all([
+          User.create(),
           (async () => {
-            await Group.bulkCreate([{ name: 'Developers' }, { name: 'Designers' }, { name: 'Managers' }]);
-            return await Group.findAll();
-          })(),
-          (async () => {
-            await Company.bulkCreate([
-              { name: 'Sequelize' },
-              { name: 'Coca Cola' },
-              { name: 'Bonanza' },
-              { name: 'NYSE' },
-              { name: 'Coshopr' }
+            await Product.bulkCreate([
+              { title: 'Chair' },
+              { title: 'Desk' },
+              { title: 'Bed' },
+              { title: 'Pen' },
+              { title: 'Monitor' }
             ]);
-            return await Company.findAll();
-          })(),
-          (async () => {
-            await Rank.bulkCreate([
-              { name: 'Admin', canInvite: 1, canRemove: 1, canPost: 1 },
-              { name: 'Trustee', canInvite: 1, canRemove: 0, canPost: 1 },
-              { name: 'Member', canInvite: 1, canRemove: 0, canPost: 0 }
-            ]);
-            return await Rank.findAll();
-          })(),
-          (async () => {
-            await Tag.bulkCreate([{ name: 'A' }, { name: 'B' }, { name: 'C' }, { name: 'D' }, { name: 'E' }]);
-            return await Tag.findAll();
+            return await Product.findAll();
           })()
         ]);
 
-        // Sequential on purpose: each pass re-reads every Product row and indexes
-        // into it as products[i * 5 + n], so the previous pass's rows must already
-        // be committed.
-        for (const i of [0, 1, 2, 3, 4]) {
-          const [user, products] = await Promise.all([
-            User.create(),
-            (async () => {
-              await Product.bulkCreate([
-                { title: 'Chair' },
-                { title: 'Desk' },
-                { title: 'Bed' },
-                { title: 'Pen' },
-                { title: 'Monitor' }
-              ]);
-              return await Product.findAll();
-            })()
-          ]);
-
-          const groupMembers = [
-            { AccUserId: user.id, GroupId: groups[0].id, RankId: ranks[0].id },
-            { AccUserId: user.id, GroupId: groups[1].id, RankId: ranks[2].id }
-          ];
-          if (i < 3) {
-            groupMembers.push({ AccUserId: user.id, GroupId: groups[2].id, RankId: ranks[1].id });
-          }
-
-          await Promise.all([
-            GroupMember.bulkCreate(groupMembers),
-            user.setProducts([products[i * 5 + 0], products[i * 5 + 1], products[i * 5 + 3]]),
-            Promise.all([
-              products[i * 5 + 0].setTags([tags[0], tags[2]]),
-              products[i * 5 + 1].setTags([tags[1]]),
-              products[i * 5 + 0].setCategory(tags[1]),
-              products[i * 5 + 2].setTags([tags[0]]),
-              products[i * 5 + 3].setTags([tags[0]])
-            ]),
-            Promise.all([
-              products[i * 5 + 0].setCompany(companies[4]),
-              products[i * 5 + 1].setCompany(companies[3]),
-              products[i * 5 + 2].setCompany(companies[2]),
-              products[i * 5 + 3].setCompany(companies[1]),
-              products[i * 5 + 4].setCompany(companies[0])
-            ]),
-            Price.bulkCreate([
-              { ProductId: products[i * 5 + 0].id, value: 5 },
-              { ProductId: products[i * 5 + 0].id, value: 10 },
-              { ProductId: products[i * 5 + 1].id, value: 5 },
-              { ProductId: products[i * 5 + 1].id, value: 10 },
-              { ProductId: products[i * 5 + 1].id, value: 15 },
-              { ProductId: products[i * 5 + 1].id, value: 20 },
-              { ProductId: products[i * 5 + 2].id, value: 20 },
-              { ProductId: products[i * 5 + 3].id, value: 20 }
-            ])
-          ]);
+        const groupMembers = [
+          { AccUserId: user.id, GroupId: groups[0].id, RankId: ranks[0].id },
+          { AccUserId: user.id, GroupId: groups[1].id, RankId: ranks[2].id }
+        ];
+        if (i < 3) {
+          groupMembers.push({ AccUserId: user.id, GroupId: groups[2].id, RankId: ranks[1].id });
         }
-      };
-    });
 
-    it('should work on a nested set of relations with a where condition in between relations', async function () {
-      const User = this.sequelize.define('User', {}),
-        SubscriptionForm = this.sequelize.define('SubscriptionForm', {}),
-        Collection = this.sequelize.define('Collection', {}),
-        Category = this.sequelize.define('Category', {}),
-        SubCategory = this.sequelize.define('SubCategory', {}),
-        Capital = this.sequelize.define('Capital', {});
+        await Promise.all([
+          GroupMember.bulkCreate(groupMembers),
+          user.setProducts([products[i * 5 + 0], products[i * 5 + 1], products[i * 5 + 3]]),
+          Promise.all([
+            products[i * 5 + 0].setTags([tags[0], tags[2]]),
+            products[i * 5 + 1].setTags([tags[1]]),
+            products[i * 5 + 0].setCategory(tags[1]),
+            products[i * 5 + 2].setTags([tags[0]]),
+            products[i * 5 + 3].setTags([tags[0]])
+          ]),
+          Promise.all([
+            products[i * 5 + 0].setCompany(companies[4]),
+            products[i * 5 + 1].setCompany(companies[3]),
+            products[i * 5 + 2].setCompany(companies[2]),
+            products[i * 5 + 3].setCompany(companies[1]),
+            products[i * 5 + 4].setCompany(companies[0])
+          ]),
+          Price.bulkCreate([
+            { ProductId: products[i * 5 + 0].id, value: 5 },
+            { ProductId: products[i * 5 + 0].id, value: 10 },
+            { ProductId: products[i * 5 + 1].id, value: 5 },
+            { ProductId: products[i * 5 + 1].id, value: 10 },
+            { ProductId: products[i * 5 + 1].id, value: 15 },
+            { ProductId: products[i * 5 + 1].id, value: 20 },
+            { ProductId: products[i * 5 + 2].id, value: 20 },
+            { ProductId: products[i * 5 + 3].id, value: 20 }
+          ])
+        ]);
+      }
+    };
+
+    it('should work on a nested set of relations with a where condition in between relations', async () => {
+      const User = current.define('User', {}),
+        SubscriptionForm = current.define('SubscriptionForm', {}),
+        Collection = current.define('Collection', {}),
+        Category = current.define('Category', {}),
+        SubCategory = current.define('SubCategory', {}),
+        Capital = current.define('Capital', {});
 
       User.hasOne(SubscriptionForm, { foreignKey: 'boundUser' });
       SubscriptionForm.belongsTo(User, { foreignKey: 'boundUser' });
@@ -189,7 +191,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       Category.hasMany(SubCategory, { foreignKey: 'boundCategory' });
       SubCategory.belongsTo(Category, { foreignKey: 'boundCategory' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       await User.findOne({
         include: [
@@ -224,17 +226,17 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should accept nested `where` and `limit` at the same time', async function () {
-      const Product = this.sequelize.define('Product', {
+    it('should accept nested `where` and `limit` at the same time', async () => {
+      const Product = current.define('Product', {
           title: DataTypes.STRING
         }),
-        Tag = this.sequelize.define('Tag', {
+        Tag = current.define('Tag', {
           name: DataTypes.STRING
         }),
-        ProductTag = this.sequelize.define('ProductTag', {
+        ProductTag = current.define('ProductTag', {
           priority: DataTypes.INTEGER
         }),
-        Set = this.sequelize.define('Set', {
+        Set = current.define('Set', {
           title: DataTypes.STRING
         });
 
@@ -243,7 +245,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       Product.belongsToMany(Tag, { through: ProductTag });
       Tag.belongsToMany(Product, { through: ProductTag });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       await Promise.all([
         Set.bulkCreate([{ title: 'office' }]),
@@ -285,22 +287,22 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should support an include with multiple different association types', async function () {
-      const User = this.sequelize.define('User', {}),
-        Product = this.sequelize.define('Product', {
+    it('should support an include with multiple different association types', async () => {
+      const User = current.define('User', {}),
+        Product = current.define('Product', {
           title: DataTypes.STRING
         }),
-        Tag = this.sequelize.define('Tag', {
+        Tag = current.define('Tag', {
           name: DataTypes.STRING
         }),
-        Price = this.sequelize.define('Price', {
+        Price = current.define('Price', {
           value: DataTypes.FLOAT
         }),
-        Group = this.sequelize.define('Group', {
+        Group = current.define('Group', {
           name: DataTypes.STRING
         }),
-        GroupMember = this.sequelize.define('GroupMember', {}),
-        Rank = this.sequelize.define('Rank', {
+        GroupMember = current.define('GroupMember', {}),
+        Rank = current.define('Rank', {
           name: DataTypes.STRING,
           canInvite: {
             type: DataTypes.INTEGER,
@@ -328,7 +330,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       GroupMember.belongsTo(Group);
       Group.hasMany(GroupMember, { as: 'Memberships' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [groups, ranks, tags] = await Promise.all([
         (async () => {
@@ -408,15 +410,15 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should support many levels of belongsTo', async function () {
-      const A = this.sequelize.define('a', {}),
-        B = this.sequelize.define('b', {}),
-        C = this.sequelize.define('c', {}),
-        D = this.sequelize.define('d', {}),
-        E = this.sequelize.define('e', {}),
-        F = this.sequelize.define('f', {}),
-        G = this.sequelize.define('g', {}),
-        H = this.sequelize.define('h', {});
+    it('should support many levels of belongsTo', async () => {
+      const A = current.define('a', {}),
+        B = current.define('b', {}),
+        C = current.define('c', {}),
+        D = current.define('d', {}),
+        E = current.define('e', {}),
+        F = current.define('f', {}),
+        G = current.define('g', {}),
+        H = current.define('h', {});
 
       A.belongsTo(B);
       B.belongsTo(C);
@@ -426,7 +428,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       F.belongsTo(G);
       G.belongsTo(H);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [created, b] = await Promise.all([
         (async () => {
@@ -481,17 +483,17 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should support many levels of belongsTo (with a lower level having a where)', async function () {
-      const A = this.sequelize.define('a', {}),
-        B = this.sequelize.define('b', {}),
-        C = this.sequelize.define('c', {}),
-        D = this.sequelize.define('d', {}),
-        E = this.sequelize.define('e', {}),
-        F = this.sequelize.define('f', {}),
-        G = this.sequelize.define('g', {
+    it('should support many levels of belongsTo (with a lower level having a where)', async () => {
+      const A = current.define('a', {}),
+        B = current.define('b', {}),
+        C = current.define('c', {}),
+        D = current.define('d', {}),
+        E = current.define('e', {}),
+        F = current.define('f', {}),
+        G = current.define('g', {
           name: DataTypes.STRING
         }),
-        H = this.sequelize.define('h', {
+        H = current.define('h', {
           name: DataTypes.STRING
         });
 
@@ -503,7 +505,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       F.belongsTo(G);
       G.belongsTo(H);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [created, b] = await Promise.all([
         (async () => {
@@ -582,16 +584,16 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should support ordering with only belongsTo includes', async function () {
-      const User = this.sequelize.define('User', {}),
-        Item = this.sequelize.define('Item', { test: DataTypes.STRING }),
-        Order = this.sequelize.define('Order', { position: DataTypes.INTEGER });
+    it('should support ordering with only belongsTo includes', async () => {
+      const User = current.define('User', {}),
+        Item = current.define('Item', { test: DataTypes.STRING }),
+        Order = current.define('Order', { position: DataTypes.INTEGER });
 
       User.belongsTo(Item, { as: 'itemA', foreignKey: 'itemA_id' });
       User.belongsTo(Item, { as: 'itemB', foreignKey: 'itemB_id' });
       User.belongsTo(Order);
 
-      await this.sequelize.sync();
+      await current.sync();
 
       const [users, items, orders] = await Promise.all([
         (async () => {
@@ -647,21 +649,21 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(as[1].Order.position).to.eql(2);
     });
 
-    it('should include attributes from through models', async function () {
-      const Product = this.sequelize.define('Product', {
+    it('should include attributes from through models', async () => {
+      const Product = current.define('Product', {
           title: DataTypes.STRING
         }),
-        Tag = this.sequelize.define('Tag', {
+        Tag = current.define('Tag', {
           name: DataTypes.STRING
         }),
-        ProductTag = this.sequelize.define('ProductTag', {
+        ProductTag = current.define('ProductTag', {
           priority: DataTypes.INTEGER
         });
 
       Product.belongsToMany(Tag, { through: ProductTag });
       Tag.belongsToMany(Product, { through: ProductTag });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [created, tags] = await Promise.all([
         (async () => {
@@ -701,13 +703,13 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(products[2].Tags[2].ProductTag.priority).to.equal(2);
     });
 
-    it('should support a required belongsTo include', async function () {
-      const User = this.sequelize.define('User', {}),
-        Group = this.sequelize.define('Group', {});
+    it('should support a required belongsTo include', async () => {
+      const User = current.define('User', {}),
+        Group = current.define('Group', {});
 
       User.belongsTo(Group);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [groups, created] = await Promise.all([
         (async () => {
@@ -730,15 +732,15 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(users[0].Group).to.be.ok;
     });
 
-    it('should be possible to extend the on clause with a where option on a belongsTo include', async function () {
-      const User = this.sequelize.define('User', {}),
-        Group = this.sequelize.define('Group', {
+    it('should be possible to extend the on clause with a where option on a belongsTo include', async () => {
+      const User = current.define('User', {}),
+        Group = current.define('Group', {
           name: DataTypes.STRING
         });
 
       User.belongsTo(Group);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [groups, created] = await Promise.all([
         (async () => {
@@ -762,15 +764,15 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(users[0].Group.name).to.equal('A');
     });
 
-    it('should be possible to extend the on clause with a where option on a belongsTo include', async function () {
-      const User = this.sequelize.define('User', {}),
-        Group = this.sequelize.define('Group', {
+    it('should be possible to extend the on clause with a where option on a belongsTo include', async () => {
+      const User = current.define('User', {}),
+        Group = current.define('Group', {
           name: DataTypes.STRING
         });
 
       User.belongsTo(Group);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [groups, created] = await Promise.all([
         (async () => {
@@ -794,10 +796,10 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should be possible to define a belongsTo include as required with child hasMany not required', async function () {
-      const Address = this.sequelize.define('Address', { active: DataTypes.BOOLEAN }),
-        Street = this.sequelize.define('Street', { active: DataTypes.BOOLEAN }),
-        User = this.sequelize.define('User', { username: DataTypes.STRING });
+    it('should be possible to define a belongsTo include as required with child hasMany not required', async () => {
+      const Address = current.define('Address', { active: DataTypes.BOOLEAN }),
+        Street = current.define('Street', { active: DataTypes.BOOLEAN }),
+        User = current.define('User', { username: DataTypes.STRING });
 
       // Associate
       User.belongsTo(Address, { foreignKey: 'addressId' });
@@ -807,7 +809,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       Street.hasMany(Address, { foreignKey: 'streetId' });
 
       // Sync
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const street = await Street.create({ active: true });
       const address = await Address.create({ active: true, streetId: street.id });
@@ -836,19 +838,19 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(john.Address.Street).to.be.ok;
     });
 
-    it('should be possible to define a belongsTo include as required with child hasMany with limit', async function () {
-      const User = this.sequelize.define('User', {}),
-        Group = this.sequelize.define('Group', {
+    it('should be possible to define a belongsTo include as required with child hasMany with limit', async () => {
+      const User = current.define('User', {}),
+        Group = current.define('Group', {
           name: DataTypes.STRING
         }),
-        Category = this.sequelize.define('Category', {
+        Category = current.define('Category', {
           category: DataTypes.STRING
         });
 
       User.belongsTo(Group);
       Group.hasMany(Category);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [groups, created, categories] = await Promise.all([
         (async () => {
@@ -883,19 +885,19 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should be possible to define a belongsTo include as required with child hasMany with limit and aliases', async function () {
-      const User = this.sequelize.define('User', {}),
-        Group = this.sequelize.define('Group', {
+    it('should be possible to define a belongsTo include as required with child hasMany with limit and aliases', async () => {
+      const User = current.define('User', {}),
+        Group = current.define('Group', {
           name: DataTypes.STRING
         }),
-        Category = this.sequelize.define('Category', {
+        Category = current.define('Category', {
           category: DataTypes.STRING
         });
 
       User.belongsTo(Group, { as: 'Team' });
       Group.hasMany(Category, { as: 'Tags' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [groups, created, categories] = await Promise.all([
         (async () => {
@@ -930,19 +932,19 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should be possible to define a belongsTo include as required with child hasMany which is not required with limit', async function () {
-      const User = this.sequelize.define('User', {}),
-        Group = this.sequelize.define('Group', {
+    it('should be possible to define a belongsTo include as required with child hasMany which is not required with limit', async () => {
+      const User = current.define('User', {}),
+        Group = current.define('Group', {
           name: DataTypes.STRING
         }),
-        Category = this.sequelize.define('Category', {
+        Category = current.define('Category', {
           category: DataTypes.STRING
         });
 
       User.belongsTo(Group);
       Group.hasMany(Category);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [groups, created, categories] = await Promise.all([
         (async () => {
@@ -977,15 +979,15 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should be possible to extend the on clause with a where option on a hasOne include', async function () {
-      const User = this.sequelize.define('User', {}),
-        Project = this.sequelize.define('Project', {
+    it('should be possible to extend the on clause with a where option on a hasOne include', async () => {
+      const User = current.define('User', {}),
+        Project = current.define('Project', {
           title: DataTypes.STRING
         });
 
       User.hasOne(Project, { as: 'LeaderOf' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [projects, created] = await Promise.all([
         (async () => {
@@ -1009,21 +1011,21 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(users[0].LeaderOf.title).to.equal('Beta');
     });
 
-    it('should be possible to extend the on clause with a where option on a hasMany include with a through model', async function () {
-      const Product = this.sequelize.define('Product', {
+    it('should be possible to extend the on clause with a where option on a hasMany include with a through model', async () => {
+      const Product = current.define('Product', {
           title: DataTypes.STRING
         }),
-        Tag = this.sequelize.define('Tag', {
+        Tag = current.define('Tag', {
           name: DataTypes.STRING
         }),
-        ProductTag = this.sequelize.define('ProductTag', {
+        ProductTag = current.define('ProductTag', {
           priority: DataTypes.INTEGER
         });
 
       Product.belongsToMany(Tag, { through: ProductTag });
       Tag.belongsToMany(Product, { through: ProductTag });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [created, tags] = await Promise.all([
         (async () => {
@@ -1053,24 +1055,24 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(products[0].Tags.length).to.equal(1);
     });
 
-    it('should be possible to extend the on clause with a where option on nested includes', async function () {
-      const User = this.sequelize.define('User', {
+    it('should be possible to extend the on clause with a where option on nested includes', async () => {
+      const User = current.define('User', {
           name: DataTypes.STRING
         }),
-        Product = this.sequelize.define('Product', {
+        Product = current.define('Product', {
           title: DataTypes.STRING
         }),
-        Tag = this.sequelize.define('Tag', {
+        Tag = current.define('Tag', {
           name: DataTypes.STRING
         }),
-        Price = this.sequelize.define('Price', {
+        Price = current.define('Price', {
           value: DataTypes.FLOAT
         }),
-        Group = this.sequelize.define('Group', {
+        Group = current.define('Group', {
           name: DataTypes.STRING
         }),
-        GroupMember = this.sequelize.define('GroupMember', {}),
-        Rank = this.sequelize.define('Rank', {
+        GroupMember = current.define('GroupMember', {}),
+        Rank = current.define('Rank', {
           name: DataTypes.STRING,
           canInvite: {
             type: DataTypes.INTEGER,
@@ -1098,7 +1100,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       GroupMember.belongsTo(Group);
       Group.hasMany(GroupMember, { as: 'Memberships' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [groups, ranks, tags] = await Promise.all([
         (async () => {
@@ -1181,15 +1183,15 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should be possible to use limit and a where with a belongsTo include', async function () {
-      const User = this.sequelize.define('User', {}),
-        Group = this.sequelize.define('Group', {
+    it('should be possible to use limit and a where with a belongsTo include', async () => {
+      const User = current.define('User', {}),
+        Group = current.define('Group', {
           name: DataTypes.STRING
         });
 
       User.belongsTo(Group);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [groups, created] = await Promise.all([
         (async () => {
@@ -1221,18 +1223,14 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should be possible use limit, attributes and a where on a belongsTo with additional hasMany includes', async function () {
-      await this.fixtureA();
+    it('should be possible use limit, attributes and a where on a belongsTo with additional hasMany includes', async () => {
+      await fixtureA();
 
-      const products = await this.models.Product.findAll({
+      const products = await models.Product.findAll({
         attributes: ['id', 'title'],
-        include: [
-          { model: this.models.Company, where: { name: 'NYSE' } },
-          { model: this.models.Tag },
-          { model: this.models.Price }
-        ],
+        include: [{ model: models.Company, where: { name: 'NYSE' } }, { model: models.Tag }, { model: models.Price }],
         limit: 3,
-        order: [[this.sequelize.col(this.models.Product.name + '.id'), 'ASC']]
+        order: [[current.col(models.Product.name + '.id'), 'ASC']]
       });
 
       expect(products.length).to.equal(3);
@@ -1244,14 +1242,14 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should be possible to have the primary key in attributes', async function () {
-      const Parent = this.sequelize.define('Parent', {});
-      const Child1 = this.sequelize.define('Child1', {});
+    it('should be possible to have the primary key in attributes', async () => {
+      const Parent = current.define('Parent', {});
+      const Child1 = current.define('Child1', {});
 
       Parent.hasMany(Child1);
       Child1.belongsTo(Parent);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [parent, child] = await Promise.all([Parent.create(), Child1.create()]);
 
@@ -1270,12 +1268,12 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should be possible to turn off the attributes for the through table', async function () {
-      await this.fixtureA();
+    it('should be possible to turn off the attributes for the through table', async () => {
+      await fixtureA();
 
-      const products = await this.models.Product.findAll({
+      const products = await models.Product.findAll({
         attributes: ['title'],
-        include: [{ model: this.models.Tag, through: { attributes: [] }, required: true }]
+        include: [{ model: models.Tag, through: { attributes: [] }, required: true }]
       });
 
       products.forEach((product) => {
@@ -1286,14 +1284,14 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should be possible to select on columns inside a through table', async function () {
-      await this.fixtureA();
+    it('should be possible to select on columns inside a through table', async () => {
+      await fixtureA();
 
-      const products = await this.models.Product.findAll({
+      const products = await models.Product.findAll({
         attributes: ['title'],
         include: [
           {
-            model: this.models.Tag,
+            model: models.Tag,
             through: {
               where: {
                 ProductId: 3
@@ -1307,14 +1305,14 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(products).have.length(1);
     });
 
-    it('should be possible to select on columns inside a through table and a limit', async function () {
-      await this.fixtureA();
+    it('should be possible to select on columns inside a through table and a limit', async () => {
+      await fixtureA();
 
-      const products = await this.models.Product.findAll({
+      const products = await models.Product.findAll({
         attributes: ['title'],
         include: [
           {
-            model: this.models.Tag,
+            model: models.Tag,
             through: {
               where: {
                 ProductId: 3
@@ -1330,8 +1328,8 @@ describe(Support.getTestDialectTeaser('Include'), () => {
     });
 
     // Test case by @eshell
-    it('should be possible not to include the main id in the attributes', async function () {
-      const Member = this.sequelize.define('Member', {
+    it('should be possible not to include the main id in the attributes', async () => {
+      const Member = current.define('Member', {
         id: {
           type: Sequelize.BIGINT,
           primaryKey: true,
@@ -1349,7 +1347,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         },
         password: Sequelize.STRING
       });
-      const Album = this.sequelize.define('Album', {
+      const Album = current.define('Album', {
         id: {
           type: Sequelize.BIGINT,
           primaryKey: true,
@@ -1364,7 +1362,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       Album.belongsTo(Member);
       Member.hasMany(Album);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const members = [],
         albums = [],
@@ -1401,15 +1399,15 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should be possible to use limit and a where on a hasMany with additional includes', async function () {
-      await this.fixtureA();
+    it('should be possible to use limit and a where on a hasMany with additional includes', async () => {
+      await fixtureA();
 
-      const products = await this.models.Product.findAll({
+      const products = await models.Product.findAll({
         include: [
-          { model: this.models.Company },
-          { model: this.models.Tag },
+          { model: models.Company },
+          { model: models.Tag },
           {
-            model: this.models.Price,
+            model: models.Price,
             where: {
               value: { gt: 5 }
             }
@@ -1431,14 +1429,14 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should be possible to use limit and a where on a hasMany with a through model with additional includes', async function () {
-      await this.fixtureA();
+    it('should be possible to use limit and a where on a hasMany with a through model with additional includes', async () => {
+      await fixtureA();
 
-      const products = await this.models.Product.findAll({
+      const products = await models.Product.findAll({
         include: [
-          { model: this.models.Company },
-          { model: this.models.Tag, where: { name: ['A', 'B', 'C'] } },
-          { model: this.models.Price }
+          { model: models.Company },
+          { model: models.Tag, where: { name: ['A', 'B', 'C'] } },
+          { model: models.Price }
         ],
         limit: 10,
         order: [['id', 'ASC']]
@@ -1456,15 +1454,15 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should support including date fields, with the correct timeszone', async function () {
-      const User = this.sequelize.define(
+    it('should support including date fields, with the correct timeszone', async () => {
+      const User = current.define(
           'user',
           {
             dateField: Sequelize.DATE
           },
           { timestamps: false }
         ),
-        Group = this.sequelize.define(
+        Group = current.define(
           'group',
           {
             dateField: Sequelize.DATE
@@ -1475,7 +1473,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       User.belongsToMany(Group, { through: 'group_user' });
       Group.belongsToMany(User, { through: 'group_user' });
 
-      await this.sequelize.sync();
+      await current.sync();
 
       const user = await User.create({ dateField: Date.UTC(2014, 1, 20) });
       const group = await Group.create({ dateField: Date.UTC(2014, 1, 20) });
@@ -1493,14 +1491,14 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(users[0].groups[0].dateField.getTime()).to.equal(Date.UTC(2014, 1, 20));
     });
 
-    it('should still pull the main record(s) when an included model is not required and has where restrictions without matches', async function () {
-      const A = this.sequelize.define('a', { name: DataTypes.STRING(40) }),
-        B = this.sequelize.define('b', { name: DataTypes.STRING(40) });
+    it('should still pull the main record(s) when an included model is not required and has where restrictions without matches', async () => {
+      const A = current.define('a', { name: DataTypes.STRING(40) }),
+        B = current.define('b', { name: DataTypes.STRING(40) });
 
       A.belongsToMany(B, { through: 'a_b' });
       B.belongsToMany(A, { through: 'a_b' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
       await A.create({
         name: 'Foobar'
       });
@@ -1514,8 +1512,8 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(as[0].get('bs')).deep.equal([]);
     });
 
-    it('should work with paranoid, a main record where, an include where, and a limit', async function () {
-      const Post = this.sequelize.define(
+    it('should work with paranoid, a main record where, an include where, and a limit', async () => {
+      const Post = current.define(
         'post',
         {
           date: DataTypes.DATE,
@@ -1525,14 +1523,14 @@ describe(Support.getTestDialectTeaser('Include'), () => {
           paranoid: true
         }
       );
-      const Category = this.sequelize.define('category', {
+      const Category = current.define('category', {
         slug: DataTypes.STRING
       });
 
       Post.hasMany(Category);
       Category.belongsTo(Post);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const created = await Promise.all([
         Post.create({ public: true }),
@@ -1561,15 +1559,15 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(posts.length).to.equal(2);
     });
 
-    it('should work on a nested set of required 1:1 relations', async function () {
-      const Person = this.sequelize.define('Person', {
+    it('should work on a nested set of required 1:1 relations', async () => {
+      const Person = current.define('Person', {
         name: {
           type: Sequelize.STRING,
           allowNull: false
         }
       });
 
-      const UserPerson = this.sequelize.define('UserPerson', {
+      const UserPerson = current.define('UserPerson', {
         PersonId: {
           type: Sequelize.INTEGER,
           primaryKey: true
@@ -1580,7 +1578,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         }
       });
 
-      const User = this.sequelize.define('User', {
+      const User = current.define('User', {
         UserPersonId: {
           type: Sequelize.INTEGER,
           primaryKey: true
@@ -1621,7 +1619,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         onDelete: 'CASCADE'
       });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       await Person.findAll({
         offset: 0,
@@ -1644,16 +1642,16 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should work with an empty include.where', async function () {
-      const User = this.sequelize.define('User', {}),
-        Company = this.sequelize.define('Company', {}),
-        Group = this.sequelize.define('Group', {});
+    it('should work with an empty include.where', async () => {
+      const User = current.define('User', {}),
+        Company = current.define('Company', {}),
+        Group = current.define('Group', {});
 
       User.belongsTo(Company);
       User.belongsToMany(Group, { through: 'UsersGroups' });
       Group.belongsToMany(User, { through: 'UsersGroups' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       await User.findAll({
         include: [
@@ -1663,15 +1661,15 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       });
     });
 
-    it('should be able to order on the main table and a required belongsTo relation with custom tablenames and limit ', async function () {
-      const User = this.sequelize.define(
+    it('should be able to order on the main table and a required belongsTo relation with custom tablenames and limit ', async () => {
+      const User = current.define(
         'User',
         {
           lastName: DataTypes.STRING
         },
         { tableName: 'dem_users' }
       );
-      const Company = this.sequelize.define(
+      const Company = current.define(
         'Company',
         {
           rank: DataTypes.INTEGER
@@ -1682,7 +1680,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       User.belongsTo(Company);
       Company.hasMany(User);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       const [albertsen, zenith, hansen, company1, company2] = await Promise.all([
         User.create({ lastName: 'Albertsen' }),
@@ -1713,17 +1711,17 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(users[2].Company.rank).to.equal(2);
     });
 
-    it('should ignore include with attributes: [] (used for aggregates)', async function () {
-      const Post = this.sequelize.define('Post', {
+    it('should ignore include with attributes: [] (used for aggregates)', async () => {
+      const Post = current.define('Post', {
           title: DataTypes.STRING
         }),
-        Comment = this.sequelize.define('Comment', {
+        Comment = current.define('Comment', {
           content: DataTypes.TEXT
         });
 
       Post.Comments = Post.hasMany(Comment, { as: 'comments' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
       await Post.create(
         {
           title: Math.random().toString(),
@@ -1739,7 +1737,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       );
 
       const posts = await Post.findAll({
-        attributes: [[this.sequelize.fn('COUNT', this.sequelize.col('comments.id')), 'commentCount']],
+        attributes: [[current.fn('COUNT', current.col('comments.id')), 'commentCount']],
         include: [{ association: Post.Comments, attributes: [] }],
         group: ['Post.id']
       });
@@ -1752,17 +1750,17 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(parseInt(post.get('commentCount'), 10)).to.equal(3);
     });
 
-    it('should not add primary key when including and aggregating with raw: true', async function () {
-      const Post = this.sequelize.define('Post', {
+    it('should not add primary key when including and aggregating with raw: true', async () => {
+      const Post = current.define('Post', {
           title: DataTypes.STRING
         }),
-        Comment = this.sequelize.define('Comment', {
+        Comment = current.define('Comment', {
           content: DataTypes.TEXT
         });
 
       Post.Comments = Post.hasMany(Comment, { as: 'comments' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
       await Post.create(
         {
           title: Math.random().toString(),
@@ -1782,7 +1780,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         include: [
           {
             association: Post.Comments,
-            attributes: [[this.sequelize.fn('COUNT', this.sequelize.col('comments.id')), 'commentCount']]
+            attributes: [[current.fn('COUNT', current.col('comments.id')), 'commentCount']]
           }
         ],
         raw: true
@@ -1795,15 +1793,15 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(parseInt(post['comments.commentCount'], 10)).to.equal(3);
     });
 
-    it('Should return posts with nested include with inner join with a m:n association', async function () {
-      const User = this.sequelize.define('User', {
+    it('Should return posts with nested include with inner join with a m:n association', async () => {
+      const User = current.define('User', {
         username: {
           type: DataTypes.STRING,
           primaryKey: true
         }
       });
 
-      const Entity = this.sequelize.define('Entity', {
+      const Entity = current.define('Entity', {
         entity_id: {
           type: DataTypes.INTEGER,
           autoIncrement: true,
@@ -1820,7 +1818,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         }
       });
 
-      const Post = this.sequelize.define('Post', {
+      const Post = current.define('Post', {
         post_id: {
           type: DataTypes.INTEGER,
           allowNull: false,
@@ -1828,7 +1826,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         }
       });
 
-      const TaggableSentient = this.sequelize.define('TaggableSentient', {
+      const TaggableSentient = current.define('TaggableSentient', {
         nametag: {
           type: DataTypes.STRING,
           primaryKey: true
@@ -1852,7 +1850,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         otherKey: 'entity_id'
       });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
       await User.create({ username: 'bob' });
       await TaggableSentient.create({ nametag: 'bob' });
 
@@ -1894,21 +1892,21 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(posts[0].Entity.tags[0].EntityTag.entity_id).to.equal(posts[0].post_id);
     });
 
-    it('should be able to generate a correct request with inner and outer join', async function () {
-      const Customer = this.sequelize.define('customer', {
+    it('should be able to generate a correct request with inner and outer join', async () => {
+      const Customer = current.define('customer', {
         name: DataTypes.STRING
       });
 
-      const ShippingAddress = this.sequelize.define('shippingAddress', {
+      const ShippingAddress = current.define('shippingAddress', {
         address: DataTypes.STRING,
         verified: DataTypes.BOOLEAN
       });
 
-      const Order = this.sequelize.define('purchaseOrder', {
+      const Order = current.define('purchaseOrder', {
         description: DataTypes.TEXT
       });
 
-      const Shipment = this.sequelize.define('shipment', {
+      const Shipment = current.define('shipment', {
         trackingNumber: DataTypes.STRING
       });
 
@@ -1921,7 +1919,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       Shipment.belongsTo(Order);
       Order.hasOne(Shipment);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       await Shipment.findOne({
         include: [

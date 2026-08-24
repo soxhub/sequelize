@@ -16,7 +16,7 @@ if (current.dialect.supports['UNION ALL']) {
         let clock, User, Project, Task, ProjectUserParanoid, projects;
 
         before(() => {
-          clock = sinon.useFakeTimers();
+          clock = sinon.useFakeTimers({ toFake: ['Date'] });
         });
 
         afterEach(() => {

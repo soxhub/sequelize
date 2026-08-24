@@ -35,7 +35,7 @@ describe(Support.getTestDialectTeaser('Paranoid'), () => {
   });
 
   before(() => {
-    clock = sinon.useFakeTimers();
+    clock = sinon.useFakeTimers({ toFake: ['Date'] });
   });
 
   after(() => {

@@ -9,29 +9,31 @@ const current = Support.sequelize;
 
 if (current.dialect.supports.transactions) {
   describe(Support.getTestDialectTeaser('Sequelize#transaction'), () => {
-    beforeEach(function () {
-      this.sinon = sinon.createSandbox();
+    let sandbox;
+
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
     });
 
-    afterEach(function () {
-      this.sinon.restore();
+    afterEach(() => {
+      sandbox.restore();
     });
 
     describe('then', () => {
-      it('gets triggered once a transaction has been successfully committed', async function () {
+      it('gets triggered once a transaction has been successfully committed', async () => {
         let called = false;
 
-        const t = await this.sequelize.transaction();
+        const t = await current.transaction();
         await t.commit();
         called = 1;
 
         expect(called).to.be.ok;
       });
 
-      it('gets triggered once a transaction has been successfully rolled back', async function () {
+      it('gets triggered once a transaction has been successfully rolled back', async () => {
         let called = false;
 
-        const t = await this.sequelize.transaction();
+        const t = await current.transaction();
         await t.rollback();
         called = 1;
 
@@ -42,10 +44,9 @@ if (current.dialect.supports.transactions) {
         it('works for long running transactions', async function () {
           this.timeout(30000);
 
-          const sequelize = await Support.prepareTransactionTest(this.sequelize);
-          this.sequelize = sequelize;
+          const sequelize = await Support.prepareTransactionTest(current);
 
-          this.User = sequelize.define(
+          const User = sequelize.define(
             'User',
             {
               name: Support.Sequelize.STRING
@@ -55,7 +56,7 @@ if (current.dialect.supports.transactions) {
 
           await sequelize.sync({ force: true });
 
-          const t = await this.sequelize.transaction();
+          const t = await sequelize.transaction();
 
           let query = 'select sleep(2);';
 
@@ -73,12 +74,12 @@ if (current.dialect.supports.transactions) {
               break;
           }
 
-          await this.sequelize.query(query, { transaction: t });
-          await this.User.create({ name: 'foo' });
-          await this.sequelize.query(query, { transaction: t });
+          await sequelize.query(query, { transaction: t });
+          await User.create({ name: 'foo' });
+          await sequelize.query(query, { transaction: t });
           await t.commit();
 
-          const users = await this.User.findAll();
+          const users = await User.findAll();
           expect(users.length).to.equal(1);
           expect(users[0].name).to.equal('foo');
         });
@@ -86,8 +87,8 @@ if (current.dialect.supports.transactions) {
     });
 
     describe('complex long running example', () => {
-      it('works with promise syntax', async function () {
-        const sequelize = await Support.prepareTransactionTest(this.sequelize);
+      it('works with promise syntax', async () => {
+        const sequelize = await Support.prepareTransactionTest(current);
 
         const Test = sequelize.define('Test', {
           id: { type: Support.Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
@@ -110,10 +111,12 @@ if (current.dialect.supports.transactions) {
 
     describe('concurrency', () => {
       describe('having tables with uniqueness constraints', () => {
-        beforeEach(async function () {
-          this.sequelize = await Support.prepareTransactionTest(this.sequelize);
+        let sequelize, Model;
 
-          this.Model = this.sequelize.define(
+        beforeEach(async () => {
+          sequelize = await Support.prepareTransactionTest(current);
+
+          Model = sequelize.define(
             'Model',
             {
               name: { type: Support.Sequelize.STRING, unique: true }
@@ -123,17 +126,17 @@ if (current.dialect.supports.transactions) {
             }
           );
 
-          await this.Model.sync({ force: true });
+          await Model.sync({ force: true });
         });
 
-        it('triggers the error event for the second transactions', async function () {
-          const t1 = await this.sequelize.transaction();
-          const t2 = await this.sequelize.transaction();
+        it('triggers the error event for the second transactions', async () => {
+          const t1 = await sequelize.transaction();
+          const t2 = await sequelize.transaction();
 
-          await this.Model.create({ name: 'omnom' }, { transaction: t1 });
+          await Model.create({ name: 'omnom' }, { transaction: t1 });
 
           const conflicting = (async () => {
-            const err = await expect(this.Model.create({ name: 'omnom' }, { transaction: t2 })).to.be.rejected;
+            const err = await expect(Model.create({ name: 'omnom' }, { transaction: t2 })).to.be.rejected;
             expect(err).to.be.ok;
             return t2.rollback();
           })();

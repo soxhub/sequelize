@@ -10,14 +10,14 @@ const current = Support.sequelize;
 if (current.dialect.supports.groupedLimit) {
   describe(Support.getTestDialectTeaser('Include'), () => {
     describe('separate', () => {
-      it('should run a hasMany association in a separate query', async function () {
-        const User = this.sequelize.define('User', {}),
-          Task = this.sequelize.define('Task', {}),
+      it('should run a hasMany association in a separate query', async () => {
+        const User = current.define('User', {}),
+          Task = current.define('Task', {}),
           sqlSpy = sinon.spy();
 
         User.Tasks = User.hasMany(Task, { as: 'tasks' });
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
 
         await Promise.all([
           User.create(
@@ -57,16 +57,16 @@ if (current.dialect.supports.groupedLimit) {
         expect(sqlSpy.calledTwice).to.be.true;
       });
 
-      it('should work even if the id was not included', async function () {
-        const User = this.sequelize.define('User', {
+      it('should work even if the id was not included', async () => {
+        const User = current.define('User', {
             name: DataTypes.STRING
           }),
-          Task = this.sequelize.define('Task', {}),
+          Task = current.define('Task', {}),
           sqlSpy = sinon.spy();
 
         User.Tasks = User.hasMany(Task, { as: 'tasks' });
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
 
         await User.create(
           {
@@ -90,15 +90,15 @@ if (current.dialect.supports.groupedLimit) {
         expect(sqlSpy.calledTwice).to.be.true;
       });
 
-      it('should not break a nested include with null values', async function () {
-        const User = this.sequelize.define('User', {}),
-          Team = this.sequelize.define('Team', {}),
-          Company = this.sequelize.define('Company', {});
+      it('should not break a nested include with null values', async () => {
+        const User = current.define('User', {}),
+          Team = current.define('Team', {}),
+          Company = current.define('Company', {});
 
         User.Team = User.belongsTo(Team);
         Team.Company = Team.belongsTo(Company);
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
         await User.create({});
 
         await User.findAll({
@@ -106,9 +106,9 @@ if (current.dialect.supports.groupedLimit) {
         });
       });
 
-      it('should run a hasMany association with limit in a separate query', async function () {
-        const User = this.sequelize.define('User', {}),
-          Task = this.sequelize.define('Task', {
+      it('should run a hasMany association with limit in a separate query', async () => {
+        const User = current.define('User', {}),
+          Task = current.define('Task', {
             userId: {
               type: DataTypes.INTEGER,
               field: 'user_id'
@@ -118,7 +118,7 @@ if (current.dialect.supports.groupedLimit) {
 
         User.Tasks = User.hasMany(Task, { as: 'tasks', foreignKey: 'userId' });
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
 
         await Promise.all([
           User.create(
@@ -154,16 +154,16 @@ if (current.dialect.supports.groupedLimit) {
         expect(sqlSpy.calledTwice).to.be.true;
       });
 
-      it('should run a nested (from a non-separate include) hasMany association in a separate query', async function () {
-        const User = this.sequelize.define('User', {}),
-          Company = this.sequelize.define('Company'),
-          Task = this.sequelize.define('Task', {}),
+      it('should run a nested (from a non-separate include) hasMany association in a separate query', async () => {
+        const User = current.define('User', {}),
+          Company = current.define('Company'),
+          Task = current.define('Task', {}),
           sqlSpy = sinon.spy();
 
         User.Company = User.belongsTo(Company, { as: 'company' });
         Company.Tasks = Company.hasMany(Task, { as: 'tasks' });
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
 
         await Promise.all([
           User.create(
@@ -203,18 +203,18 @@ if (current.dialect.supports.groupedLimit) {
         expect(sqlSpy.calledTwice).to.be.true;
       });
 
-      it('should work having a separate include between a parent and child include', async function () {
-        const User = this.sequelize.define('User', {}),
-          Project = this.sequelize.define('Project'),
-          Company = this.sequelize.define('Company'),
-          Task = this.sequelize.define('Task', {}),
+      it('should work having a separate include between a parent and child include', async () => {
+        const User = current.define('User', {}),
+          Project = current.define('Project'),
+          Company = current.define('Company'),
+          Task = current.define('Task', {}),
           sqlSpy = sinon.spy();
 
         Company.Users = Company.hasMany(User, { as: 'users' });
         User.Tasks = User.hasMany(Task, { as: 'tasks' });
         Task.Project = Task.belongsTo(Project, { as: 'project' });
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
 
         await Company.create(
           {
@@ -246,16 +246,16 @@ if (current.dialect.supports.groupedLimit) {
         expect(companies[0].users[0].tasks[0].project).to.be.ok;
       });
 
-      it('should run two nested hasMany association in a separate queries', async function () {
-        const User = this.sequelize.define('User', {}),
-          Project = this.sequelize.define('Project', {}),
-          Task = this.sequelize.define('Task', {}),
+      it('should run two nested hasMany association in a separate queries', async () => {
+        const User = current.define('User', {}),
+          Project = current.define('Project', {}),
+          Task = current.define('Task', {}),
           sqlSpy = sinon.spy();
 
         User.Projects = User.hasMany(Project, { as: 'projects' });
         Project.Tasks = Project.hasMany(Task, { as: 'tasks' });
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
 
         await Promise.all([
           User.create(
@@ -331,9 +331,9 @@ if (current.dialect.supports.groupedLimit) {
         expect(sqlSpy.calledThrice).to.be.true;
       });
 
-      it('should work with two schema models in a hasMany association', async function () {
-        const User = this.sequelize.define('User', {}, { schema: 'archive' }),
-          Task = this.sequelize.define(
+      it('should work with two schema models in a hasMany association', async () => {
+        const User = current.define('User', {}, { schema: 'archive' }),
+          Task = current.define(
             'Task',
             {
               id: { type: DataTypes.INTEGER, primaryKey: true },
@@ -344,9 +344,9 @@ if (current.dialect.supports.groupedLimit) {
 
         User.Tasks = User.hasMany(Task, { as: 'tasks' });
 
-        await this.sequelize.dropAllSchemas();
-        await this.sequelize.createSchema('archive');
-        await this.sequelize.sync({ force: true });
+        await current.dropAllSchemas();
+        await current.createSchema('archive');
+        await current.sync({ force: true });
 
         await Promise.all([
           User.create(
@@ -391,9 +391,9 @@ if (current.dialect.supports.groupedLimit) {
         expect(result[1].tasks[0].title).to.equal('a');
         expect(result[1].tasks[1].title).to.equal('c');
 
-        await this.sequelize.dropSchema('archive');
+        await current.dropSchema('archive');
 
-        const schemas = await this.sequelize.showAllSchemas();
+        const schemas = await current.showAllSchemas();
         expect(schemas).to.be.empty;
       });
     });

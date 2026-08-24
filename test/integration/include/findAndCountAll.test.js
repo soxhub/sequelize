@@ -4,23 +4,27 @@ import sinon from 'sinon';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Include'), () => {
-  before(function () {
-    this.clock = sinon.useFakeTimers();
+  let clock;
+
+  before(() => {
+    clock = sinon.useFakeTimers();
   });
 
-  after(function () {
-    this.clock.restore();
+  after(() => {
+    clock.restore();
   });
 
   describe('findAndCountAll', () => {
-    it('should be able to include two required models with a limit. Result rows should match limit.', async function () {
-      const Project = this.sequelize.define('Project', {
+    it('should be able to include two required models with a limit. Result rows should match limit.', async () => {
+      const Project = current.define('Project', {
           id: { type: DataTypes.INTEGER, primaryKey: true },
           name: DataTypes.STRING(40)
         }),
-        Task = this.sequelize.define('Task', { name: DataTypes.STRING(40), fk: DataTypes.INTEGER }),
-        Employee = this.sequelize.define('Employee', { name: DataTypes.STRING(40), fk: DataTypes.INTEGER });
+        Task = current.define('Task', { name: DataTypes.STRING(40), fk: DataTypes.INTEGER }),
+        Employee = current.define('Employee', { name: DataTypes.STRING(40), fk: DataTypes.INTEGER });
 
       Project.hasMany(Task, { foreignKey: 'fk', constraints: false });
       Project.hasMany(Employee, { foreignKey: 'fk', constraints: false });
@@ -29,7 +33,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       Employee.belongsTo(Project, { foreignKey: 'fk', constraints: false });
 
       // Sync them
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       // Create an enviroment
       await Promise.all([
@@ -77,9 +81,9 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(result.rows.length).to.be.equal(limit, 'Complete set of available rows were not returned.');
     });
 
-    it('should be able to include a required model. Result rows should match count', async function () {
-      const User = this.sequelize.define('User', { name: DataTypes.STRING(40) }, { paranoid: true }),
-        SomeConnection = this.sequelize.define(
+    it('should be able to include a required model. Result rows should match count', async () => {
+      const User = current.define('User', { name: DataTypes.STRING(40) }, { paranoid: true }),
+        SomeConnection = current.define(
           'SomeConnection',
           {
             m: DataTypes.STRING(40),
@@ -88,9 +92,9 @@ describe(Support.getTestDialectTeaser('Include'), () => {
           },
           { paranoid: true }
         ),
-        A = this.sequelize.define('A', { name: DataTypes.STRING(40) }, { paranoid: true }),
-        B = this.sequelize.define('B', { name: DataTypes.STRING(40) }, { paranoid: true }),
-        C = this.sequelize.define('C', { name: DataTypes.STRING(40) }, { paranoid: true });
+        A = current.define('A', { name: DataTypes.STRING(40) }, { paranoid: true }),
+        B = current.define('B', { name: DataTypes.STRING(40) }, { paranoid: true }),
+        C = current.define('C', { name: DataTypes.STRING(40) }, { paranoid: true });
 
       // Associate them
       User.hasMany(SomeConnection, { foreignKey: 'u', constraints: false });
@@ -105,7 +109,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       C.hasMany(SomeConnection, { foreignKey: 'fk', constraints: false });
 
       // Sync them
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       // Create an enviroment
       await Promise.all([
@@ -157,7 +161,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
         }
       });
 
-      this.clock.tick(1000);
+      clock.tick(1000);
 
       // Last and most important queries ( we connected 4, but deleted 2, witch means we must get 2 only )
       const result = await A.findAndCountAll({
@@ -178,13 +182,13 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(result.rows.length).to.be.equal(2);
     });
 
-    it('should count on a where and not use an uneeded include', async function () {
-      const Project = this.sequelize.define('Project', {
+    it('should count on a where and not use an uneeded include', async () => {
+      const Project = current.define('Project', {
         id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
         project_name: { type: DataTypes.STRING }
       });
 
-      const User = this.sequelize.define('User', {
+      const User = current.define('User', {
         id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
         user_name: { type: DataTypes.STRING }
       });
@@ -211,8 +215,8 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(result.count).to.equal(1);
     });
 
-    it('should return the correct count and rows when using a required belongsTo and a limit', async function () {
-      const s = this.sequelize,
+    it('should return the correct count and rows when using a required belongsTo and a limit', async () => {
+      const s = current,
         Foo = s.define('Foo', {}),
         Bar = s.define('Bar', {});
 
@@ -246,14 +250,14 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(result.rows.length).to.equal(2);
     });
 
-    it('should return the correct count and rows when using a required belongsTo with a where condition and a limit', async function () {
-      const Foo = this.sequelize.define('Foo', {}),
-        Bar = this.sequelize.define('Bar', { m: DataTypes.STRING(40) });
+    it('should return the correct count and rows when using a required belongsTo with a where condition and a limit', async () => {
+      const Foo = current.define('Foo', {}),
+        Bar = current.define('Bar', { m: DataTypes.STRING(40) });
 
       Foo.hasMany(Bar);
       Bar.belongsTo(Foo);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       await Foo.bulkCreate([{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }]);
 
@@ -279,27 +283,27 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(result.rows.length).to.equal(1);
     });
 
-    it('should correctly filter, limit and sort when multiple includes and types of associations are present.', async function () {
-      const TaskTag = this.sequelize.define('TaskTag', {
+    it('should correctly filter, limit and sort when multiple includes and types of associations are present.', async () => {
+      const TaskTag = current.define('TaskTag', {
         id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
         name: { type: DataTypes.STRING }
       });
 
-      const Tag = this.sequelize.define('Tag', {
+      const Tag = current.define('Tag', {
         id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
         name: { type: DataTypes.STRING }
       });
 
-      const Task = this.sequelize.define('Task', {
+      const Task = current.define('Task', {
         id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
         name: { type: DataTypes.STRING }
       });
-      const Project = this.sequelize.define('Project', {
+      const Project = current.define('Project', {
         id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
         m: { type: DataTypes.STRING }
       });
 
-      const User = this.sequelize.define('User', {
+      const User = current.define('User', {
         id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
         name: { type: DataTypes.STRING }
       });
@@ -308,7 +312,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       Task.belongsTo(Project);
       Task.belongsToMany(Tag, { through: TaskTag });
       // Sync them
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       // Create an enviroment
       await User.bulkCreate([{ name: 'user-name-1' }, { name: 'user-name-2' }]);
@@ -349,22 +353,21 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       expect(result.rows.length).to.equal(1);
     });
 
-    it('should properly work with sequelize.function', async function () {
-      const sequelize = this.sequelize;
-      const User = this.sequelize.define('User', {
+    it('should properly work with sequelize.function', async () => {
+      const User = current.define('User', {
         id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
         first_name: { type: DataTypes.STRING },
         last_name: { type: DataTypes.STRING }
       });
 
-      const Project = this.sequelize.define('Project', {
+      const Project = current.define('Project', {
         id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
         name: { type: DataTypes.STRING }
       });
 
       User.hasMany(Project);
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
       await User.bulkCreate([
         { first_name: 'user-fname-1', last_name: 'user-lname-1' },
@@ -381,7 +384,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       const result = await User.findAndCountAll({
         limit: 1,
         offset: 1,
-        where: sequelize.or({ first_name: { like: '%user-fname%' } }, { last_name: { like: '%user-lname%' } }),
+        where: current.or({ first_name: { like: '%user-fname%' } }, { last_name: { like: '%user-lname%' } }),
         include: [
           {
             model: Project,

@@ -4,11 +4,13 @@ import Sequelize from '../../../index.js';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('DAO'), () => {
   describe('Values', () => {
     describe('set', () => {
-      it("doesn't overwrite generated primary keys", function () {
-        const User = this.sequelize.define('User', {
+      it("doesn't overwrite generated primary keys", () => {
+        const User = current.define('User', {
           name: { type: DataTypes.STRING }
         });
 
@@ -24,8 +26,8 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
         expect(user.get('name')).to.equal('Jan');
       });
 
-      it("doesn't overwrite defined primary keys", function () {
-        const User = this.sequelize.define('User', {
+      it("doesn't overwrite defined primary keys", () => {
+        const User = current.define('User', {
           identifier: { type: DataTypes.STRING, primaryKey: true }
         });
 
@@ -36,8 +38,8 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
         expect(user.get('identifier')).to.equal('identifier');
       });
 
-      it("doesn't set timestamps", function () {
-        const User = this.sequelize.define('User', {
+      it("doesn't set timestamps", () => {
+        const User = current.define('User', {
           identifier: { type: DataTypes.STRING, primaryKey: true }
         });
 
@@ -57,8 +59,8 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
         expect(user.get('updatedAt')).not.to.be.ok;
       });
 
-      it("doesn't set underscored timestamps", function () {
-        const User = this.sequelize.define(
+      it("doesn't set underscored timestamps", () => {
+        const User = current.define(
           'User',
           {
             identifier: { type: DataTypes.STRING, primaryKey: true }
@@ -84,8 +86,8 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
         expect(user.get('updated_at')).not.to.be.ok;
       });
 
-      it("doesn't set value if not a dynamic setter or a model attribute", function () {
-        const User = this.sequelize.define(
+      it("doesn't set value if not a dynamic setter or a model attribute", () => {
+        const User = current.define(
           'User',
           {
             name: { type: DataTypes.STRING },
@@ -116,20 +118,19 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
         expect(user.dataValues.email).not.to.be.ok;
       });
 
-      it('allows use of sequelize.fn and sequelize.col in date and bool fields', async function () {
-        const self = this,
-          User = this.sequelize.define(
-            'User',
-            {
-              d: DataTypes.DATE,
-              b: DataTypes.BOOLEAN,
-              always_false: {
-                type: DataTypes.BOOLEAN,
-                defaultValue: false
-              }
-            },
-            { timestamps: false }
-          );
+      it('allows use of sequelize.fn and sequelize.col in date and bool fields', async () => {
+        const User = current.define(
+          'User',
+          {
+            d: DataTypes.DATE,
+            b: DataTypes.BOOLEAN,
+            always_false: {
+              type: DataTypes.BOOLEAN,
+              defaultValue: false
+            }
+          },
+          { timestamps: false }
+        );
 
         await User.sync({ force: true });
 
@@ -137,15 +138,15 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
 
         // Create the user first to set the proper default values. PG does not support column references in insert,
         // so we must create a record with the right value for always_false, then reference it in an update
-        const now = self.sequelize.fn('NOW');
+        const now = current.fn('NOW');
 
         user.set({
           d: now,
-          b: self.sequelize.col('always_false')
+          b: current.col('always_false')
         });
 
-        expect(user.get('d')).to.be.instanceof(self.sequelize.Utils.Fn);
-        expect(user.get('b')).to.be.instanceof(self.sequelize.Utils.Col);
+        expect(user.get('d')).to.be.instanceof(current.Utils.Fn);
+        expect(user.get('b')).to.be.instanceof(current.Utils.Col);
 
         await user.save();
         await user.reload();
@@ -155,14 +156,14 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
       });
 
       describe('includes', () => {
-        it('should support basic includes', function () {
-          const Product = this.sequelize.define('product', {
+        it('should support basic includes', () => {
+          const Product = current.define('product', {
             title: Sequelize.STRING
           });
-          const Tag = this.sequelize.define('tag', {
+          const Tag = current.define('tag', {
             name: Sequelize.STRING
           });
-          const User = this.sequelize.define('user', {
+          const User = current.define('user', {
             first_name: Sequelize.STRING,
             last_name: Sequelize.STRING
           });
@@ -198,14 +199,14 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
           expect(product.user).to.be.instanceof(User);
         });
 
-        it('should support basic includes (with raw: true)', function () {
-          const Product = this.sequelize.define('Product', {
+        it('should support basic includes (with raw: true)', () => {
+          const Product = current.define('Product', {
             title: Sequelize.STRING
           });
-          const Tag = this.sequelize.define('tag', {
+          const Tag = current.define('tag', {
             name: Sequelize.STRING
           });
-          const User = this.sequelize.define('user', {
+          const User = current.define('user', {
             first_name: Sequelize.STRING,
             last_name: Sequelize.STRING
           });
@@ -247,8 +248,8 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
     });
 
     describe('get', () => {
-      it('should use custom attribute getters in get(key)', function () {
-        const Product = this.sequelize.define('Product', {
+      it('should use custom attribute getters in get(key)', () => {
+        const Product = current.define('Product', {
           price: {
             type: Sequelize.FLOAT,
             get() {
@@ -263,8 +264,8 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
         expect(product.get('price')).to.equal(1000);
       });
 
-      it('should custom virtual getters in get(key)', function () {
-        const Product = this.sequelize.define(
+      it('should custom virtual getters in get(key)', () => {
+        const Product = current.define(
           'Product',
           {
             priceInCents: {
@@ -286,8 +287,8 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
         expect(product.get('price')).to.equal(10);
       });
 
-      it('should use custom getters in toJSON', function () {
-        const Product = this.sequelize.define(
+      it('should use custom getters in toJSON', () => {
+        const Product = current.define(
           'Product',
           {
             price: {
@@ -312,8 +313,8 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
         expect(product.toJSON()).to.deep.equal({ withTaxes: 1250, price: 1000, id: null });
       });
 
-      it('should work with save', async function () {
-        const Contact = this.sequelize.define('Contact', {
+      it('should work with save', async () => {
+        const Contact = current.define('Contact', {
           first: { type: Sequelize.STRING },
           last: { type: Sequelize.STRING },
           tags: {
@@ -328,7 +329,7 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
           }
         });
 
-        await this.sequelize.sync();
+        await current.sync();
 
         const contact = Contact.build({
           first: 'My',
@@ -342,11 +343,11 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
       });
 
       describe('plain', () => {
-        it('should return plain values when true', function () {
-          const Product = this.sequelize.define('product', {
+        it('should return plain values when true', () => {
+          const Product = current.define('product', {
             title: Sequelize.STRING
           });
-          const User = this.sequelize.define('user', {
+          const User = current.define('user', {
             first_name: Sequelize.STRING,
             last_name: Sequelize.STRING
           });
@@ -379,8 +380,8 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
       });
 
       describe('clone', () => {
-        it('should copy the values', function () {
-          const Product = this.sequelize.define('product', {
+        it('should copy the values', () => {
+          const Product = current.define('product', {
             title: Sequelize.STRING
           });
 
@@ -399,8 +400,8 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
         });
       });
 
-      it('can pass parameters to getters', function () {
-        const Product = this.sequelize.define(
+      it('can pass parameters to getters', () => {
+        const Product = current.define(
           'product',
           {
             title: Sequelize.STRING
@@ -418,7 +419,7 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
           }
         );
 
-        const User = this.sequelize.define(
+        const User = current.define(
           'user',
           {
             first_name: Sequelize.STRING,
@@ -471,8 +472,8 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
     });
 
     describe('changed', () => {
-      it('should return false if object was built from database', async function () {
-        const User = this.sequelize.define('User', {
+      it('should return false if object was built from database', async () => {
+        const User = current.define('User', {
           name: { type: DataTypes.STRING }
         });
 
@@ -487,8 +488,8 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
         expect(bulkCreated.changed()).not.to.be.ok;
       });
 
-      it('should return true if previous value is different', function () {
-        const User = this.sequelize.define('User', {
+      it('should return true if previous value is different', () => {
+        const User = current.define('User', {
           name: { type: DataTypes.STRING }
         });
 
@@ -500,8 +501,8 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
         expect(user.changed()).to.be.ok;
       });
 
-      it('should return false immediately after saving', async function () {
-        const User = this.sequelize.define('User', {
+      it('should return false immediately after saving', async () => {
+        const User = current.define('User', {
           name: { type: DataTypes.STRING }
         });
 
@@ -519,8 +520,8 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
         expect(user.changed()).not.to.be.ok;
       });
 
-      it('should be available to a afterUpdate hook', async function () {
-        const User = this.sequelize.define('User', {
+      it('should be available to a afterUpdate hook', async () => {
+        const User = current.define('User', {
           name: { type: DataTypes.STRING }
         });
         let changed;
@@ -548,8 +549,8 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
     });
 
     describe('previous', () => {
-      it('should return an object with the previous values', function () {
-        const User = this.sequelize.define('User', {
+      it('should return an object with the previous values', () => {
+        const User = current.define('User', {
           name: { type: DataTypes.STRING },
           title: { type: DataTypes.STRING }
         });
@@ -565,8 +566,8 @@ describe(Support.getTestDialectTeaser('DAO'), () => {
         expect(user.previous()).to.eql({ name: 'Jan Meier', title: 'Mr' });
       });
 
-      it('should return the previous value', function () {
-        const User = this.sequelize.define('User', {
+      it('should return the previous value', () => {
+        const User = current.define('User', {
           name: { type: DataTypes.STRING }
         });
 

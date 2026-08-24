@@ -3,10 +3,14 @@ import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Instance'), () => {
   describe('toJSON', () => {
-    beforeEach(async function () {
-      this.User = this.sequelize.define(
+    let User, Project;
+
+    beforeEach(async () => {
+      User = current.define(
         'User',
         {
           username: { type: DataTypes.STRING },
@@ -23,37 +27,37 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
         }
       );
 
-      this.Project = this.sequelize.define('NiceProject', { title: DataTypes.STRING }, { timestamps: false });
+      Project = current.define('NiceProject', { title: DataTypes.STRING }, { timestamps: false });
 
-      this.User.hasMany(this.Project, { as: 'Projects', foreignKey: 'lovelyUserId' });
-      this.Project.belongsTo(this.User, { as: 'LovelyUser', foreignKey: 'lovelyUserId' });
+      User.hasMany(Project, { as: 'Projects', foreignKey: 'lovelyUserId' });
+      Project.belongsTo(User, { as: 'LovelyUser', foreignKey: 'lovelyUserId' });
 
-      await this.User.sync({ force: true });
-      await this.Project.sync({ force: true });
+      await User.sync({ force: true });
+      await Project.sync({ force: true });
     });
 
-    it("dont return instance that isn't defined", async function () {
-      const created = await this.Project.create({ lovelyUserId: null });
+    it("dont return instance that isn't defined", async () => {
+      const created = await Project.create({ lovelyUserId: null });
 
-      const project = await this.Project.findOne({
+      const project = await Project.findOne({
         where: {
           id: created.id
         },
-        include: [{ model: this.User, as: 'LovelyUser' }]
+        include: [{ model: User, as: 'LovelyUser' }]
       });
 
       const json = project.toJSON();
       expect(json.LovelyUser).to.be.equal(null);
     });
 
-    it("dont return instances that aren't defined", async function () {
-      const created = await this.User.create({ username: 'cuss' });
+    it("dont return instances that aren't defined", async () => {
+      const created = await User.create({ username: 'cuss' });
 
-      const user = await this.User.findOne({
+      const user = await User.findOne({
         where: {
           id: created.id
         },
-        include: [{ model: this.Project, as: 'Projects' }]
+        include: [{ model: Project, as: 'Projects' }]
       });
 
       expect(user.Projects).to.be.instanceof(Array);
@@ -61,8 +65,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     });
 
     describe('build', () => {
-      it('returns an object containing all values', function () {
-        const user = this.User.build({
+      it('returns an object containing all values', () => {
+        const user = User.build({
           username: 'Adam',
           age: 22,
           level: -1,
@@ -80,8 +84,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
         });
       });
 
-      it('returns a response that can be stringified', function () {
-        const user = this.User.build({
+      it('returns a response that can be stringified', () => {
+        const user = User.build({
           username: 'test.user',
           age: 99,
           isAdmin: true,
@@ -92,8 +96,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
         );
       });
 
-      it('returns a response that can be stringified and then parsed', function () {
-        const user = this.User.build({ username: 'test.user', age: 99, isAdmin: true });
+      it('returns a response that can be stringified and then parsed', () => {
+        const user = User.build({ username: 'test.user', age: 99, isAdmin: true });
         expect(JSON.parse(JSON.stringify(user))).to.deep.equal({
           username: 'test.user',
           age: 99,
@@ -105,8 +109,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     });
 
     describe('create', () => {
-      it('returns an object containing all values', async function () {
-        const user = await this.User.create({
+      it('returns an object containing all values', async () => {
+        const user = await User.create({
           username: 'Adam',
           age: 22,
           level: -1,
@@ -124,8 +128,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
         });
       });
 
-      it('returns a response that can be stringified', async function () {
-        const user = await this.User.create({
+      it('returns a response that can be stringified', async () => {
+        const user = await User.create({
           username: 'test.user',
           age: 99,
           isAdmin: true,
@@ -138,8 +142,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
         );
       });
 
-      it('returns a response that can be stringified and then parsed', async function () {
-        const user = await this.User.create({
+      it('returns a response that can be stringified and then parsed', async () => {
+        const user = await User.create({
           username: 'test.user',
           age: 99,
           isAdmin: true,
@@ -158,8 +162,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     });
 
     describe('find', () => {
-      it('returns an object containing all values', async function () {
-        const created = await this.User.create({
+      it('returns an object containing all values', async () => {
+        const created = await User.create({
           username: 'Adam',
           age: 22,
           level: -1,
@@ -167,7 +171,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
           isAdmin: true
         });
 
-        const user = await this.User.findByPk(created.get('id'));
+        const user = await User.findByPk(created.get('id'));
 
         expect(user.toJSON()).to.deep.equal({
           id: user.get('id'),
@@ -179,29 +183,29 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
         });
       });
 
-      it('returns a response that can be stringified', async function () {
-        const created = await this.User.create({
+      it('returns a response that can be stringified', async () => {
+        const created = await User.create({
           username: 'test.user',
           age: 99,
           isAdmin: true,
           isUser: false
         });
 
-        const user = await this.User.findByPk(created.get('id'));
+        const user = await User.findByPk(created.get('id'));
 
         expect(JSON.stringify(user)).to.deep.equal(
           `{"id":${user.get('id')},"username":"test.user","age":99,"level":null,"isUser":false,"isAdmin":true}`
         );
       });
 
-      it('returns a response that can be stringified and then parsed', async function () {
-        const created = await this.User.create({
+      it('returns a response that can be stringified and then parsed', async () => {
+        const created = await User.create({
           username: 'test.user',
           age: 99,
           isAdmin: true
         });
 
-        const user = await this.User.findByPk(created.get('id'));
+        const user = await User.findByPk(created.get('id'));
 
         expect(JSON.parse(JSON.stringify(user))).to.deep.equal({
           id: user.get('id'),
@@ -214,18 +218,18 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       });
     });
 
-    it('includes the eagerly loaded associations', async function () {
-      const user = await this.User.create({ username: 'fnord', age: 1, isAdmin: true });
-      const project = await this.Project.create({ title: 'fnord' });
+    it('includes the eagerly loaded associations', async () => {
+      const user = await User.create({ username: 'fnord', age: 1, isAdmin: true });
+      const project = await Project.create({ title: 'fnord' });
       await user.setProjects([project]);
 
-      const users = await this.User.findAll({ include: [{ model: this.Project, as: 'Projects' }] });
+      const users = await User.findAll({ include: [{ model: Project, as: 'Projects' }] });
       const _user = users[0];
 
       expect(_user.Projects).to.exist;
       expect(JSON.parse(JSON.stringify(_user)).Projects).to.exist;
 
-      const projects = await this.Project.findAll({ include: [{ model: this.User, as: 'LovelyUser' }] });
+      const projects = await Project.findAll({ include: [{ model: User, as: 'LovelyUser' }] });
       const _project = projects[0];
 
       expect(_project.LovelyUser).to.exist;

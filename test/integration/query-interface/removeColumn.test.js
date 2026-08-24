@@ -3,20 +3,24 @@ import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('QueryInterface'), () => {
-  beforeEach(function () {
-    this.sequelize.options.quoteIdenifiers = true;
-    this.queryInterface = this.sequelize.getQueryInterface();
+  let queryInterface;
+
+  beforeEach(() => {
+    current.options.quoteIdenifiers = true;
+    queryInterface = current.getQueryInterface();
   });
 
-  afterEach(function () {
-    return this.sequelize.dropAllSchemas();
+  afterEach(() => {
+    return current.dropAllSchemas();
   });
 
   describe('removeColumn', () => {
     describe('(without a schema)', () => {
-      beforeEach(function () {
-        return this.queryInterface.createTable('users', {
+      beforeEach(() => {
+        return queryInterface.createTable('users', {
           id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
@@ -43,36 +47,36 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
         });
       });
 
-      it('should be able to remove a column with a default value', async function () {
-        await this.queryInterface.removeColumn('users', 'firstName');
+      it('should be able to remove a column with a default value', async () => {
+        await queryInterface.removeColumn('users', 'firstName');
 
-        const table = await this.queryInterface.describeTable('users');
+        const table = await queryInterface.describeTable('users');
         expect(table).to.not.have.property('firstName');
       });
 
-      it('should be able to remove a column without default value', async function () {
-        await this.queryInterface.removeColumn('users', 'lastName');
+      it('should be able to remove a column without default value', async () => {
+        await queryInterface.removeColumn('users', 'lastName');
 
-        const table = await this.queryInterface.describeTable('users');
+        const table = await queryInterface.describeTable('users');
         expect(table).to.not.have.property('lastName');
       });
 
-      it('should be able to remove a column with a foreign key constraint', async function () {
-        await this.queryInterface.removeColumn('users', 'manager');
+      it('should be able to remove a column with a foreign key constraint', async () => {
+        await queryInterface.removeColumn('users', 'manager');
 
-        const table = await this.queryInterface.describeTable('users');
+        const table = await queryInterface.describeTable('users');
         expect(table).to.not.have.property('manager');
       });
 
-      it('should be able to remove a column with primaryKey', async function () {
-        await this.queryInterface.removeColumn('users', 'manager');
+      it('should be able to remove a column with primaryKey', async () => {
+        await queryInterface.removeColumn('users', 'manager');
 
-        const withoutManager = await this.queryInterface.describeTable('users');
+        const withoutManager = await queryInterface.describeTable('users');
         expect(withoutManager).to.not.have.property('manager');
 
-        await this.queryInterface.removeColumn('users', 'id');
+        await queryInterface.removeColumn('users', 'id');
 
-        const withoutId = await this.queryInterface.describeTable('users');
+        const withoutId = await queryInterface.describeTable('users');
         expect(withoutId).to.not.have.property('id');
       });
 
@@ -81,19 +85,19 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       //      - Used in a CHECK or UNIQUE constraint.
       // https://docs.microsoft.com/en-us/sql/t-sql/statements/alter-table-transact-sql#arguments
 
-      it('should be able to remove a column with unique contraint', async function () {
-        await this.queryInterface.removeColumn('users', 'email');
+      it('should be able to remove a column with unique contraint', async () => {
+        await queryInterface.removeColumn('users', 'email');
 
-        const table = await this.queryInterface.describeTable('users');
+        const table = await queryInterface.describeTable('users');
         expect(table).to.not.have.property('email');
       });
     });
 
     describe('(with a schema)', () => {
-      beforeEach(async function () {
-        await this.sequelize.createSchema('archive');
+      beforeEach(async () => {
+        await current.createSchema('archive');
 
-        await this.queryInterface.createTable(
+        await queryInterface.createTable(
           {
             tableName: 'users',
             schema: 'archive'
@@ -119,8 +123,8 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
         );
       });
 
-      it('should be able to remove a column with a default value', async function () {
-        await this.queryInterface.removeColumn(
+      it('should be able to remove a column with a default value', async () => {
+        await queryInterface.removeColumn(
           {
             tableName: 'users',
             schema: 'archive'
@@ -128,7 +132,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
           'firstName'
         );
 
-        const table = await this.queryInterface.describeTable({
+        const table = await queryInterface.describeTable({
           tableName: 'users',
           schema: 'archive'
         });
@@ -136,8 +140,8 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
         expect(table).to.not.have.property('firstName');
       });
 
-      it('should be able to remove a column without default value', async function () {
-        await this.queryInterface.removeColumn(
+      it('should be able to remove a column without default value', async () => {
+        await queryInterface.removeColumn(
           {
             tableName: 'users',
             schema: 'archive'
@@ -145,7 +149,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
           'lastName'
         );
 
-        const table = await this.queryInterface.describeTable({
+        const table = await queryInterface.describeTable({
           tableName: 'users',
           schema: 'archive'
         });
@@ -153,8 +157,8 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
         expect(table).to.not.have.property('lastName');
       });
 
-      it('should be able to remove a column with primaryKey', async function () {
-        await this.queryInterface.removeColumn(
+      it('should be able to remove a column with primaryKey', async () => {
+        await queryInterface.removeColumn(
           {
             tableName: 'users',
             schema: 'archive'
@@ -162,7 +166,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
           'id'
         );
 
-        const table = await this.queryInterface.describeTable({
+        const table = await queryInterface.describeTable({
           tableName: 'users',
           schema: 'archive'
         });
@@ -175,8 +179,8 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       //      - Used in a CHECK or UNIQUE constraint.
       // https://docs.microsoft.com/en-us/sql/t-sql/statements/alter-table-transact-sql#arguments
 
-      it('should be able to remove a column with unique contraint', async function () {
-        await this.queryInterface.removeColumn(
+      it('should be able to remove a column with unique contraint', async () => {
+        await queryInterface.removeColumn(
           {
             tableName: 'users',
             schema: 'archive'
@@ -184,7 +188,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
           'email'
         );
 
-        const table = await this.queryInterface.describeTable({
+        const table = await queryInterface.describeTable({
           tableName: 'users',
           schema: 'archive'
         });

@@ -3,12 +3,16 @@ import { expect } from 'chai';
 import Sequelize from '../../../../index.js';
 import Support from '../../support.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('attributes', () => {
     describe('types', () => {
       describe('VIRTUAL', () => {
-        beforeEach(function () {
-          this.User = this.sequelize.define(
+        let User, Task, Project, sqlAssert;
+
+        beforeEach(() => {
+          User = current.define(
             'user',
             {
               storage: Sequelize.STRING,
@@ -36,23 +40,23 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             { timestamps: false }
           );
 
-          this.Task = this.sequelize.define('task', {});
-          this.Project = this.sequelize.define('project', {});
+          Task = current.define('task', {});
+          Project = current.define('project', {});
 
-          this.Task.belongsTo(this.User);
-          this.Project.belongsToMany(this.User, { through: 'project_user' });
-          this.User.belongsToMany(this.Project, { through: 'project_user' });
+          Task.belongsTo(User);
+          Project.belongsToMany(User, { through: 'project_user' });
+          User.belongsToMany(Project, { through: 'project_user' });
 
-          this.sqlAssert = function (sql) {
+          sqlAssert = (sql) => {
             expect(sql.indexOf('field1')).to.equal(-1);
             expect(sql.indexOf('field2')).to.equal(-1);
           };
 
-          return this.sequelize.sync({ force: true });
+          return current.sync({ force: true });
         });
 
-        it('should not be ignored in dataValues get', function () {
-          const user = this.User.build({
+        it('should not be ignored in dataValues get', () => {
+          const user = User.build({
             field1: 'field1_value',
             field2: 'field2_value'
           });
@@ -66,39 +70,39 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           });
         });
 
-        it('should be ignored in table creation', async function () {
-          const fields = await this.sequelize.getQueryInterface().describeTable(this.User.tableName);
+        it('should be ignored in table creation', async () => {
+          const fields = await current.getQueryInterface().describeTable(User.tableName);
           expect(Object.keys(fields).length).to.equal(2);
         });
 
-        it('should be ignored in find, findAll and includes', function () {
+        it('should be ignored in find, findAll and includes', () => {
           return Promise.all([
-            this.User.findOne({
-              logging: this.sqlAssert
+            User.findOne({
+              logging: sqlAssert
             }),
-            this.User.findAll({
-              logging: this.sqlAssert
+            User.findAll({
+              logging: sqlAssert
             }),
-            this.Task.findAll({
-              include: [this.User],
-              logging: this.sqlAssert
+            Task.findAll({
+              include: [User],
+              logging: sqlAssert
             }),
-            this.Project.findAll({
-              include: [this.User],
-              logging: this.sqlAssert
+            Project.findAll({
+              include: [User],
+              logging: sqlAssert
             })
           ]);
         });
 
-        it('should allow me to store selected values', async function () {
-          const Post = this.sequelize.define('Post', {
+        it('should allow me to store selected values', async () => {
+          const Post = current.define('Post', {
             text: Sequelize.TEXT,
             someBoolean: {
               type: Sequelize.VIRTUAL
             }
           });
 
-          await this.sequelize.sync({ force: true });
+          await current.sync({ force: true });
           await Post.bulkCreate([{ text: 'text1' }, { text: 'text2' }]);
 
           const boolQuery = 'EXISTS(SELECT 1) AS "someBoolean"';
@@ -108,8 +112,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           expect(post.get().someBoolean).to.be.ok;
         });
 
-        it('should be ignored in create and updateAttributes', async function () {
-          const created = await this.User.create({
+        it('should be ignored in create and updateAttributes', async () => {
+          const created = await User.create({
             field1: 'something'
           });
 
@@ -131,19 +135,19 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           expect(updated.storage).to.equal('something else');
         });
 
-        it('should be ignored in bulkCreate and and bulkUpdate', async function () {
-          await this.User.bulkCreate(
+        it('should be ignored in bulkCreate and and bulkUpdate', async () => {
+          await User.bulkCreate(
             [
               {
                 field1: 'something'
               }
             ],
             {
-              logging: this.sqlAssert
+              logging: sqlAssert
             }
           );
 
-          const users = await this.User.findAll();
+          const users = await User.findAll();
           expect(users[0].storage).to.equal('something');
         });
       });

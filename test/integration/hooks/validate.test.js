@@ -4,9 +4,13 @@ import sinon from 'sinon';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Hooks'), () => {
-  beforeEach(function () {
-    this.User = this.sequelize.define('User', {
+  let User;
+
+  beforeEach(() => {
+    User = current.define('User', {
       username: {
         type: DataTypes.STRING,
         allowNull: false
@@ -16,22 +20,22 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         values: ['happy', 'sad', 'neutral']
       }
     });
-    return this.sequelize.sync({ force: true });
+    return current.sync({ force: true });
   });
 
   describe('#validate', () => {
     describe('#create', () => {
-      it('should return the user', async function () {
-        this.User.beforeValidate((user) => {
+      it('should return the user', async () => {
+        User.beforeValidate((user) => {
           user.username = 'Bob';
           user.mood = 'happy';
         });
 
-        this.User.afterValidate((user) => {
+        User.afterValidate((user) => {
           user.username = 'Toni';
         });
 
-        const user = await this.User.create({ mood: 'ecstatic' });
+        const user = await User.create({ mood: 'ecstatic' });
 
         expect(user.mood).to.equal('happy');
         expect(user.username).to.equal('Toni');
@@ -39,18 +43,18 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
     });
 
     describe('#3534, hooks modifications', () => {
-      it('fields modified in hooks are saved', async function () {
-        this.User.afterValidate((user) => {
+      it('fields modified in hooks are saved', async () => {
+        User.afterValidate((user) => {
           //if username is defined and has more than 5 char
           user.username = user.username ? (user.username.length < 5 ? null : user.username) : null;
           user.username = user.username || 'Samorost 3';
         });
 
-        this.User.beforeValidate((user) => {
+        User.beforeValidate((user) => {
           user.mood = user.mood || 'neutral';
         });
 
-        const user = await this.User.create({ username: 'T', mood: 'neutral' });
+        const user = await User.create({ username: 'T', mood: 'neutral' });
         expect(user.mood).to.equal('neutral');
         expect(user.username).to.equal('Samorost 3');
 
@@ -70,7 +74,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         expect(resaved.mood).to.equal('sad');
         expect(resaved.username).to.equal('Samorost 3');
 
-        const fetched = await this.User.findByPk(resaved.id);
+        const fetched = await User.findByPk(resaved.id);
         expect(fetched.mood).to.equal('sad');
         expect(fetched.username).to.equal('Samorost 3');
 
@@ -81,7 +85,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         expect(fetchedSaved.mood).to.equal('neutral');
         expect(fetchedSaved.username).to.equal('New Game is Needed');
 
-        const refetched = await this.User.findByPk(fetchedSaved.id);
+        const refetched = await User.findByPk(fetchedSaved.id);
         expect(refetched.mood).to.equal('neutral');
         expect(refetched.username).to.equal('New Game is Needed');
 
@@ -96,41 +100,41 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
     });
 
     describe('on error', () => {
-      it('should emit an error from after hook', function () {
-        this.User.afterValidate((user) => {
+      it('should emit an error from after hook', () => {
+        User.afterValidate((user) => {
           user.mood = 'ecstatic';
           throw new Error('Whoops! Changed user.mood!');
         });
 
-        return expect(this.User.create({ username: 'Toni', mood: 'happy' })).to.be.rejectedWith(
+        return expect(User.create({ username: 'Toni', mood: 'happy' })).to.be.rejectedWith(
           'Whoops! Changed user.mood!'
         );
       });
 
-      it('should call validationFailed hook', async function () {
+      it('should call validationFailed hook', async () => {
         const validationFailedHook = sinon.spy();
 
-        this.User.validationFailed(validationFailedHook);
+        User.validationFailed(validationFailedHook);
 
-        await expect(this.User.create({ mood: 'happy' })).to.be.rejected;
+        await expect(User.create({ mood: 'happy' })).to.be.rejected;
         expect(validationFailedHook.calledOnce).to.be.true;
       });
 
-      it('should not replace the validation error in validationFailed hook by default', async function () {
+      it('should not replace the validation error in validationFailed hook by default', async () => {
         const validationFailedHook = sinon.stub();
 
-        this.User.validationFailed(validationFailedHook);
+        User.validationFailed(validationFailedHook);
 
-        const err = await expect(this.User.create({ mood: 'happy' })).to.be.rejected;
+        const err = await expect(User.create({ mood: 'happy' })).to.be.rejected;
         expect(err.name).to.equal('SequelizeValidationError');
       });
 
-      it('should replace the validation error if validationFailed hook creates a new error', async function () {
+      it('should replace the validation error if validationFailed hook creates a new error', async () => {
         const validationFailedHook = sinon.stub().throws(new Error('Whoops!'));
 
-        this.User.validationFailed(validationFailedHook);
+        User.validationFailed(validationFailedHook);
 
-        const err = await expect(this.User.create({ mood: 'happy' })).to.be.rejected;
+        const err = await expect(User.create({ mood: 'happy' })).to.be.rejected;
         expect(err.message).to.equal('Whoops!');
       });
     });

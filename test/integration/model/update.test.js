@@ -8,8 +8,10 @@ const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('update', () => {
-    beforeEach(function () {
-      this.Account = this.sequelize.define('Account', {
+    let Account;
+
+    beforeEach(() => {
+      Account = current.define('Account', {
         ownerId: {
           type: DataTypes.INTEGER,
           allowNull: false,
@@ -19,13 +21,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           type: DataTypes.STRING
         }
       });
-      return this.Account.sync({ force: true });
+      return Account.sync({ force: true });
     });
 
-    it('should only update the passed fields', async function () {
-      const account = await this.Account.create({ ownerId: 2 });
+    it('should only update the passed fields', async () => {
+      const account = await Account.create({ ownerId: 2 });
 
-      await this.Account.update(
+      await Account.update(
         {
           name: Math.random().toString()
         },
@@ -38,10 +40,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
 
     if (_.get(current.dialect.supports, 'returnValues.returning')) {
-      it('should return the updated record', async function () {
-        const account = await this.Account.create({ ownerId: 2 });
+      it('should return the updated record', async () => {
+        const account = await Account.create({ ownerId: 2 });
 
-        const [, accounts] = await this.Account.update(
+        const [, accounts] = await Account.update(
           { name: 'FooBar' },
           {
             where: {
@@ -56,10 +58,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(firstAcc.name).to.be.equal('FooBar');
       });
 
-      it('should return only the requested attributes', async function () {
-        const account = await this.Account.create({ ownerId: 2 });
+      it('should return only the requested attributes', async () => {
+        const account = await Account.create({ ownerId: 2 });
 
-        const [, accounts] = await this.Account.update(
+        const [, accounts] = await Account.update(
           { name: 'FooBar' },
           {
             where: {
@@ -74,10 +76,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(firstAcc.ownerId).to.be.equal(undefined);
       });
 
-      it('should accept attribute names whose column differs', async function () {
-        const account = await this.Account.create({ ownerId: 2 });
+      it('should accept attribute names whose column differs', async () => {
+        const account = await Account.create({ ownerId: 2 });
 
-        const [, accounts] = await this.Account.update(
+        const [, accounts] = await Account.update(
           { name: 'FooBar' },
           {
             where: {
@@ -93,10 +95,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(firstAcc.name).to.be.equal(undefined);
       });
 
-      it('should return plain objects with raw', async function () {
-        const account = await this.Account.create({ ownerId: 2 });
+      it('should return plain objects with raw', async () => {
+        const account = await Account.create({ ownerId: 2 });
 
-        const [, accounts] = await this.Account.update(
+        const [, accounts] = await Account.update(
           { name: 'FooBar' },
           {
             where: {
@@ -108,25 +110,25 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         );
 
         const firstAcc = accounts[0];
-        expect(firstAcc).to.not.be.an.instanceOf(this.Account);
+        expect(firstAcc).to.not.be.an.instanceOf(Account);
         expect(Object.keys(firstAcc)).to.deep.equal(['ownerId']);
         expect(firstAcc.ownerId).to.be.equal(2);
       });
     }
 
     if (current.dialect.supports['LIMIT ON UPDATE']) {
-      it('should only update one row', async function () {
-        await this.Account.create({
+      it('should only update one row', async () => {
+        await Account.create({
           ownerId: 2,
           name: 'Account Name 1'
         });
 
-        await this.Account.create({
+        await Account.create({
           ownerId: 2,
           name: 'Account Name 2'
         });
 
-        await this.Account.create({
+        await Account.create({
           ownerId: 2,
           name: 'Account Name 3'
         });
@@ -138,7 +140,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           limit: 1
         };
 
-        const account = await this.Account.update({ name: 'New Name' }, options);
+        const account = await Account.update({ name: 'New Name' }, options);
         expect(account[0]).to.equal(1);
       });
     }

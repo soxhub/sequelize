@@ -4,18 +4,21 @@ import DataTypes from '../../../../lib/data-types.js';
 import Support from '../../support.js';
 
 const Sequelize = Support.Sequelize;
+const current = Support.sequelize;
 
 const constraintName = 'overlap_period';
-beforeEach(async function () {
-  this.Booking = this.sequelize.define('Booking', {
+let Booking;
+
+beforeEach(async () => {
+  Booking = current.define('Booking', {
     roomNo: DataTypes.INTEGER,
     period: DataTypes.RANGE(DataTypes.DATE)
   });
-  await this.Booking.sync({ force: true });
+  await Booking.sync({ force: true });
 
-  await this.sequelize.query(
+  await current.query(
     'ALTER TABLE "' +
-      this.Booking.tableName +
+      Booking.tableName +
       '" ADD CONSTRAINT ' +
       constraintName +
       ' EXCLUDE USING gist ("roomNo" WITH =, period WITH &&)'
@@ -38,9 +41,7 @@ describe('[POSTGRES Specific] ExclusionConstraintError', () => {
     }
   });
 
-  it('should throw ExclusionConstraintError when "period" value overlaps existing', async function () {
-    const Booking = this.Booking;
-
+  it('should throw ExclusionConstraintError when "period" value overlaps existing', async () => {
     await Booking.create({
       roomNo: 1,
       guestName: 'Incognito Visitor',

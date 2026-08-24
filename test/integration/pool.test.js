@@ -7,17 +7,19 @@ const dialect = Support.getTestDialect();
 
 const Sequelize = Support.Sequelize;
 
-describe(Support.getTestDialectTeaser('Pooling'), function () {
-  beforeEach(function () {
-    this.sinon = sinon.createSandbox();
+describe(Support.getTestDialectTeaser('Pooling'), () => {
+  let sandbox;
+
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
   });
 
-  afterEach(function () {
-    this.sinon.restore();
+  afterEach(() => {
+    sandbox.restore();
   });
 
-  it('should reject when unable to acquire connection in given time', function () {
-    this.testInstance = new Sequelize('localhost', 'ffd', 'dfdf', {
+  it('should reject when unable to acquire connection in given time', () => {
+    const testInstance = new Sequelize('localhost', 'ffd', 'dfdf', {
       dialect,
       databaseVersion: '1.2.3',
       pool: {
@@ -25,13 +27,13 @@ describe(Support.getTestDialectTeaser('Pooling'), function () {
       }
     });
 
-    this.sinon.stub(this.testInstance.connectionManager, '_connect').returns(new Sequelize.Promise(() => {}));
+    sandbox.stub(testInstance.connectionManager, '_connect').returns(new Sequelize.Promise(() => {}));
 
-    return expect(this.testInstance.authenticate()).to.eventually.be.rejectedWith('ResourceRequest timed out');
+    return expect(testInstance.authenticate()).to.eventually.be.rejectedWith('ResourceRequest timed out');
   });
 
-  it('should not result in unhandled promise rejection when unable to acquire connection', async function () {
-    this.testInstance = new Sequelize('localhost', 'ffd', 'dfdf', {
+  it('should not result in unhandled promise rejection when unable to acquire connection', async () => {
+    const testInstance = new Sequelize('localhost', 'ffd', 'dfdf', {
       dialect,
       databaseVersion: '1.2.3',
       pool: {
@@ -40,11 +42,11 @@ describe(Support.getTestDialectTeaser('Pooling'), function () {
       }
     });
 
-    this.sinon.stub(this.testInstance.connectionManager, '_connect').returns(new Sequelize.Promise(() => {}));
+    sandbox.stub(testInstance.connectionManager, '_connect').returns(new Sequelize.Promise(() => {}));
 
     const acquireTwice = async () => {
-      await this.testInstance.transaction();
-      return this.testInstance.transaction();
+      await testInstance.transaction();
+      return testInstance.transaction();
     };
 
     await expect(acquireTwice()).to.eventually.be.rejectedWith('ResourceRequest timed out');

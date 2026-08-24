@@ -4,12 +4,16 @@ import Sequelize from '../../index.js';
 import Support from '../support.js';
 import DataTypes from '../../lib/data-types.js';
 
+const current = Support.sequelize;
+
 const Op = Sequelize.Op;
 
 describe(Support.getTestDialectTeaser('Operators'), () => {
   describe('REGEXP', () => {
-    beforeEach(function () {
-      this.User = this.sequelize.define(
+    let User;
+
+    beforeEach(() => {
+      User = current.define(
         'user',
         {
           id: {
@@ -30,7 +34,7 @@ describe(Support.getTestDialectTeaser('Operators'), () => {
         }
       );
 
-      return this.sequelize.getQueryInterface().createTable('users', {
+      return current.getQueryInterface().createTable('users', {
         userId: {
           type: DataTypes.INTEGER,
           allowNull: false,
@@ -44,12 +48,12 @@ describe(Support.getTestDialectTeaser('Operators'), () => {
     });
 
     describe('case sensitive', () => {
-      it('should work with a regexp where', async function () {
-        await this.User.create({
+      it('should work with a regexp where', async () => {
+        await User.create({
           name: 'Foobar'
         });
 
-        const user = await this.User.findOne({
+        const user = await User.findOne({
           where: {
             name: {
               [Op.regexp]: '^Foo'
@@ -60,12 +64,12 @@ describe(Support.getTestDialectTeaser('Operators'), () => {
         expect(user).to.be.ok;
       });
 
-      it('should work with a not regexp where', async function () {
-        await this.User.create({
+      it('should work with a not regexp where', async () => {
+        await User.create({
           name: 'Foobar'
         });
 
-        const user = await this.User.findOne({
+        const user = await User.findOne({
           where: {
             name: {
               [Op.notRegexp]: '^Foo'
@@ -76,8 +80,8 @@ describe(Support.getTestDialectTeaser('Operators'), () => {
         expect(user).to.not.be.ok;
       });
 
-      it('should properly escape regular expressions', async function () {
-        await this.User.bulkCreate([
+      it('should properly escape regular expressions', async () => {
+        await User.bulkCreate([
           {
             name: 'John'
           },
@@ -86,7 +90,7 @@ describe(Support.getTestDialectTeaser('Operators'), () => {
           }
         ]);
 
-        await this.User.findAll({
+        await User.findAll({
           where: {
             name: {
               [Op.notRegexp]: "Bob'; drop table users --"
@@ -94,7 +98,7 @@ describe(Support.getTestDialectTeaser('Operators'), () => {
           }
         });
 
-        await this.User.findAll({
+        await User.findAll({
           where: {
             name: {
               [Op.regexp]: "Bob'; drop table users --"
@@ -102,18 +106,18 @@ describe(Support.getTestDialectTeaser('Operators'), () => {
           }
         });
 
-        const users = await this.User.findAll();
+        const users = await User.findAll();
         expect(users).length(2);
       });
     });
 
     describe('case insensitive', () => {
-      it('should work with a case-insensitive regexp where', async function () {
-        await this.User.create({
+      it('should work with a case-insensitive regexp where', async () => {
+        await User.create({
           name: 'Foobar'
         });
 
-        const user = await this.User.findOne({
+        const user = await User.findOne({
           where: {
             name: {
               [Op.iRegexp]: '^foo'
@@ -124,12 +128,12 @@ describe(Support.getTestDialectTeaser('Operators'), () => {
         expect(user).to.be.ok;
       });
 
-      it('should work with a case-insensitive not regexp where', async function () {
-        await this.User.create({
+      it('should work with a case-insensitive not regexp where', async () => {
+        await User.create({
           name: 'Foobar'
         });
 
-        const user = await this.User.findOne({
+        const user = await User.findOne({
           where: {
             name: {
               [Op.notIRegexp]: '^foo'
@@ -140,8 +144,8 @@ describe(Support.getTestDialectTeaser('Operators'), () => {
         expect(user).to.not.be.ok;
       });
 
-      it('should properly escape regular expressions', async function () {
-        await this.User.bulkCreate([
+      it('should properly escape regular expressions', async () => {
+        await User.bulkCreate([
           {
             name: 'John'
           },
@@ -150,7 +154,7 @@ describe(Support.getTestDialectTeaser('Operators'), () => {
           }
         ]);
 
-        await this.User.findAll({
+        await User.findAll({
           where: {
             name: {
               [Op.iRegexp]: "Bob'; drop table users --"
@@ -158,7 +162,7 @@ describe(Support.getTestDialectTeaser('Operators'), () => {
           }
         });
 
-        await this.User.findAll({
+        await User.findAll({
           where: {
             name: {
               [Op.notIRegexp]: "Bob'; drop table users --"
@@ -166,7 +170,7 @@ describe(Support.getTestDialectTeaser('Operators'), () => {
           }
         });
 
-        const users = await this.User.findAll();
+        const users = await User.findAll();
         expect(users).length(2);
       });
     });

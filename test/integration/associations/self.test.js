@@ -4,9 +4,11 @@ import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import _ from 'lodash';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Self'), () => {
-  it('supports freezeTableName', async function () {
-    const Group = this.sequelize.define(
+  it('supports freezeTableName', async () => {
+    const Group = current.define(
       'Group',
       {},
       {
@@ -29,14 +31,14 @@ describe(Support.getTestDialectTeaser('Self'), () => {
     });
   });
 
-  it('can handle 1:m associations', async function () {
-    const Person = this.sequelize.define('Person', { name: DataTypes.STRING });
+  it('can handle 1:m associations', async () => {
+    const Person = current.define('Person', { name: DataTypes.STRING });
 
     Person.hasMany(Person, { as: 'Children', foreignKey: 'parent_id' });
 
     expect(Person.rawAttributes.parent_id).to.be.ok;
 
-    await this.sequelize.sync({ force: true });
+    await current.sync({ force: true });
 
     const [mary, john, chris] = await Promise.all([
       Person.create({ name: 'Mary' }),
@@ -47,14 +49,14 @@ describe(Support.getTestDialectTeaser('Self'), () => {
     await mary.setChildren([john, chris]);
   });
 
-  it('can handle n:m associations', async function () {
-    const Person = this.sequelize.define('Person', { name: DataTypes.STRING });
+  it('can handle n:m associations', async () => {
+    const Person = current.define('Person', { name: DataTypes.STRING });
 
     Person.belongsToMany(Person, { as: 'Parents', through: 'Family', foreignKey: 'ChildId', otherKey: 'PersonId' });
     Person.belongsToMany(Person, { as: 'Childs', through: 'Family', foreignKey: 'PersonId', otherKey: 'ChildId' });
 
     const foreignIdentifiers = _.map(_.values(Person.associations), 'foreignIdentifier');
-    const rawAttributes = _.keys(this.sequelize.models.Family.rawAttributes);
+    const rawAttributes = _.keys(current.models.Family.rawAttributes);
 
     expect(foreignIdentifiers.length).to.equal(2);
     expect(rawAttributes.length).to.equal(4);
@@ -62,7 +64,7 @@ describe(Support.getTestDialectTeaser('Self'), () => {
     expect(foreignIdentifiers).to.have.members(['PersonId', 'ChildId']);
     expect(rawAttributes).to.have.members(['createdAt', 'updatedAt', 'PersonId', 'ChildId']);
 
-    await this.sequelize.sync({ force: true });
+    await current.sync({ force: true });
 
     const [mary, john, chris] = await Promise.all([
       Person.create({ name: 'Mary' }),
@@ -77,9 +79,9 @@ describe(Support.getTestDialectTeaser('Self'), () => {
     expect(_.map(children, 'id')).to.have.members([mary.id, chris.id]);
   });
 
-  it('can handle n:m associations with pre-defined through table', async function () {
-    const Person = this.sequelize.define('Person', { name: DataTypes.STRING });
-    const Family = this.sequelize.define(
+  it('can handle n:m associations with pre-defined through table', async () => {
+    const Person = current.define('Person', { name: DataTypes.STRING });
+    const Family = current.define(
       'Family',
       {
         preexisting_child: {
@@ -117,17 +119,13 @@ describe(Support.getTestDialectTeaser('Self'), () => {
     expect(rawAttributes).to.have.members(['preexisting_parent', 'preexisting_child']);
 
     let count = 0;
-    await this.sequelize.sync({ force: true });
+    await current.sync({ force: true });
 
     const [mary, john, chris] = await Promise.all([
       Person.create({ name: 'Mary' }),
       Person.create({ name: 'John' }),
       Person.create({ name: 'Chris' })
     ]);
-
-    this.mary = mary;
-    this.chris = chris;
-    this.john = john;
 
     await mary.setParents([john], {
       logging(sql) {
@@ -139,7 +137,7 @@ describe(Support.getTestDialectTeaser('Self'), () => {
       }
     });
 
-    await this.mary.addParent(this.chris, {
+    await mary.addParent(chris, {
       logging(sql) {
         if (sql.match(/INSERT/)) {
           count++;
@@ -149,7 +147,7 @@ describe(Support.getTestDialectTeaser('Self'), () => {
       }
     });
 
-    const children = await this.john.getChildren({
+    const children = await john.getChildren({
       logging(sql) {
         count++;
         const whereClause = sql.split('FROM')[1]; // look only in the whereClause
@@ -159,6 +157,6 @@ describe(Support.getTestDialectTeaser('Self'), () => {
     });
 
     expect(count).to.be.equal(3);
-    expect(_.map(children, 'id')).to.have.members([this.mary.id]);
+    expect(_.map(children, 'id')).to.have.members([mary.id]);
   });
 });

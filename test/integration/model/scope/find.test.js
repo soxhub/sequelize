@@ -3,10 +3,14 @@ import { expect } from 'chai';
 import Sequelize from '../../../../index.js';
 import Support from '../../support.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('scopes', () => {
-    beforeEach(async function () {
-      this.ScopeMe = this.sequelize.define(
+    let ScopeMe;
+
+    beforeEach(async () => {
+      ScopeMe = current.define(
         'ScopeMe',
         {
           username: Sequelize.STRING,
@@ -47,9 +51,9 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         }
       );
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
-      await this.ScopeMe.bulkCreate([
+      await ScopeMe.bulkCreate([
         { username: 'tony', email: 'tony@sequelizejs.com', access_level: 3, other_value: 7, parent_id: 1 },
         { username: 'tobi', email: 'tobi@fakeemail.com', access_level: 10, other_value: 11, parent_id: 2 },
         { username: 'dan', email: 'dan@sequelizejs.com', access_level: 5, other_value: 10, parent_id: 1 },
@@ -57,23 +61,23 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       ]);
     });
 
-    it('should be able use where in scope', async function () {
-      const users = await this.ScopeMe.scope({ where: { parent_id: 2 } }).findAll();
+    it('should be able use where in scope', async () => {
+      const users = await ScopeMe.scope({ where: { parent_id: 2 } }).findAll();
 
       expect(users).to.have.length(1);
       expect(users[0].username).to.equal('tobi');
     });
 
-    it('should be able to combine scope and findAll where clauses', async function () {
-      const users = await this.ScopeMe.scope({ where: { parent_id: 1 } }).findAll({ where: { access_level: 3 } });
+    it('should be able to combine scope and findAll where clauses', async () => {
+      const users = await ScopeMe.scope({ where: { parent_id: 1 } }).findAll({ where: { access_level: 3 } });
 
       expect(users).to.have.length(2);
       expect(['tony', 'fred'].indexOf(users[0].username) !== -1).to.be.true;
       expect(['tony', 'fred'].indexOf(users[1].username) !== -1).to.be.true;
     });
 
-    it('should be able to use a defaultScope if declared', async function () {
-      const users = await this.ScopeMe.findAll();
+    it('should be able to use a defaultScope if declared', async () => {
+      const users = await ScopeMe.findAll();
 
       expect(users).to.have.length(2);
       expect([10, 5].indexOf(users[0].access_level) !== -1).to.be.true;
@@ -82,35 +86,35 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(['dan', 'tobi'].indexOf(users[1].username) !== -1).to.be.true;
     });
 
-    it('should be able to handle $and in scopes', async function () {
-      const users = await this.ScopeMe.scope('andScope').findAll();
+    it('should be able to handle $and in scopes', async () => {
+      const users = await ScopeMe.scope('andScope').findAll();
 
       expect(users).to.have.length(1);
       expect(users[0].username).to.equal('tony');
     });
 
     describe('should not overwrite', () => {
-      it('default scope with values from previous finds', async function () {
-        const filtered = await this.ScopeMe.findAll({ where: { other_value: 10 } });
+      it('default scope with values from previous finds', async () => {
+        const filtered = await ScopeMe.findAll({ where: { other_value: 10 } });
         expect(filtered).to.have.length(1);
 
-        const users = await this.ScopeMe.findAll();
+        const users = await ScopeMe.findAll();
         // This should not have other_value: 10
         expect(users).to.have.length(2);
       });
 
-      it('other scopes with values from previous finds', async function () {
-        const filtered = await this.ScopeMe.scope('highValue').findAll({ where: { access_level: 10 } });
+      it('other scopes with values from previous finds', async () => {
+        const filtered = await ScopeMe.scope('highValue').findAll({ where: { access_level: 10 } });
         expect(filtered).to.have.length(1);
 
-        const users = await this.ScopeMe.scope('highValue').findAll();
+        const users = await ScopeMe.scope('highValue').findAll();
         // This should not have other_value: 10
         expect(users).to.have.length(2);
       });
     });
 
-    it('should have no problem performing findOrCreate', async function () {
-      const [user] = await this.ScopeMe.findOrCreate({ where: { username: 'fake' } });
+    it('should have no problem performing findOrCreate', async () => {
+      const [user] = await ScopeMe.findOrCreate({ where: { username: 'fake' } });
       expect(user.username).to.equal('fake');
     });
   });

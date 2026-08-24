@@ -3,14 +3,18 @@ import { expect } from 'chai';
 import Sequelize from '../../../../index.js';
 import Support from '../../support.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('scope', () => {
     describe('aggregate', () => {
-      beforeEach(async function () {
-        this.Child = this.sequelize.define('Child', {
+      let Child, ScopeMe;
+
+      beforeEach(async () => {
+        Child = current.define('Child', {
           priority: Sequelize.INTEGER
         });
-        this.ScopeMe = this.sequelize.define(
+        ScopeMe = current.define(
           'ScopeMe',
           {
             username: Sequelize.STRING,
@@ -40,7 +44,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
               withInclude: {
                 include: [
                   {
-                    model: this.Child,
+                    model: Child,
                     where: {
                       priority: 1
                     }
@@ -50,19 +54,19 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             }
           }
         );
-        this.Child.belongsTo(this.ScopeMe);
-        this.ScopeMe.hasMany(this.Child);
+        Child.belongsTo(ScopeMe);
+        ScopeMe.hasMany(Child);
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
 
-        await this.ScopeMe.bulkCreate([
+        await ScopeMe.bulkCreate([
           { username: 'tony', email: 'tony@sequelizejs.com', access_level: 3, other_value: 7 },
           { username: 'tobi', email: 'tobi@fakeemail.com', access_level: 10, other_value: 11 },
           { username: 'dan', email: 'dan@sequelizejs.com', access_level: 5, other_value: 10 },
           { username: 'fred', email: 'fred@foobar.com', access_level: 3, other_value: 7 }
         ]);
 
-        const records = await this.ScopeMe.findAll();
+        const records = await ScopeMe.findAll();
         await Promise.all([
           records[0].createChild({
             priority: 1
@@ -73,33 +77,31 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         ]);
       });
 
-      it('should apply defaultScope', function () {
-        return expect(this.ScopeMe.aggregate('*', 'count')).to.eventually.equal(2);
+      it('should apply defaultScope', () => {
+        return expect(ScopeMe.aggregate('*', 'count')).to.eventually.equal(2);
       });
 
-      it('should be able to override default scope', function () {
-        return expect(this.ScopeMe.aggregate('*', 'count', { where: { access_level: { gt: 5 } } })).to.eventually.equal(
-          1
-        );
+      it('should be able to override default scope', () => {
+        return expect(ScopeMe.aggregate('*', 'count', { where: { access_level: { gt: 5 } } })).to.eventually.equal(1);
       });
 
-      it('should be able to unscope', function () {
-        return expect(this.ScopeMe.unscoped().aggregate('*', 'count')).to.eventually.equal(4);
+      it('should be able to unscope', () => {
+        return expect(ScopeMe.unscoped().aggregate('*', 'count')).to.eventually.equal(4);
       });
 
-      it('should be able to apply other scopes', function () {
-        return expect(this.ScopeMe.scope('lowAccess').aggregate('*', 'count')).to.eventually.equal(3);
+      it('should be able to apply other scopes', () => {
+        return expect(ScopeMe.scope('lowAccess').aggregate('*', 'count')).to.eventually.equal(3);
       });
 
-      it('should be able to merge scopes with where', function () {
+      it('should be able to merge scopes with where', () => {
         return expect(
-          this.ScopeMe.scope('lowAccess').aggregate('*', 'count', { where: { username: 'dan' } })
+          ScopeMe.scope('lowAccess').aggregate('*', 'count', { where: { username: 'dan' } })
         ).to.eventually.equal(1);
       });
 
-      it('should be able to use where on include', function () {
+      it('should be able to use where on include', () => {
         return expect(
-          this.ScopeMe.scope('withInclude').aggregate('ScopeMe.id', 'count', {
+          ScopeMe.scope('withInclude').aggregate('ScopeMe.id', 'count', {
             plain: true,
             dataType: new Sequelize.INTEGER(),
             includeIgnoreAttributes: false,

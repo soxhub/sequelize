@@ -2,15 +2,17 @@ import { describe, it } from 'mocha';
 import { expect } from 'chai';
 import Support from '../support.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Alias'), () => {
-  it('should uppercase the first letter in alias getter, but not in eager loading', async function () {
-    const User = this.sequelize.define('user', {}),
-      Task = this.sequelize.define('task', {});
+  it('should uppercase the first letter in alias getter, but not in eager loading', async () => {
+    const User = current.define('user', {}),
+      Task = current.define('task', {});
 
     User.hasMany(Task, { as: 'assignments', foreignKey: 'userId' });
     Task.belongsTo(User, { as: 'owner', foreignKey: 'userId' });
 
-    await this.sequelize.sync({ force: true });
+    await current.sync({ force: true });
 
     const created = await User.create({ id: 1 });
     expect(created.getAssignments).to.be.ok;
@@ -27,14 +29,14 @@ describe(Support.getTestDialectTeaser('Alias'), () => {
     expect(task.owner).to.be.ok;
   });
 
-  it('shouldnt touch the passed alias', async function () {
-    const User = this.sequelize.define('user', {}),
-      Task = this.sequelize.define('task', {});
+  it('shouldnt touch the passed alias', async () => {
+    const User = current.define('user', {}),
+      Task = current.define('task', {});
 
     User.hasMany(Task, { as: 'ASSIGNMENTS', foreignKey: 'userId' });
     Task.belongsTo(User, { as: 'OWNER', foreignKey: 'userId' });
 
-    await this.sequelize.sync({ force: true });
+    await current.sync({ force: true });
 
     const created = await User.create({ id: 1 });
     expect(created.getASSIGNMENTS).to.be.ok;
@@ -51,13 +53,13 @@ describe(Support.getTestDialectTeaser('Alias'), () => {
     expect(task.OWNER).to.be.ok;
   });
 
-  it('should allow me to pass my own plural and singular forms to hasMany', async function () {
-    const User = this.sequelize.define('user', {}),
-      Task = this.sequelize.define('task', {});
+  it('should allow me to pass my own plural and singular forms to hasMany', async () => {
+    const User = current.define('user', {}),
+      Task = current.define('task', {});
 
     User.hasMany(Task, { as: { singular: 'task', plural: 'taskz' } });
 
-    await this.sequelize.sync({ force: true });
+    await current.sync({ force: true });
 
     const created = await User.create({ id: 1 });
     expect(created.getTaskz).to.be.ok;
@@ -68,9 +70,9 @@ describe(Support.getTestDialectTeaser('Alias'), () => {
     expect(user.taskz).to.be.ok;
   });
 
-  it('should allow me to define plural and singular forms on the model', async function () {
-    const User = this.sequelize.define('user', {}),
-      Task = this.sequelize.define(
+  it('should allow me to define plural and singular forms on the model', async () => {
+    const User = current.define('user', {}),
+      Task = current.define(
         'task',
         {},
         {
@@ -83,7 +85,7 @@ describe(Support.getTestDialectTeaser('Alias'), () => {
 
     User.hasMany(Task);
 
-    await this.sequelize.sync({ force: true });
+    await current.sync({ force: true });
 
     const created = await User.create({ id: 1 });
     expect(created.getAssignments).to.be.ok;

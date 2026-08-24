@@ -4,6 +4,8 @@ import moment from 'moment';
 import Support from '../../support.js';
 import DataTypes from '../../../../lib/data-types.js';
 
+const current = Support.sequelize;
+
 const dialect = Support.getTestDialect();
 
 describe('[POSTGRES Specific] Data Types', () => {
@@ -83,27 +85,27 @@ describe('[POSTGRES Specific] Data Types', () => {
 
   describe('DATE SQL', () => {
     // create dummy user
-    it('should be able to create and update records with Infinity/-Infinity', async function () {
-      this.sequelize.options.typeValidation = true;
+    it('should be able to create and update records with Infinity/-Infinity', async () => {
+      current.options.typeValidation = true;
 
       const date = new Date();
-      const User = this.sequelize.define(
+      const User = current.define(
         'User',
         {
-          username: this.sequelize.Sequelize.STRING,
+          username: current.Sequelize.STRING,
           beforeTime: {
-            type: this.sequelize.Sequelize.DATE,
+            type: current.Sequelize.DATE,
             defaultValue: -Infinity
           },
           sometime: {
-            type: this.sequelize.Sequelize.DATE,
-            defaultValue: this.sequelize.fn('NOW')
+            type: current.Sequelize.DATE,
+            defaultValue: current.fn('NOW')
           },
           anotherTime: {
-            type: this.sequelize.Sequelize.DATE
+            type: current.Sequelize.DATE
           },
           afterTime: {
-            type: this.sequelize.Sequelize.DATE,
+            type: current.Sequelize.DATE,
             defaultValue: Infinity
           }
         },
@@ -162,7 +164,7 @@ describe('[POSTGRES Specific] Data Types', () => {
 
       const nowed = await reapplied.update(
         {
-          sometime: this.sequelize.fn('NOW')
+          sometime: current.fn('NOW')
         },
         {
           returning: true
@@ -192,27 +194,27 @@ describe('[POSTGRES Specific] Data Types', () => {
 
   describe('DATEONLY SQL', () => {
     // create dummy user
-    it('should be able to create and update records with Infinity/-Infinity', async function () {
-      this.sequelize.options.typeValidation = true;
+    it('should be able to create and update records with Infinity/-Infinity', async () => {
+      current.options.typeValidation = true;
 
       const date = new Date();
-      const User = this.sequelize.define(
+      const User = current.define(
         'User',
         {
-          username: this.sequelize.Sequelize.STRING,
+          username: current.Sequelize.STRING,
           beforeTime: {
-            type: this.sequelize.Sequelize.DATEONLY,
+            type: current.Sequelize.DATEONLY,
             defaultValue: -Infinity
           },
           sometime: {
-            type: this.sequelize.Sequelize.DATEONLY,
-            defaultValue: this.sequelize.fn('NOW')
+            type: current.Sequelize.DATEONLY,
+            defaultValue: current.fn('NOW')
           },
           anotherTime: {
-            type: this.sequelize.Sequelize.DATEONLY
+            type: current.Sequelize.DATEONLY
           },
           afterTime: {
-            type: this.sequelize.Sequelize.DATEONLY,
+            type: current.Sequelize.DATEONLY,
             defaultValue: Infinity
           }
         },
@@ -260,7 +262,7 @@ describe('[POSTGRES Specific] Data Types', () => {
 
       const nowed = await reapplied.update(
         {
-          sometime: this.sequelize.fn('NOW')
+          sometime: current.fn('NOW')
         },
         {
           returning: true

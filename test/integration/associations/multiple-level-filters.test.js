@@ -3,11 +3,13 @@ import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Multiple Level Filters'), () => {
-  it('can filter through belongsTo', async function () {
-    const User = this.sequelize.define('User', { username: DataTypes.STRING }),
-      Task = this.sequelize.define('Task', { title: DataTypes.STRING }),
-      Project = this.sequelize.define('Project', { title: DataTypes.STRING });
+  it('can filter through belongsTo', async () => {
+    const User = current.define('User', { username: DataTypes.STRING }),
+      Task = current.define('Task', { title: DataTypes.STRING }),
+      Project = current.define('Project', { title: DataTypes.STRING });
 
     Project.belongsTo(User);
     User.hasMany(Project);
@@ -15,7 +17,7 @@ describe(Support.getTestDialectTeaser('Multiple Level Filters'), () => {
     Task.belongsTo(Project);
     Project.hasMany(Task);
 
-    await this.sequelize.sync({ force: true });
+    await current.sync({ force: true });
 
     await User.bulkCreate([
       {
@@ -71,10 +73,10 @@ describe(Support.getTestDialectTeaser('Multiple Level Filters'), () => {
     expect(tasks[1].title).to.be.equal('stablish republic');
   });
 
-  it('avoids duplicated tables in query', async function () {
-    const User = this.sequelize.define('User', { username: DataTypes.STRING }),
-      Task = this.sequelize.define('Task', { title: DataTypes.STRING }),
-      Project = this.sequelize.define('Project', { title: DataTypes.STRING });
+  it('avoids duplicated tables in query', async () => {
+    const User = current.define('User', { username: DataTypes.STRING }),
+      Task = current.define('Task', { title: DataTypes.STRING }),
+      Project = current.define('Project', { title: DataTypes.STRING });
 
     Project.belongsTo(User);
     User.hasMany(Project);
@@ -82,7 +84,7 @@ describe(Support.getTestDialectTeaser('Multiple Level Filters'), () => {
     Task.belongsTo(Project);
     Project.hasMany(Task);
 
-    await this.sequelize.sync({ force: true });
+    await current.sync({ force: true });
 
     await User.bulkCreate([
       {
@@ -146,10 +148,10 @@ describe(Support.getTestDialectTeaser('Multiple Level Filters'), () => {
     expect(tasks[1].title).to.be.equal('stablish republic');
   });
 
-  it('can filter through hasMany', async function () {
-    const User = this.sequelize.define('User', { username: DataTypes.STRING }),
-      Task = this.sequelize.define('Task', { title: DataTypes.STRING }),
-      Project = this.sequelize.define('Project', { title: DataTypes.STRING });
+  it('can filter through hasMany', async () => {
+    const User = current.define('User', { username: DataTypes.STRING }),
+      Task = current.define('Task', { title: DataTypes.STRING }),
+      Project = current.define('Project', { title: DataTypes.STRING });
 
     Project.belongsTo(User);
     User.hasMany(Project);
@@ -157,7 +159,7 @@ describe(Support.getTestDialectTeaser('Multiple Level Filters'), () => {
     Task.belongsTo(Project);
     Project.hasMany(Task);
 
-    await this.sequelize.sync({ force: true });
+    await current.sync({ force: true });
 
     await User.bulkCreate([
       {
@@ -212,14 +214,14 @@ describe(Support.getTestDialectTeaser('Multiple Level Filters'), () => {
     expect(users[0].username).to.be.equal('leia');
   });
 
-  it('can filter through hasMany connector', async function () {
-    const User = this.sequelize.define('User', { username: DataTypes.STRING }),
-      Project = this.sequelize.define('Project', { title: DataTypes.STRING });
+  it('can filter through hasMany connector', async () => {
+    const User = current.define('User', { username: DataTypes.STRING }),
+      Project = current.define('Project', { title: DataTypes.STRING });
 
     Project.belongsToMany(User, { through: 'user_project' });
     User.belongsToMany(Project, { through: 'user_project' });
 
-    await this.sequelize.sync({ force: true });
+    await current.sync({ force: true });
 
     await User.bulkCreate([
       {

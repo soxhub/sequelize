@@ -3,17 +3,21 @@ import { expect } from 'chai';
 import Support from './support.js';
 import DataTypes from '../../lib/data-types.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Schema'), () => {
-  beforeEach(function () {
-    return this.sequelize.createSchema('testschema');
+  let User;
+
+  beforeEach(() => {
+    return current.createSchema('testschema');
   });
 
-  afterEach(function () {
-    return this.sequelize.dropSchema('testschema');
+  afterEach(() => {
+    return current.dropSchema('testschema');
   });
 
-  beforeEach(function () {
-    this.User = this.sequelize.define(
+  beforeEach(() => {
+    User = current.define(
       'User',
       {
         aNumber: { type: DataTypes.INTEGER }
@@ -23,11 +27,11 @@ describe(Support.getTestDialectTeaser('Schema'), () => {
       }
     );
 
-    return this.User.sync({ force: true });
+    return User.sync({ force: true });
   });
 
-  it('supports increment', async function () {
-    const user = await this.User.create({ aNumber: 1 });
+  it('supports increment', async () => {
+    const user = await User.create({ aNumber: 1 });
     const incremented = await user.increment('aNumber', { by: 3 });
     const reloaded = await incremented.reload();
 
@@ -35,8 +39,8 @@ describe(Support.getTestDialectTeaser('Schema'), () => {
     expect(reloaded.aNumber).to.be.equal(4);
   });
 
-  it('supports decrement', async function () {
-    const user = await this.User.create({ aNumber: 10 });
+  it('supports decrement', async () => {
+    const user = await User.create({ aNumber: 10 });
     const decremented = await user.decrement('aNumber', { by: 3 });
     const reloaded = await decremented.reload();
 

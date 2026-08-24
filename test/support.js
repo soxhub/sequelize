@@ -1,4 +1,3 @@
-import { beforeEach } from 'mocha';
 import _ from 'lodash';
 import Sequelize from '../index.js';
 import DataTypes from '../lib/data-types.js';
@@ -185,11 +184,6 @@ const Support = {
   }
 };
 
-if (typeof beforeEach !== 'undefined') {
-  beforeEach(function () {
-    this.sequelize = Support.sequelize;
-  });
-}
 Support.sequelize = Support.createSequelizeInstance();
 
 export default Support;

@@ -449,7 +449,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
 
     describe('eager loading', () => {
-      let Task, Worker, worker, task;
+      let Task;
+      let Worker;
+      let worker;
+      let task;
 
       it('should not ignore where condition with empty includes, #8771', async () => {
         await SharedUser.bulkCreate([
@@ -817,8 +820,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       describe('include all', () => {
-        let Continent, Country, Industry, Person;
-        let europe, england, coal, bob;
+        let Continent;
+        let Country;
+        let Industry;
+        let Person;
+        let europe;
+        let england;
+        let coal;
+        let bob;
 
         beforeEach(async () => {
           Continent = current.define('continent', { name: Sequelize.STRING });
@@ -915,7 +924,9 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       describe('properly handles attributes:[] cases', () => {
-        let Animal, Kingdom, AnimalKingdom;
+        let Animal;
+        let Kingdom;
+        let AnimalKingdom;
 
         beforeEach(async () => {
           Animal = current.define('Animal', {
@@ -1013,8 +1024,18 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
     describe('order by eager loaded tables', () => {
       (describe('HasMany', () => {
-        let Continent, Country, Person;
-        let europe, asia, england, france, korea, bob, fred, pierre, kim;
+        let Continent;
+        let Country;
+        let Person;
+        let europe;
+        let asia;
+        let england;
+        let france;
+        let korea;
+        let bob;
+        let fred;
+        let pierre;
+        let kim;
 
         beforeEach(async () => {
           Continent = current.define('continent', { name: Sequelize.STRING });
@@ -1205,8 +1226,15 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
       }),
         describe('ManyToMany', () => {
-          let Country, Industry, IndustryCountry;
-          let england, france, korea, energy, media, tech;
+          let Country;
+          let Industry;
+          let IndustryCountry;
+          let england;
+          let france;
+          let korea;
+          let energy;
+          let media;
+          let tech;
 
           beforeEach(async () => {
             Country = current.define('country', { name: Sequelize.STRING });

@@ -12,7 +12,8 @@ const dialect = Support.getTestDialect();
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser('Instance'), () => {
-  let clock, SharedUser;
+  let clock;
+  let SharedUser;
 
   before(() => {
     clock = sinon.useFakeTimers({ toFake: ['Date'] });
@@ -1435,7 +1436,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     });
 
     describe('eagerly loaded objects', () => {
-      let UserEager, ProjectEager;
+      let UserEager;
+      let ProjectEager;
 
       beforeEach(async () => {
         UserEager = current.define(

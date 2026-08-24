@@ -17,8 +17,10 @@ let locationId;
 describe(Support.getTestDialectTeaser('Model'), () => {
   if (current.dialect.supports.searchPath) {
     describe('SEARCH PATH', () => {
-      before(function () {
-        this.Restaurant = current.define(
+      let Restaurant, Location, Employee;
+
+      before(() => {
+        Restaurant = current.define(
           'restaurant',
           {
             foo: DataTypes.STRING,
@@ -26,7 +28,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           },
           { tableName: 'restaurants' }
         );
-        this.Location = current.define(
+        Location = current.define(
           'location',
           {
             name: DataTypes.STRING,
@@ -34,7 +36,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           },
           { tableName: 'locations' }
         );
-        this.Employee = current.define(
+        Employee = current.define(
           'employee',
           {
             first_name: DataTypes.STRING,
@@ -42,23 +44,21 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           },
           { tableName: 'employees' }
         );
-        this.Restaurant.belongsTo(this.Location, {
+        Restaurant.belongsTo(Location, {
           foreignKey: 'location_id',
           constraints: false
         });
-        this.Employee.belongsTo(this.Restaurant, {
+        Employee.belongsTo(Restaurant, {
           foreignKey: 'restaurant_id',
           constraints: false
         });
-        this.Restaurant.hasMany(this.Employee, {
+        Restaurant.hasMany(Employee, {
           foreignKey: 'restaurant_id',
           constraints: false
         });
       });
 
-      beforeEach('build restaurant tables', async function () {
-        const Restaurant = this.Restaurant;
-
+      beforeEach('build restaurant tables', async () => {
         await current.createSchema('schema_one');
         await current.createSchema('schema_two');
         await Restaurant.sync({ force: true, searchPath: SEARCH_PATH_ONE });
@@ -71,15 +71,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       describe('enum case', () => {
-        it('able to refresh enum when searchPath is used', function () {
-          return this.Location.sync({ force: true });
+        it('able to refresh enum when searchPath is used', () => {
+          return Location.sync({ force: true });
         });
       });
 
       describe('Add data via model.create, retrieve via model.findOne', () => {
-        it('should be able to insert data into the table in schema_one using create', async function () {
-          const Restaurant = this.Restaurant;
-
+        it('should be able to insert data into the table in schema_one using create', async () => {
           await Restaurant.create(
             {
               foo: 'one',
@@ -100,9 +98,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           expect(byId.foo).to.equal('one');
         });
 
-        it('should be able to insert data into the table in schema_two using create', async function () {
-          const Restaurant = this.Restaurant;
-
+        it('should be able to insert data into the table in schema_two using create', async () => {
           await Restaurant.create(
             {
               foo: 'two',
@@ -123,25 +119,19 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           expect(byId.foo).to.equal('two');
         });
 
-        it('should fail to find schema_one object in schema_two', async function () {
-          const Restaurant = this.Restaurant;
-
+        it('should fail to find schema_one object in schema_two', async () => {
           const RestaurantObj = await Restaurant.findOne({ where: { foo: 'one' }, searchPath: SEARCH_PATH_TWO });
           expect(RestaurantObj).to.be.null;
         });
 
-        it('should fail to find schema_two object in schema_one', async function () {
-          const Restaurant = this.Restaurant;
-
+        it('should fail to find schema_two object in schema_one', async () => {
           const RestaurantObj = await Restaurant.findOne({ where: { foo: 'two' }, searchPath: SEARCH_PATH_ONE });
           expect(RestaurantObj).to.be.null;
         });
       });
 
       describe('Add data via instance.save, retrieve via model.findAll', () => {
-        it('should be able to insert data into both schemas using instance.save and retrieve it via findAll', async function () {
-          const Restaurant = this.Restaurant;
-
+        it('should be able to insert data into both schemas using instance.save and retrieve it via findAll', async () => {
           await Restaurant.build({ bar: 'one.1' }).save({ searchPath: SEARCH_PATH_ONE });
           await Restaurant.build({ bar: 'one.2' }).save({ searchPath: SEARCH_PATH_ONE });
           await Restaurant.build({ bar: 'two.1' }).save({ searchPath: SEARCH_PATH_TWO });
@@ -181,9 +171,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       describe('Add data via instance.save, retrieve via model.count and model.find', () => {
-        it('should be able to insert data into both schemas using instance.save count it and retrieve it via findAll with where', async function () {
-          const Restaurant = this.Restaurant;
-
+        it('should be able to insert data into both schemas using instance.save count it and retrieve it via findAll with where', async () => {
           await Restaurant.build({ bar: 'one.1' }).save({ searchPath: SEARCH_PATH_ONE });
           await Restaurant.build({ bar: 'one.2' }).save({ searchPath: SEARCH_PATH_ONE });
           await Restaurant.build({ bar: 'two.1' }).save({ searchPath: SEARCH_PATH_TWO });
@@ -221,9 +209,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       describe('Get associated data in public schema via include', () => {
-        beforeEach(async function () {
-          const Location = this.Location;
-
+        beforeEach(async () => {
           await Location.sync({ force: true });
           await Location.create({ name: 'HQ' });
 
@@ -233,10 +219,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           locationId = obj.id;
         });
 
-        it('should be able to insert and retrieve associated data into the table in schema_one', async function () {
-          const Restaurant = this.Restaurant;
-          const Location = this.Location;
-
+        it('should be able to insert and retrieve associated data into the table in schema_one', async () => {
           await Restaurant.create(
             {
               foo: 'one',
@@ -262,10 +245,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           expect(obj.location.name).to.equal('HQ');
         });
 
-        it('should be able to insert and retrieve associated data into the table in schema_two', async function () {
-          const Restaurant = this.Restaurant;
-          const Location = this.Location;
-
+        it('should be able to insert and retrieve associated data into the table in schema_two', async () => {
           await Restaurant.create(
             {
               foo: 'two',
@@ -293,17 +273,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       describe('Get schema specific associated data via include', () => {
-        beforeEach(async function () {
-          const Employee = this.Employee;
-
+        beforeEach(async () => {
           await Employee.sync({ force: true, searchPath: SEARCH_PATH_ONE });
           await Employee.sync({ force: true, searchPath: SEARCH_PATH_TWO });
         });
 
-        it('should be able to insert and retrieve associated data into the table in schema_one', async function () {
-          const Restaurant = this.Restaurant;
-          const Employee = this.Employee;
-
+        it('should be able to insert and retrieve associated data into the table in schema_one', async () => {
           await Restaurant.create(
             {
               foo: 'one'
@@ -367,10 +342,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           expect(restaurant.foo).to.equal('one');
         });
 
-        it('should be able to insert and retrieve associated data into the table in schema_two', async function () {
-          const Restaurant = this.Restaurant;
-          const Employee = this.Employee;
-
+        it('should be able to insert and retrieve associated data into the table in schema_two', async () => {
           await Restaurant.create(
             {
               foo: 'two'
@@ -436,9 +408,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       describe('concurency tests', () => {
-        it('should build and persist instances to 2 schemas concurrently in any order', async function () {
-          const Restaurant = this.Restaurant;
-
+        it('should build and persist instances to 2 schemas concurrently in any order', async () => {
           let restaurauntModelSchema1 = Restaurant.build({ bar: 'one.1' });
           const restaurauntModelSchema2 = Restaurant.build({ bar: 'two.1' });
 

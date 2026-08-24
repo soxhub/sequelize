@@ -4,11 +4,13 @@ import Sequelize from '../../../../index.js';
 import Support from '../../support.js';
 import DataTypes from '../../../../lib/data-types.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('create', () => {
     describe('include', () => {
-      it('should create data for BelongsTo relations', async function () {
-        const Product = this.sequelize.define(
+      it('should create data for BelongsTo relations', async () => {
+        const Product = current.define(
           'Product',
           {
             title: Sequelize.STRING
@@ -21,7 +23,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             }
           }
         );
-        const User = this.sequelize.define(
+        const User = current.define(
           'User',
           {
             first_name: Sequelize.STRING,
@@ -38,7 +40,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
         Product.belongsTo(User);
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
 
         const savedProduct = await Product.create(
           {
@@ -72,18 +74,18 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(persistedProduct.User.last_name).to.be.equal('Broadstone');
       });
 
-      it('should create data for BelongsTo relations with alias', async function () {
-        const Product = this.sequelize.define('Product', {
+      it('should create data for BelongsTo relations with alias', async () => {
+        const Product = current.define('Product', {
           title: Sequelize.STRING
         });
-        const User = this.sequelize.define('User', {
+        const User = current.define('User', {
           first_name: Sequelize.STRING,
           last_name: Sequelize.STRING
         });
 
         const Creator = Product.belongsTo(User, { as: 'creator' });
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
 
         const savedProduct = await Product.create(
           {
@@ -108,8 +110,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(persistedProduct.creator.last_name).to.be.equal('Hansen');
       });
 
-      it('should create data for HasMany relations', async function () {
-        const Product = this.sequelize.define(
+      it('should create data for HasMany relations', async () => {
+        const Product = current.define(
           'Product',
           {
             title: Sequelize.STRING
@@ -126,7 +128,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             }
           }
         );
-        const Tag = this.sequelize.define(
+        const Tag = current.define(
           'Tag',
           {
             name: Sequelize.STRING
@@ -142,7 +144,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
         Product.hasMany(Tag);
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
 
         const savedProduct = await Product.create(
           {
@@ -178,17 +180,17 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(persistedProduct.Tags.length).to.equal(2);
       });
 
-      it('should create data for HasMany relations with alias', async function () {
-        const Product = this.sequelize.define('Product', {
+      it('should create data for HasMany relations with alias', async () => {
+        const Product = current.define('Product', {
           title: Sequelize.STRING
         });
-        const Tag = this.sequelize.define('Tag', {
+        const Tag = current.define('Tag', {
           name: Sequelize.STRING
         });
 
         const Categories = Product.hasMany(Tag, { as: 'categories' });
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
 
         const savedProduct = await Product.create(
           {
@@ -213,18 +215,18 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(persistedProduct.categories.length).to.equal(2);
       });
 
-      it('should create data for HasOne relations', async function () {
-        const User = this.sequelize.define('User', {
+      it('should create data for HasOne relations', async () => {
+        const User = current.define('User', {
           username: Sequelize.STRING
         });
 
-        const Task = this.sequelize.define('Task', {
+        const Task = current.define('Task', {
           title: Sequelize.STRING
         });
 
         User.hasOne(Task);
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
 
         const savedUser = await User.create(
           {
@@ -246,18 +248,18 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(persistedUser.Task).to.be.ok;
       });
 
-      it('should create data for HasOne relations with alias', async function () {
-        const User = this.sequelize.define('User', {
+      it('should create data for HasOne relations with alias', async () => {
+        const User = current.define('User', {
           username: Sequelize.STRING
         });
 
-        const Task = this.sequelize.define('Task', {
+        const Task = current.define('Task', {
           title: Sequelize.STRING
         });
 
         const Job = User.hasOne(Task, { as: 'job' });
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
 
         const savedUser = await User.create(
           {
@@ -279,8 +281,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(persistedUser.job).to.be.ok;
       });
 
-      it('should create data for BelongsToMany relations', async function () {
-        const User = this.sequelize.define(
+      it('should create data for BelongsToMany relations', async () => {
+        const User = current.define(
           'User',
           {
             username: DataTypes.STRING
@@ -298,7 +300,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        const Task = this.sequelize.define(
+        const Task = current.define(
           'Task',
           {
             title: DataTypes.STRING,
@@ -316,7 +318,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         User.belongsToMany(Task, { through: 'user_task' });
         Task.belongsToMany(User, { through: 'user_task' });
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
 
         const savedUser = await User.create(
           {
@@ -351,8 +353,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(persistedUser.Tasks.length).to.equal(2);
       });
 
-      it('should create data for polymorphic BelongsToMany relations', async function () {
-        const Post = this.sequelize.define(
+      it('should create data for polymorphic BelongsToMany relations', async () => {
+        const Post = current.define(
           'Post',
           {
             title: DataTypes.STRING
@@ -363,7 +365,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        const Tag = this.sequelize.define(
+        const Tag = current.define(
           'Tag',
           {
             name: DataTypes.STRING
@@ -374,7 +376,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        const ItemTag = this.sequelize.define(
+        const ItemTag = current.define(
           'ItemTag',
           {
             tag_id: {
@@ -422,7 +424,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         });
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
 
         const savedPost = await Post.create(
           {
@@ -466,12 +468,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(itemTags[1].taggable).to.equal('post');
       });
 
-      it('should create data for BelongsToMany relations with alias', async function () {
-        const User = this.sequelize.define('User', {
+      it('should create data for BelongsToMany relations with alias', async () => {
+        const User = current.define('User', {
           username: DataTypes.STRING
         });
 
-        const Task = this.sequelize.define('Task', {
+        const Task = current.define('Task', {
           title: DataTypes.STRING,
           active: DataTypes.BOOLEAN
         });
@@ -479,7 +481,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         const Jobs = User.belongsToMany(Task, { through: 'user_job', as: 'jobs' });
         Task.belongsToMany(User, { through: 'user_job' });
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
 
         const savedUser = await User.create(
           {

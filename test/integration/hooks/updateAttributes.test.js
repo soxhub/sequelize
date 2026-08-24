@@ -4,9 +4,13 @@ import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import sinon from 'sinon';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Hooks'), () => {
-  beforeEach(function () {
-    this.User = this.sequelize.define('User', {
+  let User;
+
+  beforeEach(() => {
+    User = current.define('User', {
       username: {
         type: DataTypes.STRING,
         allowNull: false
@@ -16,23 +20,23 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         values: ['happy', 'sad', 'neutral']
       }
     });
-    return this.sequelize.sync({ force: true });
+    return current.sync({ force: true });
   });
 
   describe('#updateAttributes', () => {
     describe('on success', () => {
-      it('should run hooks', async function () {
+      it('should run hooks', async () => {
         const beforeHook = sinon.spy(),
           afterHook = sinon.spy(),
           beforeSave = sinon.spy(),
           afterSave = sinon.spy();
 
-        this.User.beforeUpdate(beforeHook);
-        this.User.afterUpdate(afterHook);
-        this.User.beforeSave(beforeSave);
-        this.User.afterSave(afterSave);
+        User.beforeUpdate(beforeHook);
+        User.afterUpdate(afterHook);
+        User.beforeSave(beforeSave);
+        User.afterSave(afterSave);
 
-        const user = await this.User.create({ username: 'Toni', mood: 'happy' });
+        const user = await User.create({ username: 'Toni', mood: 'happy' });
         const updatedUser = await user.update({ username: 'Chong' });
 
         expect(beforeHook.calledOnce).to.be.true;
@@ -44,21 +48,21 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
     });
 
     describe('on error', () => {
-      it('should return an error from before', async function () {
+      it('should return an error from before', async () => {
         const beforeHook = sinon.spy(),
           afterHook = sinon.spy(),
           beforeSave = sinon.spy(),
           afterSave = sinon.spy();
 
-        this.User.beforeUpdate(() => {
+        User.beforeUpdate(() => {
           beforeHook();
           throw new Error('Whoops!');
         });
-        this.User.afterUpdate(afterHook);
-        this.User.beforeSave(beforeSave);
-        this.User.afterSave(afterSave);
+        User.afterUpdate(afterHook);
+        User.beforeSave(beforeSave);
+        User.afterSave(afterSave);
 
-        const user = await this.User.create({ username: 'Toni', mood: 'happy' });
+        const user = await User.create({ username: 'Toni', mood: 'happy' });
         await expect(user.update({ username: 'Chong' })).to.be.rejected;
 
         expect(beforeHook.calledOnce).to.be.true;
@@ -67,21 +71,21 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         expect(afterSave.calledOnce).to.be.true;
       });
 
-      it('should return an error from after', async function () {
+      it('should return an error from after', async () => {
         const beforeHook = sinon.spy(),
           afterHook = sinon.spy(),
           beforeSave = sinon.spy(),
           afterSave = sinon.spy();
 
-        this.User.beforeUpdate(beforeHook);
-        this.User.afterUpdate(() => {
+        User.beforeUpdate(beforeHook);
+        User.afterUpdate(() => {
           afterHook();
           throw new Error('Whoops!');
         });
-        this.User.beforeSave(beforeSave);
-        this.User.afterSave(afterSave);
+        User.beforeSave(beforeSave);
+        User.afterSave(afterSave);
 
-        const user = await this.User.create({ username: 'Toni', mood: 'happy' });
+        const user = await User.create({ username: 'Toni', mood: 'happy' });
         await expect(user.update({ username: 'Chong' })).to.be.rejected;
 
         expect(beforeHook.calledOnce).to.be.true;
@@ -92,39 +96,39 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
     });
 
     describe('preserves changes to instance', () => {
-      it('beforeValidate', async function () {
-        this.User.beforeValidate((user) => {
+      it('beforeValidate', async () => {
+        User.beforeValidate((user) => {
           user.mood = 'happy';
         });
 
-        const created = await this.User.create({ username: 'fireninja', mood: 'invalid' });
+        const created = await User.create({ username: 'fireninja', mood: 'invalid' });
         const user = await created.update({ username: 'hero' });
 
         expect(user.username).to.equal('hero');
         expect(user.mood).to.equal('happy');
       });
 
-      it('afterValidate', async function () {
-        this.User.afterValidate((user) => {
+      it('afterValidate', async () => {
+        User.afterValidate((user) => {
           user.mood = 'sad';
         });
 
-        const created = await this.User.create({ username: 'fireninja', mood: 'nuetral' });
+        const created = await User.create({ username: 'fireninja', mood: 'nuetral' });
         const user = await created.update({ username: 'spider' });
 
         expect(user.username).to.equal('spider');
         expect(user.mood).to.equal('sad');
       });
 
-      it('beforeSave', async function () {
+      it('beforeSave', async () => {
         let hookCalled = 0;
 
-        this.User.beforeSave((user) => {
+        User.beforeSave((user) => {
           user.mood = 'happy';
           hookCalled++;
         });
 
-        const created = await this.User.create({ username: 'fireninja', mood: 'nuetral' });
+        const created = await User.create({ username: 'fireninja', mood: 'nuetral' });
         const user = await created.update({ username: 'spider', mood: 'sad' });
 
         expect(user.username).to.equal('spider');
@@ -132,20 +136,20 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         expect(hookCalled).to.equal(2);
       });
 
-      it('beforeSave with beforeUpdate', async function () {
+      it('beforeSave with beforeUpdate', async () => {
         let hookCalled = 0;
 
-        this.User.beforeUpdate((user) => {
+        User.beforeUpdate((user) => {
           user.mood = 'sad';
           hookCalled++;
         });
 
-        this.User.beforeSave((user) => {
+        User.beforeSave((user) => {
           user.mood = 'happy';
           hookCalled++;
         });
 
-        const created = await this.User.create({ username: 'akira' });
+        const created = await User.create({ username: 'akira' });
         const user = await created.update({ username: 'spider', mood: 'sad' });
 
         expect(user.mood).to.equal('happy');

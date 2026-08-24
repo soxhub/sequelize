@@ -4,6 +4,7 @@ import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 
 const Op = Support.Sequelize.Op;
+const current = Support.sequelize;
 
 /**
  * `buildFindAllQuery` exists so callers can obtain the SQL for a find without executing it. It
@@ -13,21 +14,23 @@ const Op = Support.Sequelize.Op;
  */
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('buildFindAllQuery', () => {
-    beforeEach(async function () {
-      this.User = this.sequelize.define('BfqUser', {
+    let User, Post, Tag;
+
+    beforeEach(async () => {
+      User = current.define('BfqUser', {
         name: DataTypes.STRING,
         age: DataTypes.INTEGER,
         active: DataTypes.BOOLEAN
       });
-      this.Post = this.sequelize.define('BfqPost', { title: DataTypes.STRING, n: DataTypes.INTEGER });
-      this.Tag = this.sequelize.define('BfqTag', { label: DataTypes.STRING });
+      Post = current.define('BfqPost', { title: DataTypes.STRING, n: DataTypes.INTEGER });
+      Tag = current.define('BfqTag', { label: DataTypes.STRING });
 
-      this.User.hasMany(this.Post);
-      this.Post.belongsTo(this.User);
-      this.Post.belongsToMany(this.Tag, { through: 'BfqPostTag' });
-      this.Tag.belongsToMany(this.Post, { through: 'BfqPostTag' });
+      User.hasMany(Post);
+      Post.belongsTo(User);
+      Post.belongsToMany(Tag, { through: 'BfqPostTag' });
+      Tag.belongsToMany(Post, { through: 'BfqPostTag' });
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
     });
 
     /** Runs findAll, capturing the SQL it actually executes. */
@@ -45,77 +48,77 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     }
 
     function itMatches(label, build) {
-      it(`matches findAll for ${label}`, async function () {
-        const [Model, options] = build.call(this);
+      it(`matches findAll for ${label}`, async () => {
+        const [Model, options] = build();
         expect(Model.buildFindAllQuery(options)).to.equal(await executedSql(Model, options));
       });
     }
 
-    itMatches('no options', function () {
-      return [this.User, {}];
+    itMatches('no options', () => {
+      return [User, {}];
     });
-    itMatches('a where clause', function () {
-      return [this.User, { where: { id: 1 } }];
+    itMatches('a where clause', () => {
+      return [User, { where: { id: 1 } }];
     });
-    itMatches('an operator in where', function () {
-      return [this.User, { where: { age: { [Op.gt]: 18 } } }];
+    itMatches('an operator in where', () => {
+      return [User, { where: { age: { [Op.gt]: 18 } } }];
     });
-    itMatches('an attribute subset', function () {
-      return [this.User, { attributes: ['name'] }];
+    itMatches('an attribute subset', () => {
+      return [User, { attributes: ['name'] }];
     });
-    itMatches('order, limit and offset', function () {
-      return [this.User, { where: { active: true }, order: [['name', 'DESC']], limit: 5, offset: 10 }];
+    itMatches('order, limit and offset', () => {
+      return [User, { where: { active: true }, order: [['name', 'DESC']], limit: 5, offset: 10 }];
     });
-    itMatches('a grouped aggregate', function () {
+    itMatches('a grouped aggregate', () => {
       return [
-        this.User,
+        User,
         {
-          attributes: ['age', [this.sequelize.fn('COUNT', this.sequelize.col('id')), 'c']],
+          attributes: ['age', [current.fn('COUNT', current.col('id')), 'c']],
           group: ['age']
         }
       ];
     });
-    itMatches('a hasMany include', function () {
-      return [this.User, { include: [this.Post] }];
+    itMatches('a hasMany include', () => {
+      return [User, { include: [Post] }];
     });
-    itMatches('a belongsTo include', function () {
-      return [this.Post, { include: [this.User] }];
+    itMatches('a belongsTo include', () => {
+      return [Post, { include: [User] }];
     });
-    itMatches('an include with an attribute subset', function () {
-      return [this.User, { attributes: ['name'], include: [this.Post] }];
+    itMatches('an include with an attribute subset', () => {
+      return [User, { attributes: ['name'], include: [Post] }];
     });
-    itMatches('a nested include', function () {
-      return [this.User, { include: [{ model: this.Post, include: [this.Tag] }] }];
+    itMatches('a nested include', () => {
+      return [User, { include: [{ model: Post, include: [Tag] }] }];
     });
     // `include: all` is only expanded by `_expandIncludeAll`, so this is the case that fails if
     // `buildFindAllQuery` ever stops sharing the conform step with `findAll`.
-    itMatches('include: all', function () {
-      return [this.User, { include: [{ all: true }] }];
+    itMatches('include: all', () => {
+      return [User, { include: [{ all: true }] }];
     });
-    itMatches('include: all, nested', function () {
-      return [this.User, { include: [{ all: true, nested: true }] }];
+    itMatches('include: all, nested', () => {
+      return [User, { include: [{ all: true, nested: true }] }];
     });
-    itMatches('an include with where and order', function () {
-      return [this.User, { where: { active: true }, include: [this.Post], order: ['id'] }];
+    itMatches('an include with where and order', () => {
+      return [User, { where: { active: true }, include: [Post], order: ['id'] }];
     });
-    itMatches('an include with a limit', function () {
-      return [this.User, { include: [this.Post], limit: 3 }];
+    itMatches('an include with a limit', () => {
+      return [User, { include: [Post], limit: 3 }];
     });
-    itMatches('paranoid disabled', function () {
-      return [this.User, { paranoid: false }];
+    itMatches('paranoid disabled', () => {
+      return [User, { paranoid: false }];
     });
-    itMatches('raw', function () {
-      return [this.User, { raw: true, where: { id: 2 } }];
+    itMatches('raw', () => {
+      return [User, { raw: true, where: { id: 2 } }];
     });
-    itMatches('a row lock', function () {
-      return [this.User, { where: { id: 1 }, lock: true }];
+    itMatches('a row lock', () => {
+      return [User, { where: { id: 1 }, lock: true }];
     });
 
     it('does not mutate the options it is given', function () {
       const options = { where: { id: 1 }, attributes: ['name'] };
       const snapshot = JSON.stringify(options);
 
-      this.User.buildFindAllQuery(options);
+      User.buildFindAllQuery(options);
 
       expect(JSON.stringify(options)).to.equal(snapshot);
     });
@@ -123,32 +126,32 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     it('runs no hooks and issues no query', function () {
       const fired = [];
       for (const name of ['beforeFind', 'beforeFindAfterExpandIncludeAll', 'beforeFindAfterOptions', 'afterFind']) {
-        this.User.addHook(name, () => fired.push(name));
+        User.addHook(name, () => fired.push(name));
       }
 
       let queried = false;
-      this.User.buildFindAllQuery({ logging: () => (queried = true) });
+      User.buildFindAllQuery({ logging: () => (queried = true) });
 
       expect(fired, 'no hooks should fire').to.deep.equal([]);
       expect(queried, 'no query should be issued').to.be.false;
     });
 
     it('rejects a non-object argument like findAll does', function () {
-      expect(() => this.User.buildFindAllQuery(1)).to.throw(/must be an options object/);
+      expect(() => User.buildFindAllQuery(1)).to.throw(/must be an options object/);
     });
 
     it('rejects a malformed attributes option like findAll does', function () {
-      expect(() => this.User.buildFindAllQuery({ attributes: 'name' })).to.throw(/attributes option must be an array/);
+      expect(() => User.buildFindAllQuery({ attributes: 'name' })).to.throw(/attributes option must be an array/);
     });
 
     describe('findAll still drives its hooks around the shared steps', () => {
       it('fires the find hooks in order', async function () {
         const fired = [];
         for (const name of ['beforeFind', 'beforeFindAfterExpandIncludeAll', 'beforeFindAfterOptions', 'afterFind']) {
-          this.User.addHook(name, () => fired.push(name));
+          User.addHook(name, () => fired.push(name));
         }
 
-        await this.User.findAll();
+        await User.findAll();
 
         expect(fired).to.deep.equal([
           'beforeFind',
@@ -159,29 +162,29 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       it('applies a where set by beforeFind', async function () {
-        await this.User.create({ name: 'kept' });
-        this.User.addHook('beforeFind', (options) => {
+        await User.create({ name: 'kept' });
+        User.addHook('beforeFind', (options) => {
           options.where = { name: 'absent' };
         });
 
-        expect(await this.User.findAll()).to.have.length(0);
+        expect(await User.findAll()).to.have.length(0);
       });
 
       it('applies an attribute list set by beforeFindAfterOptions', async function () {
-        await this.User.create({ name: 'a', age: 3 });
-        this.User.addHook('beforeFindAfterOptions', (options) => {
+        await User.create({ name: 'a', age: 3 });
+        User.addHook('beforeFindAfterOptions', (options) => {
           options.attributes = ['name'];
         });
 
-        const [user] = await this.User.findAll();
+        const [user] = await User.findAll();
         expect(Object.keys(user.dataValues)).to.deep.equal(['name']);
       });
 
       it('skips the hooks when hooks is false', async function () {
         const fired = [];
-        this.User.addHook('beforeFind', () => fired.push('beforeFind'));
+        User.addHook('beforeFind', () => fired.push('beforeFind'));
 
-        await this.User.findAll({ hooks: false });
+        await User.findAll({ hooks: false });
 
         expect(fired).to.deep.equal([]);
       });

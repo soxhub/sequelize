@@ -8,17 +8,19 @@ const current = Support.sequelize;
 describe(Support.getTestDialectTeaser('Model'), () => {
   if (current.dialect.supports.GEOGRAPHY) {
     describe('GEOGRAPHY', () => {
-      beforeEach(function () {
-        this.User = this.sequelize.define('User', {
+      let User;
+
+      beforeEach(() => {
+        User = current.define('User', {
           username: DataTypes.STRING,
           geography: DataTypes.GEOGRAPHY
         });
 
-        return this.User.sync({ force: true });
+        return User.sync({ force: true });
       });
 
-      it('works with aliases fields', async function () {
-        const Pub = this.sequelize.define('Pub', {
+      it('works with aliases fields', async () => {
+        const Pub = current.define('Pub', {
             location: { field: 'coordinates', type: DataTypes.GEOGRAPHY }
           }),
           point = { type: 'Point', coordinates: [39.807222, -76.984722] };
@@ -30,8 +32,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(pub.location).to.be.deep.eql(point);
       });
 
-      it('should create a geography object', async function () {
-        const User = this.User;
+      it('should create a geography object', async () => {
         const point = { type: 'Point', coordinates: [39.807222, -76.984722] };
 
         const newUser = await User.create({ username: 'username', geography: point });
@@ -39,8 +40,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(newUser.geography).to.be.deep.eql(point);
       });
 
-      it('should update a geography object', async function () {
-        const User = this.User;
+      it('should update a geography object', async () => {
         const point1 = { type: 'Point', coordinates: [39.807222, -76.984722] },
           point2 = { type: 'Point', coordinates: [49.807222, -86.984722] };
         const props = { username: 'username', geography: point1 };
@@ -54,17 +54,18 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
 
     describe('GEOGRAPHY(POINT)', () => {
-      beforeEach(function () {
-        this.User = this.sequelize.define('User', {
+      let User;
+
+      beforeEach(() => {
+        User = current.define('User', {
           username: DataTypes.STRING,
           geography: DataTypes.GEOGRAPHY('POINT')
         });
 
-        return this.User.sync({ force: true });
+        return User.sync({ force: true });
       });
 
-      it('should create a geography object', async function () {
-        const User = this.User;
+      it('should create a geography object', async () => {
         const point = { type: 'Point', coordinates: [39.807222, -76.984722] };
 
         const newUser = await User.create({ username: 'username', geography: point });
@@ -72,8 +73,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(newUser.geography).to.be.deep.eql(point);
       });
 
-      it('should update a geography object', async function () {
-        const User = this.User;
+      it('should update a geography object', async () => {
         const point1 = { type: 'Point', coordinates: [39.807222, -76.984722] },
           point2 = { type: 'Point', coordinates: [49.807222, -86.984722] };
         const props = { username: 'username', geography: point1 };
@@ -87,17 +87,18 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
 
     describe('GEOGRAPHY(LINESTRING)', () => {
-      beforeEach(function () {
-        this.User = this.sequelize.define('User', {
+      let User;
+
+      beforeEach(() => {
+        User = current.define('User', {
           username: DataTypes.STRING,
           geography: DataTypes.GEOGRAPHY('LINESTRING')
         });
 
-        return this.User.sync({ force: true });
+        return User.sync({ force: true });
       });
 
-      it('should create a geography object', async function () {
-        const User = this.User;
+      it('should create a geography object', async () => {
         const point = {
           type: 'LineString',
           coordinates: [
@@ -111,8 +112,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(newUser.geography).to.be.deep.eql(point);
       });
 
-      it('should update a geography object', async function () {
-        const User = this.User;
+      it('should update a geography object', async () => {
         const point1 = {
             type: 'LineString',
             coordinates: [
@@ -138,17 +138,18 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
 
     describe('GEOGRAPHY(POLYGON)', () => {
-      beforeEach(function () {
-        this.User = this.sequelize.define('User', {
+      let User;
+
+      beforeEach(() => {
+        User = current.define('User', {
           username: DataTypes.STRING,
           geography: DataTypes.GEOGRAPHY('POLYGON')
         });
 
-        return this.User.sync({ force: true });
+        return User.sync({ force: true });
       });
 
-      it('should create a geography object', async function () {
-        const User = this.User;
+      it('should create a geography object', async () => {
         const point = {
           type: 'Polygon',
           coordinates: [
@@ -167,8 +168,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(newUser.geography).to.be.deep.eql(point);
       });
 
-      it('should update a geography object', async function () {
-        const User = this.User;
+      it('should update a geography object', async () => {
         const polygon1 = {
             type: 'Polygon',
             coordinates: [
@@ -204,17 +204,18 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
 
     describe('GEOGRAPHY(POLYGON, SRID)', () => {
-      beforeEach(function () {
-        this.User = this.sequelize.define('User', {
+      let User;
+
+      beforeEach(() => {
+        User = current.define('User', {
           username: DataTypes.STRING,
           geography: DataTypes.GEOGRAPHY('POLYGON', 4326)
         });
 
-        return this.User.sync({ force: true });
+        return User.sync({ force: true });
       });
 
-      it('should create a geography object', async function () {
-        const User = this.User;
+      it('should create a geography object', async () => {
         const point = {
           type: 'Polygon',
           coordinates: [
@@ -233,8 +234,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(newUser.geography).to.be.deep.eql(point);
       });
 
-      it('should update a geography object', async function () {
-        const User = this.User;
+      it('should update a geography object', async () => {
         const polygon1 = {
             type: 'Polygon',
             coordinates: [
@@ -270,15 +270,17 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
 
     describe('sql injection attacks', () => {
-      beforeEach(function () {
-        this.Model = this.sequelize.define('Model', {
+      let Model;
+
+      beforeEach(() => {
+        Model = current.define('Model', {
           location: DataTypes.GEOGRAPHY
         });
-        return this.sequelize.sync({ force: true });
+        return current.sync({ force: true });
       });
 
-      it('should properly escape the single quotes', function () {
-        return this.Model.create({
+      it('should properly escape the single quotes', () => {
+        return Model.create({
           location: {
             type: 'Point',
             properties: {

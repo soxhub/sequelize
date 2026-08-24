@@ -1,3 +1,4 @@
+import { describe, it } from 'mocha';
 import { expect } from 'chai';
 import Support from '../support.js';
 import _ from 'lodash';

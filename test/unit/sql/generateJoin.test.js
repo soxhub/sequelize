@@ -1,3 +1,4 @@
+import { describe, it } from 'mocha';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import Sequelize from '../../../lib/sequelize.js';

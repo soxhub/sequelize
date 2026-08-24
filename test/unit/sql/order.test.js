@@ -1,3 +1,4 @@
+import { describe, it } from 'mocha';
 import { inspect } from 'node:util';
 import { expect } from 'chai';
 import Support from '../support.js';

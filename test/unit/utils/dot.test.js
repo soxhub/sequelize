@@ -1,3 +1,4 @@
+import { describe, it } from 'mocha';
 import { expect } from 'chai';
 import * as Dot from '../../../lib/utils/dot.js';
 

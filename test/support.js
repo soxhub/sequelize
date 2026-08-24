@@ -1,3 +1,4 @@
+import { beforeEach } from 'mocha';
 import _ from 'lodash';
 import Sequelize from '../index.js';
 import DataTypes from '../lib/data-types.js';

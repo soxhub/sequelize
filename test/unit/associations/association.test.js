@@ -1,3 +1,4 @@
+import { describe, it } from 'mocha';
 import { AssociationError } from '../../../lib/errors.js';
 import { expect } from 'chai';
 import Support from '../support.js';

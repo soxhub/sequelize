@@ -1,3 +1,4 @@
+import { describe, it } from 'mocha';
 import Support from '../support.js';
 
 const current = Support.sequelize;

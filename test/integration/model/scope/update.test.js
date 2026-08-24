@@ -1,3 +1,4 @@
+import { describe, it, beforeEach } from 'mocha';
 import { expect } from 'chai';
 import _ from 'lodash';
 import Sequelize from '../../../../index.js';

@@ -1,3 +1,4 @@
+import { describe, it } from 'mocha';
 import { expect } from 'chai';
 import Query from '../../../../lib/dialects/postgres/base/query.js';
 import Support from '../../support.js';

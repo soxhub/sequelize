@@ -50,10 +50,10 @@
     "test-docker-unit": "pnpm run test-unit",
     "test-docker-integration": "env-cmd -f ./test/config/.docker.env pnpm run test-integration",
     "teaser": "node -e \"console.log('#'.repeat(process.env.DIALECT.length + 22) + '\\n# Running tests for ' + process.env.DIALECT + ' #\\n' + '#'.repeat(process.env.DIALECT.length + 22))\"",
-    "test-unit": "mocha --globals setImmediate,clearImmediate --exit --colors -t 30000 --reporter spec \"test/unit/**/*.js\"",
+    "test-unit": "mocha --exit --colors -t 30000 --reporter spec \"test/unit/**/*.js\"",
     "test-unit-postgres": "cross-env DIALECT=postgres pnpm run test-unit",
     "test-unit-postgres-native": "cross-env DIALECT=postgres-native pnpm run test-unit",
-    "test-integration": "mocha --globals setImmediate,clearImmediate --exit --colors -t 30000 --reporter spec \"test/integration/**/*.test.js\"",
+    "test-integration": "mocha --exit --colors -t 30000 --reporter spec \"test/integration/**/*.test.js\"",
     "test-integration-postgres": "cross-env DIALECT=postgres pnpm run test-integration",
     "test-integration-postgres-native": "cross-env DIALECT=postgres-native pnpm run test-integration",
     "test-postgres": "cross-env DIALECT=postgres pnpm test",
@@ -113,7 +113,6 @@
   },
   "packageManager": "pnpm@10.34.5",
   "options": {
-    "env_cmd": "./test/config/.docker.env",
-    "mocha": "--globals setImmediate,clearImmediate --exit --colors -t 30000 --reporter spec"
+    "env_cmd": "./test/config/.docker.env"
   }
 }

@@ -1,3 +1,4 @@
+import { describe, it, beforeEach } from 'mocha';
 import { expect } from 'chai';
 import * as Utils from '../../lib/utils.js';
 import Support from './support.js';

@@ -1,3 +1,4 @@
+import { describe, it } from 'mocha';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import { inspect } from 'node:util';

@@ -5,9 +5,11 @@ import Support from './support.js';
 
 should();
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Vectors'), () => {
-  it('should not allow insert backslash', async function () {
-    const Student = this.sequelize.define(
+  it('should not allow insert backslash', async () => {
+    const Student = current.define(
       'student',
       {
         name: Sequelize.STRING

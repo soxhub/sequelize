@@ -3,11 +3,13 @@ import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import { expect } from 'chai';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('optimistic locking', () => {
     let Account;
-    beforeEach(function () {
-      Account = this.sequelize.define(
+    beforeEach(() => {
+      Account = current.define(
         'Account',
         {
           number: {

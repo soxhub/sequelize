@@ -3,6 +3,8 @@ import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 
+const current = Support.sequelize;
+
 let count = 0;
 function log() {
   // sqlite fires a lot more querys than the other dbs. this is just a simple hack, since i'm lazy
@@ -11,20 +13,22 @@ function log() {
 }
 
 describe(Support.getTestDialectTeaser('QueryInterface'), () => {
-  beforeEach(function () {
-    this.sequelize.options.quoteIdenifiers = true;
-    this.queryInterface = this.sequelize.getQueryInterface();
+  let queryInterface;
+
+  beforeEach(() => {
+    current.options.quoteIdenifiers = true;
+    queryInterface = current.getQueryInterface();
   });
 
-  afterEach(function () {
-    return this.sequelize.dropAllSchemas();
+  afterEach(() => {
+    return current.dropAllSchemas();
   });
 
   describe('changeColumn', () => {
-    it('should support schemas', async function () {
-      await this.sequelize.createSchema('archive');
+    it('should support schemas', async () => {
+      await current.createSchema('archive');
 
-      await this.queryInterface.createTable(
+      await queryInterface.createTable(
         {
           tableName: 'users',
           schema: 'archive'
@@ -39,7 +43,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
         }
       );
 
-      await this.queryInterface.changeColumn(
+      await queryInterface.changeColumn(
         {
           tableName: 'users',
           schema: 'archive'
@@ -50,7 +54,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
         }
       );
 
-      const table = await this.queryInterface.describeTable({
+      const table = await queryInterface.describeTable({
         tableName: 'users',
         schema: 'archive'
       });
@@ -58,8 +62,8 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       expect(table.currency.type).to.equal('DOUBLE PRECISION');
     });
 
-    it('should change columns', async function () {
-      await this.queryInterface.createTable(
+    it('should change columns', async () => {
+      await queryInterface.createTable(
         {
           tableName: 'users'
         },
@@ -73,12 +77,12 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
         }
       );
 
-      await this.queryInterface.changeColumn('users', 'currency', {
+      await queryInterface.changeColumn('users', 'currency', {
         type: DataTypes.FLOAT,
         allowNull: true
       });
 
-      const table = await this.queryInterface.describeTable({
+      const table = await queryInterface.describeTable({
         tableName: 'users'
       });
 
@@ -88,8 +92,8 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
     // MSSQL doesn't support using a modified column in a check constraint.
     // https://docs.microsoft.com/en-us/sql/t-sql/statements/alter-table-transact-sql
 
-    it('should work with enums', async function () {
-      await this.queryInterface.createTable(
+    it('should work with enums', async () => {
+      await queryInterface.createTable(
         {
           tableName: 'users'
         },
@@ -98,15 +102,15 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
         }
       );
 
-      await this.queryInterface.changeColumn('users', 'firstName', {
+      await queryInterface.changeColumn('users', 'firstName', {
         type: DataTypes.ENUM(['value1', 'value2', 'value3'])
       });
     });
 
-    it('should work with enums with schemas', async function () {
-      await this.sequelize.createSchema('archive');
+    it('should work with enums with schemas', async () => {
+      await current.createSchema('archive');
 
-      await this.queryInterface.createTable(
+      await queryInterface.createTable(
         {
           tableName: 'users',
           schema: 'archive'
@@ -116,7 +120,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
         }
       );
 
-      await this.queryInterface.changeColumn(
+      await queryInterface.changeColumn(
         {
           tableName: 'users',
           schema: 'archive'
@@ -132,7 +136,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
 
     describe('should support foreign keys', () => {
       beforeEach(async function () {
-        await this.queryInterface.createTable('users', {
+        await queryInterface.createTable('users', {
           id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
@@ -144,7 +148,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
           }
         });
 
-        await this.queryInterface.createTable('level', {
+        await queryInterface.createTable('level', {
           id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
@@ -153,8 +157,8 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
         });
       });
 
-      it('able to change column to foreign key', async function () {
-        await this.queryInterface.changeColumn(
+      it('able to change column to foreign key', async () => {
+        await queryInterface.changeColumn(
           'users',
           'level_id',
           {

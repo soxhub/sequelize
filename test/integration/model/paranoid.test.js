@@ -8,16 +8,18 @@ const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('paranoid', () => {
-    before(function () {
-      this.clock = sinon.useFakeTimers();
+    let clock;
+
+    before(() => {
+      clock = sinon.useFakeTimers();
     });
 
-    after(function () {
-      this.clock.restore();
+    after(() => {
+      clock.restore();
     });
 
-    it('should be able to soft delete with timestamps', async function () {
-      const Account = this.sequelize.define(
+    it('should be able to soft delete with timestamps', async () => {
+      const Account = current.define(
         'Account',
         {
           ownerId: {
@@ -51,8 +53,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(await Account.count()).to.be.equal(1);
     });
 
-    it('should be able to soft delete without timestamps', async function () {
-      const Account = this.sequelize.define(
+    it('should be able to soft delete without timestamps', async () => {
+      const Account = current.define(
         'Account',
         {
           ownerId: {
@@ -95,8 +97,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
     if (current.dialect.supports.JSON) {
       describe('JSON', () => {
-        before(function () {
-          this.Model = this.sequelize.define(
+        let Model;
+
+        before(() => {
+          Model = current.define(
             'Model',
             {
               name: {
@@ -119,12 +123,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           );
         });
 
-        beforeEach(function () {
-          return this.Model.sync({ force: true });
+        beforeEach(() => {
+          return Model.sync({ force: true });
         });
 
-        it('should soft delete with JSON condition', async function () {
-          await this.Model.bulkCreate([
+        it('should soft delete with JSON condition', async () => {
+          await Model.bulkCreate([
             {
               name: 'One',
               data: {
@@ -143,7 +147,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             }
           ]);
 
-          await this.Model.destroy({
+          await Model.destroy({
             where: {
               data: {
                 field: {
@@ -153,7 +157,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             }
           });
 
-          const records = await this.Model.findAll();
+          const records = await Model.findAll();
           expect(records.length).to.equal(1);
           expect(records[0].get('name')).to.equal('Two');
         });

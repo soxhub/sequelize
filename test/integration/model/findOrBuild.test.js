@@ -3,25 +3,29 @@ import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Model'), () => {
-  beforeEach(function () {
-    this.User = this.sequelize.define('User', {
+  let User, Project;
+
+  beforeEach(() => {
+    User = current.define('User', {
       username: DataTypes.STRING,
       age: DataTypes.INTEGER
     });
-    this.Project = this.sequelize.define('Project', {
+    Project = current.define('Project', {
       name: DataTypes.STRING
     });
 
-    this.User.hasMany(this.Project);
-    this.Project.belongsTo(this.User);
+    User.hasMany(Project);
+    Project.belongsTo(User);
 
-    return this.sequelize.sync({ force: true });
+    return current.sync({ force: true });
   });
 
   describe('findOrBuild', () => {
-    it('initialize with includes', async function () {
-      const [, user2] = await this.User.bulkCreate(
+    it('initialize with includes', async () => {
+      const [, user2] = await User.bulkCreate(
         [
           { username: 'Mello', age: 10 },
           { username: 'Mello', age: 20 }
@@ -29,12 +33,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         { returning: true }
       );
 
-      const project = await this.Project.create({
+      const project = await Project.create({
         name: 'Investigate'
       });
       await user2.setProjects([project]);
 
-      const [user, created] = await this.User.findOrBuild({
+      const [user, created] = await User.findOrBuild({
         defaults: {
           username: 'Mello',
           age: 10
@@ -44,7 +48,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         },
         include: [
           {
-            model: this.Project
+            model: Project
           }
         ]
       });

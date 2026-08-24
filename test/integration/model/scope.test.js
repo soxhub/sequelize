@@ -3,10 +3,14 @@ import { expect } from 'chai';
 import Sequelize from '../../../index.js';
 import Support from '../support.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('scope', () => {
-    beforeEach(async function () {
-      this.ScopeMe = this.sequelize.define(
+    let ScopeMe;
+
+    beforeEach(async () => {
+      ScopeMe = current.define(
         'ScopeMe',
         {
           username: Sequelize.STRING,
@@ -53,9 +57,9 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         }
       );
 
-      await this.sequelize.sync({ force: true });
+      await current.sync({ force: true });
 
-      await this.ScopeMe.bulkCreate([
+      await ScopeMe.bulkCreate([
         { username: 'tony', email: 'tony@sequelizejs.com', access_level: 3, other_value: 7 },
         { username: 'tobi', email: 'tobi@fakeemail.com', access_level: 10, other_value: 11 },
         { username: 'dan', email: 'dan@sequelizejs.com', access_level: 5, other_value: 10 },
@@ -63,41 +67,41 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       ]);
     });
 
-    it('should be able to merge attributes as array', async function () {
-      const record = await this.ScopeMe.scope('lowAccess', 'withName').findOne();
+    it('should be able to merge attributes as array', async () => {
+      const record = await ScopeMe.scope('lowAccess', 'withName').findOne();
 
       expect(record.other_value).to.exist;
       expect(record.username).to.exist;
       expect(record.access_level).to.exist;
     });
 
-    it('should work with Symbol operators', async function () {
-      const record = await this.ScopeMe.scope('highAccess').findOne();
+    it('should work with Symbol operators', async () => {
+      const record = await ScopeMe.scope('highAccess').findOne();
       expect(record.username).to.equal('tobi');
 
-      const lessThanFour = await this.ScopeMe.scope('lessThanFour').findAll();
+      const lessThanFour = await ScopeMe.scope('lessThanFour').findAll();
       expect(lessThanFour).to.have.length(2);
       expect(lessThanFour[0].get('access_level')).to.equal(3);
       expect(lessThanFour[1].get('access_level')).to.equal(3);
 
-      const issue8473 = await this.ScopeMe.scope('issue8473').findAll();
+      const issue8473 = await ScopeMe.scope('issue8473').findAll();
       expect(issue8473).to.have.length(1);
       expect(issue8473[0].get('access_level')).to.equal(5);
       expect(issue8473[0].get('other_value')).to.equal(10);
     });
 
-    it('should keep symbols after default assignment', async function () {
-      const record = await this.ScopeMe.scope('highAccess').findOne();
+    it('should keep symbols after default assignment', async () => {
+      const record = await ScopeMe.scope('highAccess').findOne();
       expect(record.username).to.equal('tobi');
 
-      const lessThanFour = await this.ScopeMe.scope('lessThanFour').findAll({
+      const lessThanFour = await ScopeMe.scope('lessThanFour').findAll({
         where: {}
       });
       expect(lessThanFour).to.have.length(2);
       expect(lessThanFour[0].get('access_level')).to.equal(3);
       expect(lessThanFour[1].get('access_level')).to.equal(3);
 
-      await this.ScopeMe.scope('issue8473').findAll();
+      await ScopeMe.scope('issue8473').findAll();
     });
   });
 });

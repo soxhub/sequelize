@@ -4,6 +4,8 @@ import Support from '../../support.js';
 import DataTypes from '../../../../lib/data-types.js';
 import _ from 'lodash';
 
+const current = Support.sequelize;
+
 describe('[POSTGRES] Sequelize', () => {
   async function checkTimezoneParsing(baseOptions) {
     const options = _.extend({}, baseOptions, { timezone: 'Asia/Kolkata', timestamps: true });
@@ -16,14 +18,14 @@ describe('[POSTGRES] Sequelize', () => {
     expect(row).to.be.not.null;
   }
 
-  it('should correctly parse the moment based timezone', function () {
-    return checkTimezoneParsing(this.sequelize.options);
+  it('should correctly parse the moment based timezone', () => {
+    return checkTimezoneParsing(current.options);
   });
 
-  it('should correctly parse the moment based timezone while fetching hstore oids', function () {
+  it('should correctly parse the moment based timezone while fetching hstore oids', () => {
     // reset oids so we need to refetch them
     DataTypes.HSTORE.types.postgres.oids = [];
     DataTypes.HSTORE.types.postgres.array_oids = [];
-    return checkTimezoneParsing(this.sequelize.options);
+    return checkTimezoneParsing(current.options);
   });
 });

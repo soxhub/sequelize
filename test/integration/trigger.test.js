@@ -22,8 +22,8 @@ if (current.dialect.supports.tmpTableTrigger) {
         'select * from deleted\n' +
         'end\n';
 
-      beforeEach(async function () {
-        User = this.sequelize.define(
+      beforeEach(async () => {
+        User = current.define(
           'user',
           {
             username: {
@@ -37,7 +37,7 @@ if (current.dialect.supports.tmpTableTrigger) {
         );
 
         await User.sync({ force: true });
-        await this.sequelize.query(triggerQuery, { type: this.sequelize.QueryTypes.RAW });
+        await current.query(triggerQuery, { type: current.QueryTypes.RAW });
       });
 
       it('should return output rows after insert', async () => {

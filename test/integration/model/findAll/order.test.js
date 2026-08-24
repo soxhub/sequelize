@@ -9,20 +9,22 @@ describe(Support.getTestDialectTeaser('Model'), () => {
   describe('findAll', () => {
     describe('order', () => {
       describe('Sequelize.literal()', () => {
-        beforeEach(async function () {
-          this.User = this.sequelize.define('User', {
+        let User;
+
+        beforeEach(async () => {
+          User = current.define('User', {
             email: DataTypes.STRING
           });
 
-          await this.User.sync({ force: true });
-          await this.User.create({
+          await User.sync({ force: true });
+          await User.create({
             email: 'test@sequelizejs.com'
           });
         });
 
-        it('should work with order: literal()', async function () {
-          const users = await this.User.findAll({
-            order: this.sequelize.literal('email = ' + this.sequelize.escape('test@sequelizejs.com'))
+        it('should work with order: literal()', async () => {
+          const users = await User.findAll({
+            order: current.literal('email = ' + current.escape('test@sequelizejs.com'))
           });
 
           expect(users.length).to.equal(1);
@@ -31,9 +33,9 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           });
         });
 
-        it('should work with order: [literal()]', async function () {
-          const users = await this.User.findAll({
-            order: [this.sequelize.literal('email = ' + this.sequelize.escape('test@sequelizejs.com'))]
+        it('should work with order: [literal()]', async () => {
+          const users = await User.findAll({
+            order: [current.literal('email = ' + current.escape('test@sequelizejs.com'))]
           });
 
           expect(users.length).to.equal(1);
@@ -42,9 +44,9 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           });
         });
 
-        it('should work with order: [[literal()]]', async function () {
-          const users = await this.User.findAll({
-            order: [[this.sequelize.literal('email = ' + this.sequelize.escape('test@sequelizejs.com'))]]
+        it('should work with order: [[literal()]]', async () => {
+          const users = await User.findAll({
+            order: [[current.literal('email = ' + current.escape('test@sequelizejs.com'))]]
           });
 
           expect(users.length).to.equal(1);
@@ -55,37 +57,39 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       describe('injections', () => {
-        beforeEach(function () {
-          this.User = this.sequelize.define('user', {
+        let User, Group;
+
+        beforeEach(() => {
+          User = current.define('user', {
             name: DataTypes.STRING
           });
-          this.Group = this.sequelize.define('group', {});
-          this.User.belongsTo(this.Group);
-          return this.sequelize.sync({ force: true });
+          Group = current.define('group', {});
+          User.belongsTo(Group);
+          return current.sync({ force: true });
         });
 
         if (current.dialect.supports['ORDER NULLS']) {
-          it('should not throw with on NULLS LAST/NULLS FIRST', function () {
-            return this.User.findAll({
-              include: [this.Group],
+          it('should not throw with on NULLS LAST/NULLS FIRST', () => {
+            return User.findAll({
+              include: [Group],
               order: [
                 ['id', 'ASC NULLS LAST'],
-                [this.Group, 'id', 'DESC NULLS FIRST']
+                [Group, 'id', 'DESC NULLS FIRST']
               ]
             });
           });
         }
 
-        it('should not throw on a literal', function () {
-          return this.User.findAll({
-            order: [['id', this.sequelize.literal('ASC, name DESC')]]
+        it('should not throw on a literal', () => {
+          return User.findAll({
+            order: [['id', current.literal('ASC, name DESC')]]
           });
         });
 
-        it('should not throw with include when last order argument is a field', function () {
-          return this.User.findAll({
-            include: [this.Group],
-            order: [[this.Group, 'id']]
+        it('should not throw with include when last order argument is a field', () => {
+          return User.findAll({
+            include: [Group],
+            order: [[Group, 'id']]
           });
         });
       });

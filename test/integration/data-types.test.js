@@ -15,13 +15,13 @@ const current = Support.sequelize;
 const dialect = Support.getTestDialect();
 
 describe(Support.getTestDialectTeaser('DataTypes'), () => {
-  afterEach(function () {
+  afterEach(() => {
     // Restore some sanity by resetting all parsers
-    this.sequelize.connectionManager._clearTypeParser();
-    this.sequelize.connectionManager.refreshTypeParser(DataTypes[dialect]); // Reload custom parsers
+    current.connectionManager._clearTypeParser();
+    current.connectionManager.refreshTypeParser(DataTypes[dialect]); // Reload custom parsers
   });
 
-  it('allows me to return values from a custom parse function', async function () {
+  it('allows me to return values from a custom parse function', async () => {
     const parse = (Sequelize.DATE.parse = sinon.spy((value) => {
       return moment(value, 'YYYY-MM-DD HH:mm:ss');
     }));
@@ -204,8 +204,8 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
     return testSuccess(Type, 1);
   });
 
-  it('should handle JS BigInt type', async function () {
-    const User = this.sequelize.define('user', {
+  it('should handle JS BigInt type', async () => {
+    const User = current.define('user', {
       age: Sequelize.BIGINT
     });
 
@@ -333,8 +333,8 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
   }
 
   // postgres actively supports IEEE floating point literals, and sqlite doesn't care what we throw at it
-  it('should store and parse IEEE floating point literals (NaN and Infinity)', async function () {
-    const Model = this.sequelize.define('model', {
+  it('should store and parse IEEE floating point literals (NaN and Infinity)', async () => {
+    const Model = current.define('model', {
       float: Sequelize.FLOAT,
       double: Sequelize.DOUBLE,
       real: Sequelize.REAL
@@ -355,8 +355,8 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
     expect(user.get('real')).to.eq(-Infinity);
   });
 
-  it('should parse DECIMAL as string', async function () {
-    const Model = this.sequelize.define('model', {
+  it('should parse DECIMAL as string', async () => {
+    const Model = current.define('model', {
       decimal: Sequelize.DECIMAL,
       decimalPre: Sequelize.DECIMAL(10, 4),
       decimalWithParser: Sequelize.DECIMAL(32, 15),
@@ -391,8 +391,8 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
     expect(user.get('decimalWithFloatParser')).to.be.eql('0.12345678');
   });
 
-  it('should parse BIGINT as string', async function () {
-    const Model = this.sequelize.define('model', {
+  it('should parse BIGINT as string', async () => {
+    const Model = current.define('model', {
       jewelPurity: Sequelize.BIGINT
     });
 
@@ -409,8 +409,8 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
     expect(user.get('jewelPurity')).to.be.string;
   });
 
-  it('should return Int4 range properly #5747', async function () {
-    const Model = this.sequelize.define('M', {
+  it('should return Int4 range properly #5747', async () => {
+    const Model = current.define('M', {
       interval: {
         type: Sequelize.RANGE(Sequelize.INTEGER),
         allowNull: false,
@@ -426,8 +426,8 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
     expect(m.interval[1]).to.be.eql(4);
   });
 
-  it('should allow spaces in ENUM', async function () {
-    const Model = this.sequelize.define('user', {
+  it('should allow spaces in ENUM', async () => {
+    const Model = current.define('user', {
       name: Sequelize.STRING,
       type: Sequelize.ENUM(['action', 'mecha', 'canon', 'class s'])
     });
@@ -438,8 +438,8 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
     expect(record.type).to.be.eql('class s');
   });
 
-  it('should return YYYY-MM-DD format string for DATEONLY', async function () {
-    const Model = this.sequelize.define('user', {
+  it('should return YYYY-MM-DD format string for DATEONLY', async () => {
+    const Model = current.define('user', {
       stamp: Sequelize.DATEONLY
     });
     const testDate = moment().format('YYYY-MM-DD');
@@ -472,8 +472,8 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
     expect(redated.stamp).to.be.eql(moment(newDate).format('YYYY-MM-DD'));
   });
 
-  it('should return set DATEONLY field to NULL correctly', async function () {
-    const Model = this.sequelize.define('user', {
+  it('should return set DATEONLY field to NULL correctly', async () => {
+    const Model = current.define('user', {
       stamp: Sequelize.DATEONLY
     });
     const testDate = moment().format('YYYY-MM-DD');
@@ -496,21 +496,21 @@ describe(Support.getTestDialectTeaser('DataTypes'), () => {
     expect(nulled.stamp).to.be.eql(null);
   });
 
-  it('should be able to cast buffer as boolean', async function () {
-    const ByteModel = this.sequelize.define(
+  it('should be able to cast buffer as boolean', async () => {
+    const ByteModel = current.define(
       'Model',
       {
-        byteToBool: this.sequelize.Sequelize.BLOB
+        byteToBool: current.Sequelize.BLOB
       },
       {
         timestamps: false
       }
     );
 
-    const BoolModel = this.sequelize.define(
+    const BoolModel = current.define(
       'Model',
       {
-        byteToBool: this.sequelize.Sequelize.BOOLEAN
+        byteToBool: current.Sequelize.BOOLEAN
       },
       {
         timestamps: false

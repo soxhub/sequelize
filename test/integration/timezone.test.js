@@ -4,12 +4,16 @@ import Support from './support.js';
 
 // Sqlite does not support setting timezone
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Timezone'), () => {
-  beforeEach(function () {
-    this.sequelizeWithTimezone = Support.createSequelizeInstance({
+  let sequelizeWithTimezone, sequelizeWithNamedTimezone;
+
+  beforeEach(() => {
+    sequelizeWithTimezone = Support.createSequelizeInstance({
       timezone: '+07:00'
     });
-    this.sequelizeWithNamedTimezone = Support.createSequelizeInstance({
+    sequelizeWithNamedTimezone = Support.createSequelizeInstance({
       timezone: 'America/New_York'
     });
   });
@@ -30,24 +34,24 @@ describe(Support.getTestDialectTeaser('Timezone'), () => {
     return rows[0].rendered;
   };
 
-  it('applies a named timezone to the session', async function () {
-    const rendered = await renderKnownInstant(this.sequelizeWithNamedTimezone);
+  it('applies a named timezone to the session', async () => {
+    const rendered = await renderKnownInstant(sequelizeWithNamedTimezone);
     expect(rendered).to.equal('2015-01-19 19:00:00-05');
   });
 
-  it('applies an offset timezone to the session with the sign the user intended', async function () {
-    const rendered = await renderKnownInstant(this.sequelizeWithTimezone);
+  it('applies an offset timezone to the session with the sign the user intended', async () => {
+    const rendered = await renderKnownInstant(sequelizeWithTimezone);
     expect(rendered).to.equal('2015-01-20 07:00:00+07');
   });
 
-  it('returns the same value for current timestamp', async function () {
+  it('returns the same value for current timestamp', async () => {
     const now = 'now()';
     const startQueryTime = Date.now();
 
     const query = 'SELECT ' + now + ' as now';
     const [now1, now2] = await Promise.all([
-      this.sequelize.query(query, { type: this.sequelize.QueryTypes.SELECT }),
-      this.sequelizeWithTimezone.query(query, { type: this.sequelize.QueryTypes.SELECT })
+      current.query(query, { type: current.QueryTypes.SELECT }),
+      sequelizeWithTimezone.query(query, { type: current.QueryTypes.SELECT })
     ]);
 
     const elapsedQueryTime = Date.now() - startQueryTime + 1001;

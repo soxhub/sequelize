@@ -3,9 +3,13 @@ import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Hooks'), () => {
-  beforeEach(function () {
-    this.User = this.sequelize.define('User', {
+  let User;
+
+  beforeEach(() => {
+    User = current.define('User', {
       username: {
         type: DataTypes.STRING,
         allowNull: false
@@ -15,12 +19,12 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         values: ['happy', 'sad', 'neutral']
       }
     });
-    return this.sequelize.sync({ force: true });
+    return current.sync({ force: true });
   });
 
   describe('#count', () => {
-    beforeEach(function () {
-      return this.User.bulkCreate([
+    beforeEach(() => {
+      return User.bulkCreate([
         { username: 'adam', mood: 'happy' },
         { username: 'joe', mood: 'sad' },
         { username: 'joe', mood: 'happy' }
@@ -28,34 +32,34 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
     });
 
     describe('on success', () => {
-      it('hook runs', async function () {
+      it('hook runs', async () => {
         let beforeHook = false;
 
-        this.User.beforeCount(() => {
+        User.beforeCount(() => {
           beforeHook = true;
         });
 
-        const count = await this.User.count();
+        const count = await User.count();
         expect(count).to.equal(3);
         expect(beforeHook).to.be.true;
       });
 
-      it('beforeCount hook can change options', function () {
-        this.User.beforeCount((options) => {
+      it('beforeCount hook can change options', () => {
+        User.beforeCount((options) => {
           options.where.username = 'adam';
         });
 
-        return expect(this.User.count({ where: { username: 'joe' } })).to.eventually.equal(1);
+        return expect(User.count({ where: { username: 'joe' } })).to.eventually.equal(1);
       });
     });
 
     describe('on error', () => {
-      it('in beforeCount hook returns error', function () {
-        this.User.beforeCount(() => {
+      it('in beforeCount hook returns error', () => {
+        User.beforeCount(() => {
           throw new Error('Oops!');
         });
 
-        return expect(this.User.count({ where: { username: 'adam' } })).to.be.rejectedWith('Oops!');
+        return expect(User.count({ where: { username: 'adam' } })).to.be.rejectedWith('Oops!');
       });
     });
   });

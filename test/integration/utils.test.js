@@ -6,6 +6,8 @@ import DataTypes from '../../lib/data-types.js';
 import Sequelize from '../../index.js';
 import queryGenerator from '../../lib/dialects/postgres/query-generator.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Utils'), () => {
   describe('removeCommentsFromFunctionString', () => {
     it('removes line comments at the start of a line', () => {
@@ -232,8 +234,8 @@ describe(Support.getTestDialectTeaser('Utils'), () => {
   describe('Sequelize.fn', () => {
     let Airplane;
 
-    beforeEach(async function () {
-      Airplane = this.sequelize.define('Airplane', {
+    beforeEach(async () => {
+      Airplane = current.define('Airplane', {
         wings: DataTypes.INTEGER,
         engines: DataTypes.INTEGER
       });
@@ -256,12 +258,12 @@ describe(Support.getTestDialectTeaser('Utils'), () => {
     });
 
     if (Support.getTestDialect() !== 'mssql') {
-      it('accepts condition object (with cast)', async function () {
+      it('accepts condition object (with cast)', async () => {
         const type = Support.getTestDialect() === 'mysql' ? 'unsigned' : 'int';
 
         const [airplane] = await Airplane.findAll({
           attributes: [
-            [this.sequelize.fn('COUNT', '*'), 'count'],
+            [current.fn('COUNT', '*'), 'count'],
             [
               Sequelize.fn(
                 'SUM',
@@ -301,10 +303,10 @@ describe(Support.getTestDialectTeaser('Utils'), () => {
     }
 
     if (Support.getTestDialect() !== 'mssql' && Support.getTestDialect() !== 'postgres') {
-      it('accepts condition object (auto casting)', async function () {
+      it('accepts condition object (auto casting)', async () => {
         const [airplane] = await Airplane.findAll({
           attributes: [
-            [this.sequelize.fn('COUNT', '*'), 'count'],
+            [current.fn('COUNT', '*'), 'count'],
             [
               Sequelize.fn('SUM', {
                 engines: 1

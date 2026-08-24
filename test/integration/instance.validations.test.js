@@ -4,10 +4,12 @@ import Sequelize from '../../index.js';
 import Support from './support.js';
 import config from '../config/config.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
   describe('#update', () => {
-    it('should allow us to update specific columns without tripping the validations', async function () {
-      const User = this.sequelize.define('model', {
+    it('should allow us to update specific columns without tripping the validations', async () => {
+      const User = current.define('model', {
         username: Sequelize.STRING,
         email: {
           type: Sequelize.STRING,
@@ -29,8 +31,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
       expect(updatedUser.username).to.equal('toni');
     });
 
-    it('should be able to emit an error upon updating when a validation has failed from an instance', async function () {
-      const Model = this.sequelize.define('model', {
+    it('should be able to emit an error upon updating when a validation has failed from an instance', async () => {
+      const Model = current.define('model', {
         name: {
           type: Sequelize.STRING,
           allowNull: false,
@@ -49,8 +51,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
       expect(err.get('name')[0].message).to.equal('Validation notEmpty on name failed');
     });
 
-    it('should be able to emit an error upon updating when a validation has failed from the factory', async function () {
-      const Model = this.sequelize.define('model', {
+    it('should be able to emit an error upon updating when a validation has failed from the factory', async () => {
+      const Model = current.define('model', {
         name: {
           type: Sequelize.STRING,
           allowNull: false,
@@ -68,8 +70,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
       expect(err.get('name')[0].message).to.equal('Validation notEmpty on name failed');
     });
 
-    it('should enforce a unique constraint', async function () {
-      const Model = this.sequelize.define('model', {
+    it('should enforce a unique constraint', async () => {
+      const Model = current.define('model', {
         uniqueName: { type: Sequelize.STRING, unique: 'uniqueName' }
       });
       const records = [{ uniqueName: 'unique name one' }, { uniqueName: 'unique name two' }];
@@ -88,8 +90,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
       expect(err.errors[0].message).to.include('must be unique');
     });
 
-    it('should allow a custom unique constraint error message', async function () {
-      const Model = this.sequelize.define('model', {
+    it('should allow a custom unique constraint error message', async () => {
+      const Model = current.define('model', {
         uniqueName: {
           type: Sequelize.STRING,
           unique: { msg: 'custom unique error message' }
@@ -111,8 +113,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
       expect(err.errors[0].message).to.equal('custom unique error message');
     });
 
-    it('should handle multiple unique messages correctly', async function () {
-      const Model = this.sequelize.define('model', {
+    it('should handle multiple unique messages correctly', async () => {
+      const Model = current.define('model', {
         uniqueName1: {
           type: Sequelize.STRING,
           unique: { msg: 'custom unique error message 1' }
@@ -148,8 +150,10 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
 
   describe('#create', () => {
     describe('generic', () => {
-      beforeEach(async function () {
-        const Project = this.sequelize.define('Project', {
+      let Project, Task;
+
+      beforeEach(async () => {
+        Project = current.define('Project', {
           name: {
             type: Sequelize.STRING,
             allowNull: false,
@@ -160,27 +164,24 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
           }
         });
 
-        const Task = this.sequelize.define('Task', {
+        Task = current.define('Task', {
           something: Sequelize.INTEGER
         });
 
         Project.hasOne(Task);
         Task.belongsTo(Project);
 
-        await this.sequelize.sync({ force: true });
-
-        this.Project = Project;
-        this.Task = Task;
+        await current.sync({ force: true });
       });
 
-      it('correctly throws an error using create method ', async function () {
-        const err = await expect(this.Project.create({ name: 'nope' })).to.be.rejected;
+      it('correctly throws an error using create method ', async () => {
+        const err = await expect(Project.create({ name: 'nope' })).to.be.rejected;
         expect(err).to.have.ownProperty('name');
       });
 
-      it('correctly validates using create method ', async function () {
-        const project = await this.Project.create({});
-        const task = await this.Task.create({ something: 1 });
+      it('correctly validates using create method ', async () => {
+        const project = await Project.create({});
+        const task = await Task.create({ something: 1 });
 
         const associatedTask = await project.setTask(task);
         expect(associatedTask.ProjectId).to.not.be.null;
@@ -191,8 +192,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     });
 
     describe('explicitly validating primary/auto incremented columns', () => {
-      it('should emit an error when we try to enter in a string for the id key without validation arguments', async function () {
-        const User = this.sequelize.define('UserId', {
+      it('should emit an error when we try to enter in a string for the id key without validation arguments', async () => {
+        const User = current.define('UserId', {
           id: {
             type: Sequelize.INTEGER,
             autoIncrement: true,
@@ -210,8 +211,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
         expect(err.get('id')[0].message).to.equal('Validation isInt on id failed');
       });
 
-      it('should emit an error when we try to enter in a string for an auto increment key (not named id)', async function () {
-        const User = this.sequelize.define('UserId', {
+      it('should emit an error when we try to enter in a string for an auto increment key (not named id)', async () => {
+        const User = current.define('UserId', {
           username: {
             type: Sequelize.INTEGER,
             autoIncrement: true,
@@ -230,8 +231,10 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
       });
 
       describe("primaryKey with the name as id with arguments for it's validatio", () => {
-        beforeEach(function () {
-          this.User = this.sequelize.define('UserId', {
+        let User;
+
+        beforeEach(() => {
+          User = current.define('UserId', {
             id: {
               type: Sequelize.INTEGER,
               autoIncrement: true,
@@ -242,24 +245,24 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
             }
           });
 
-          return this.User.sync({ force: true });
+          return User.sync({ force: true });
         });
 
-        it('should emit an error when we try to enter in a string for the id key with validation arguments', async function () {
-          const err = await expect(this.User.create({ id: 'helloworld' })).to.be.rejected;
+        it('should emit an error when we try to enter in a string for the id key with validation arguments', async () => {
+          const err = await expect(User.create({ id: 'helloworld' })).to.be.rejected;
           expect(err).to.be.an.instanceOf(Error);
           expect(err.get('id')[0].message).to.equal('ID must be an integer!');
         });
 
-        it('should emit an error when we try to enter in a string for an auto increment key through .build().validate()', async function () {
-          const user = this.User.build({ id: 'helloworld' });
+        it('should emit an error when we try to enter in a string for an auto increment key through .build().validate()', async () => {
+          const user = User.build({ id: 'helloworld' });
 
           const err = await expect(user.validate()).to.be.rejected;
           expect(err.get('id')[0].message).to.equal('ID must be an integer!');
         });
 
-        it('should emit an error when we try to .save()', async function () {
-          const user = this.User.build({ id: 'helloworld' });
+        it('should emit an error when we try to .save()', async () => {
+          const user = User.build({ id: 'helloworld' });
 
           const err = await expect(user.save()).to.be.rejected;
           expect(err).to.be.an.instanceOf(Error);
@@ -269,8 +272,10 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     });
 
     describe('pass all paths when validating', () => {
-      beforeEach(async function () {
-        const Project = this.sequelize.define('Project', {
+      let Project, Task;
+
+      beforeEach(async () => {
+        Project = current.define('Project', {
           name: {
             type: Sequelize.STRING,
             allowNull: false,
@@ -288,7 +293,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
           }
         });
 
-        const Task = this.sequelize.define('Task', {
+        Task = current.define('Task', {
           something: Sequelize.INTEGER
         });
 
@@ -297,13 +302,10 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
 
         await Project.sync({ force: true });
         await Task.sync({ force: true });
-
-        this.Project = Project;
-        this.Task = Task;
       });
 
-      it('produce 3 errors', async function () {
-        const err = await expect(this.Project.create({})).to.be.rejected;
+      it('produce 3 errors', async () => {
+        const err = await expect(Project.create({})).to.be.rejected;
         expect(err).to.be.an.instanceOf(Error);
         delete err.stack; // longStackTraces
         expect(err.errors).to.have.length(3);
@@ -311,8 +313,10 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     });
 
     describe('not null schema validation', () => {
-      beforeEach(async function () {
-        const Project = this.sequelize.define('Project', {
+      let Project;
+
+      beforeEach(async () => {
+        Project = current.define('Project', {
           name: {
             type: Sequelize.STRING,
             allowNull: false,
@@ -322,17 +326,15 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
           }
         });
 
-        await this.sequelize.sync({ force: true });
-
-        this.Project = Project;
+        await current.sync({ force: true });
       });
 
-      it('correctly throws an error using create method ', async function () {
-        await expect(this.Project.create({})).to.be.rejected;
+      it('correctly throws an error using create method ', async () => {
+        await expect(Project.create({})).to.be.rejected;
       });
 
-      it('correctly throws an error using create method with default generated messages', async function () {
-        const err = await expect(this.Project.create({})).to.be.rejected;
+      it('correctly throws an error using create method with default generated messages', async () => {
+        const err = await expect(Project.create({})).to.be.rejected;
         expect(err).to.have.property('name', 'SequelizeValidationError');
         expect(err.message).equal('notNull Violation: Project.name cannot be null');
         expect(err.errors).to.be.an('array').and.have.length(1);
@@ -341,8 +343,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     });
   });
 
-  it('correctly validates using custom validation methods', async function () {
-    const User = this.sequelize.define('User' + config.rand(), {
+  it('correctly validates using custom validation methods', async () => {
+    const User = current.define('User' + config.rand(), {
       name: {
         type: Sequelize.STRING,
         validate: {
@@ -367,8 +369,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     await expect(successfulUser.validate()).not.to.be.rejected;
   });
 
-  it('supports promises with custom validation methods', async function () {
-    const User = this.sequelize.define('User' + config.rand(), {
+  it('supports promises with custom validation methods', async () => {
+    const User = current.define('User' + config.rand(), {
       name: {
         type: Sequelize.STRING,
         validate: {
@@ -386,14 +388,14 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     await User.sync();
 
     const error = await expect(User.build({ name: 'error' }).validate()).to.be.rejected;
-    expect(error).to.be.instanceof(this.sequelize.ValidationError);
+    expect(error).to.be.instanceof(current.ValidationError);
     expect(error.get('name')[0].message).to.equal('Invalid username');
 
     await expect(User.build({ name: 'no error' }).validate()).not.to.be.rejected;
   });
 
-  it('skips other validations if allowNull is true and the value is null', async function () {
-    const User = this.sequelize.define('User' + config.rand(), {
+  it('skips other validations if allowNull is true and the value is null', async () => {
+    const User = current.define('User' + config.rand(), {
       age: {
         type: Sequelize.INTEGER,
         allowNull: true,
@@ -407,8 +409,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     expect(error.get('age')[0].message).to.equal('must be positive');
   });
 
-  it('validates a model with custom model-wide validation methods', async function () {
-    const Foo = this.sequelize.define(
+  it('validates a model with custom model-wide validation methods', async () => {
+    const Foo = current.define(
       'Foo' + config.rand(),
       {
         field1: {
@@ -437,8 +439,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     await expect(Foo.build({ field1: 33, field2: null }).validate()).not.to.be.rejected;
   });
 
-  it('validates model with a validator whose arg is an Array successfully twice in a row', async function () {
-    const Foo = this.sequelize.define('Foo' + config.rand(), {
+  it('validates model with a validator whose arg is an Array successfully twice in a row', async () => {
+    const Foo = current.define('Foo' + config.rand(), {
         bar: {
           type: Sequelize.STRING,
           validate: {
@@ -452,10 +454,10 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     await expect(foo.validate()).not.to.be.rejected;
   });
 
-  it('validates enums', async function () {
+  it('validates enums', async () => {
     const values = ['value1', 'value2'];
 
-    const Bar = this.sequelize.define('Bar' + config.rand(), {
+    const Bar = current.define('Bar' + config.rand(), {
       field: {
         type: Sequelize.ENUM,
         values,
@@ -472,10 +474,10 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     expect(errors.get('field')[0].message).to.equal('Validation isIn on field failed');
   });
 
-  it('skips validations for the given fields', function () {
+  it('skips validations for the given fields', () => {
     const values = ['value1', 'value2'];
 
-    const Bar = this.sequelize.define('Bar' + config.rand(), {
+    const Bar = current.define('Bar' + config.rand(), {
       field: {
         type: Sequelize.ENUM,
         values,
@@ -490,8 +492,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     return expect(failingBar.validate({ skip: ['field'] })).not.to.be.rejected;
   });
 
-  it('raises an error if saving a different value into an immutable field', async function () {
-    const User = this.sequelize.define('User', {
+  it('raises an error if saving a different value into an immutable field', async () => {
+    const User = current.define('User', {
       name: {
         type: Sequelize.STRING,
         validate: {
@@ -510,8 +512,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     expect(errors.get('name')[0].message).to.eql('Validation isImmutable on name failed');
   });
 
-  it('allows setting an immutable field if the record is unsaved', function () {
-    const User = this.sequelize.define('User', {
+  it('allows setting an immutable field if the record is unsaved', () => {
+    const User = current.define('User', {
       name: {
         type: Sequelize.STRING,
         validate: {
@@ -527,8 +529,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     return expect(user.validate()).not.to.be.rejected;
   });
 
-  it('raises an error for array on a STRING', function () {
-    const User = this.sequelize.define('User', {
+  it('raises an error for array on a STRING', () => {
+    const User = current.define('User', {
       email: {
         type: Sequelize.STRING
       }
@@ -541,8 +543,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     ).to.be.rejectedWith(Sequelize.ValidationError);
   });
 
-  it('raises an error for array on a STRING(20)', function () {
-    const User = this.sequelize.define('User', {
+  it('raises an error for array on a STRING(20)', () => {
+    const User = current.define('User', {
       email: {
         type: Sequelize.STRING(20)
       }
@@ -555,8 +557,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     ).to.be.rejectedWith(Sequelize.ValidationError);
   });
 
-  it('raises an error for array on a TEXT', function () {
-    const User = this.sequelize.define('User', {
+  it('raises an error for array on a TEXT', () => {
+    const User = current.define('User', {
       email: {
         type: Sequelize.TEXT
       }
@@ -569,8 +571,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     ).to.be.rejectedWith(Sequelize.ValidationError);
   });
 
-  it('raises an error for {} on a STRING', function () {
-    const User = this.sequelize.define('User', {
+  it('raises an error for {} on a STRING', () => {
+    const User = current.define('User', {
       email: {
         type: Sequelize.STRING
       }
@@ -583,8 +585,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     ).to.be.rejectedWith(Sequelize.ValidationError);
   });
 
-  it('raises an error for {} on a STRING(20)', function () {
-    const User = this.sequelize.define('User', {
+  it('raises an error for {} on a STRING(20)', () => {
+    const User = current.define('User', {
       email: {
         type: Sequelize.STRING(20)
       }
@@ -597,8 +599,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     ).to.be.rejectedWith(Sequelize.ValidationError);
   });
 
-  it('raises an error for {} on a TEXT', function () {
-    const User = this.sequelize.define('User', {
+  it('raises an error for {} on a TEXT', () => {
+    const User = current.define('User', {
       email: {
         type: Sequelize.TEXT
       }
@@ -611,8 +613,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     ).to.be.rejectedWith(Sequelize.ValidationError);
   });
 
-  it('does not raise an error for null on a STRING (where null is allowed)', function () {
-    const User = this.sequelize.define('User', {
+  it('does not raise an error for null on a STRING (where null is allowed)', () => {
+    const User = current.define('User', {
       email: {
         type: Sequelize.STRING
       }
@@ -625,8 +627,8 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     ).not.to.be.rejected;
   });
 
-  it('validates VIRTUAL fields', async function () {
-    const User = this.sequelize.define('user', {
+  it('validates VIRTUAL fields', async () => {
+    const User = current.define('user', {
       password_hash: Sequelize.STRING,
       salt: Sequelize.STRING,
       password: {
@@ -661,12 +663,12 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
     ).not.to.be.rejected;
   });
 
-  it('allows me to add custom validation functions to validator.js', async function () {
-    this.sequelize.Validator.extend('isExactly7Characters', (val) => {
+  it('allows me to add custom validation functions to validator.js', async () => {
+    current.Validator.extend('isExactly7Characters', (val) => {
       return val.length === 7;
     });
 
-    const User = this.sequelize.define('User', {
+    const User = current.define('User', {
       name: {
         type: Sequelize.STRING,
         validate: {

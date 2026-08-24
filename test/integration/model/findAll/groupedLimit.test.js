@@ -13,28 +13,30 @@ if (current.dialect.supports['UNION ALL']) {
   describe(Support.getTestDialectTeaser('Model'), () => {
     describe('findAll', () => {
       describe('groupedLimit', () => {
-        before(function () {
-          this.clock = sinon.useFakeTimers();
+        let clock, User, Project, Task, ProjectUserParanoid, projects;
+
+        before(() => {
+          clock = sinon.useFakeTimers();
         });
 
-        afterEach(function () {
-          this.clock.reset();
+        afterEach(() => {
+          clock.reset();
         });
 
-        after(function () {
-          this.clock.restore();
+        after(() => {
+          clock.restore();
         });
 
-        beforeEach(async function () {
-          this.User = this.sequelize.define('user', {
+        beforeEach(async () => {
+          User = current.define('user', {
             age: Sequelize.INTEGER
           });
-          this.Project = this.sequelize.define('project', {
+          Project = current.define('project', {
             title: DataTypes.STRING
           });
-          this.Task = this.sequelize.define('task');
+          Task = current.define('task');
 
-          this.ProjectUserParanoid = this.sequelize.define(
+          ProjectUserParanoid = current.define(
             'project_user_paranoid',
             {},
             {
@@ -45,54 +47,42 @@ if (current.dialect.supports['UNION ALL']) {
             }
           );
 
-          this.User.Projects = this.User.belongsToMany(this.Project, { through: 'project_user' });
-          this.Project.belongsToMany(this.User, { as: 'members', through: 'project_user' });
+          User.Projects = User.belongsToMany(Project, { through: 'project_user' });
+          Project.belongsToMany(User, { as: 'members', through: 'project_user' });
 
-          this.User.ParanoidProjects = this.User.belongsToMany(this.Project, { through: this.ProjectUserParanoid });
-          this.Project.belongsToMany(this.User, { as: 'paranoidMembers', through: this.ProjectUserParanoid });
+          User.ParanoidProjects = User.belongsToMany(Project, { through: ProjectUserParanoid });
+          Project.belongsToMany(User, { as: 'paranoidMembers', through: ProjectUserParanoid });
 
-          this.User.Tasks = this.User.hasMany(this.Task);
+          User.Tasks = User.hasMany(Task);
 
-          await this.sequelize.sync({ force: true });
-
-          await Promise.all([
-            this.User.bulkCreate([
-              { age: -5 },
-              { age: 45 },
-              { age: 7 },
-              { age: -9 },
-              { age: 8 },
-              { age: 15 },
-              { age: -9 }
-            ]),
-            this.Project.bulkCreate([{}, {}]),
-            this.Task.bulkCreate([{}, {}])
-          ]);
-
-          const [users, projects, tasks] = await Promise.all([
-            this.User.findAll(),
-            this.Project.findAll(),
-            this.Task.findAll()
-          ]);
-
-          this.projects = projects;
+          await current.sync({ force: true });
 
           await Promise.all([
-            projects[0].setMembers(users.slice(0, 4)),
-            projects[1].setMembers(users.slice(2)),
-            projects[0].setParanoidMembers(users.slice(0, 4)),
-            projects[1].setParanoidMembers(users.slice(2)),
+            User.bulkCreate([{ age: -5 }, { age: 45 }, { age: 7 }, { age: -9 }, { age: 8 }, { age: 15 }, { age: -9 }]),
+            Project.bulkCreate([{}, {}]),
+            Task.bulkCreate([{}, {}])
+          ]);
+
+          const [users, allProjects, tasks] = await Promise.all([User.findAll(), Project.findAll(), Task.findAll()]);
+
+          await Promise.all([
+            allProjects[0].setMembers(users.slice(0, 4)),
+            allProjects[1].setMembers(users.slice(2)),
+            allProjects[0].setParanoidMembers(users.slice(0, 4)),
+            allProjects[1].setParanoidMembers(users.slice(2)),
             users[2].setTasks(tasks)
           ]);
+
+          projects = allProjects;
         });
 
         describe('on: belongsToMany', () => {
-          it('maps attributes from a grouped limit to models', async function () {
-            const users = await this.User.findAll({
+          it('maps attributes from a grouped limit to models', async () => {
+            const users = await User.findAll({
               groupedLimit: {
                 limit: 3,
-                on: this.User.Projects,
-                values: this.projects.map((item) => item.get('id'))
+                on: User.Projects,
+                values: projects.map((item) => item.get('id'))
               }
             });
 
@@ -109,15 +99,15 @@ if (current.dialect.supports['UNION ALL']) {
               });
           });
 
-          it('maps attributes from a grouped limit to models with include', async function () {
-            const users = await this.User.findAll({
+          it('maps attributes from a grouped limit to models with include', async () => {
+            const users = await User.findAll({
               groupedLimit: {
                 limit: 3,
-                on: this.User.Projects,
-                values: this.projects.map((item) => item.get('id'))
+                on: User.Projects,
+                values: projects.map((item) => item.get('id'))
               },
               order: ['id'],
-              include: [this.User.Tasks]
+              include: [User.Tasks]
             });
 
             /*
@@ -140,16 +130,16 @@ if (current.dialect.supports['UNION ALL']) {
               });
           });
 
-          it('works with computed order', async function () {
-            const users = await this.User.findAll({
+          it('works with computed order', async () => {
+            const users = await User.findAll({
               attributes: ['id'],
               groupedLimit: {
                 limit: 3,
-                on: this.User.Projects,
-                values: this.projects.map((item) => item.get('id'))
+                on: User.Projects,
+                values: projects.map((item) => item.get('id'))
               },
               order: [Sequelize.fn('ABS', Sequelize.col('age'))],
-              include: [this.User.Tasks]
+              include: [User.Tasks]
             });
 
             /*
@@ -160,16 +150,16 @@ if (current.dialect.supports['UNION ALL']) {
             expect(users.map((u) => u.get('id'))).to.deep.equal([1, 3, 5, 4]);
           });
 
-          it('works with multiple orders', async function () {
-            const users = await this.User.findAll({
+          it('works with multiple orders', async () => {
+            const users = await User.findAll({
               attributes: ['id'],
               groupedLimit: {
                 limit: 3,
-                on: this.User.Projects,
-                values: this.projects.map((item) => item.get('id'))
+                on: User.Projects,
+                values: projects.map((item) => item.get('id'))
               },
               order: [Sequelize.fn('ABS', Sequelize.col('age')), ['id', 'DESC']],
-              include: [this.User.Tasks]
+              include: [User.Tasks]
             });
 
             /*
@@ -180,16 +170,16 @@ if (current.dialect.supports['UNION ALL']) {
             expect(users.map((u) => u.get('id'))).to.deep.equal([1, 3, 5, 7, 4]);
           });
 
-          it('works with paranoid junction models', async function () {
-            const users = await this.User.findAll({
+          it('works with paranoid junction models', async () => {
+            const users = await User.findAll({
               attributes: ['id'],
               groupedLimit: {
                 limit: 3,
-                on: this.User.ParanoidProjects,
-                values: this.projects.map((item) => item.get('id'))
+                on: User.ParanoidProjects,
+                values: projects.map((item) => item.get('id'))
               },
               order: [Sequelize.fn('ABS', Sequelize.col('age')), ['id', 'DESC']],
-              include: [this.User.Tasks]
+              include: [User.Tasks]
             });
 
             /*
@@ -200,19 +190,19 @@ if (current.dialect.supports['UNION ALL']) {
             expect(users.map((u) => u.get('id'))).to.deep.equal([1, 3, 5, 7, 4]);
 
             await Promise.all([
-              this.projects[0].setParanoidMembers(users.slice(0, 2)),
-              this.projects[1].setParanoidMembers(users.slice(4))
+              projects[0].setParanoidMembers(users.slice(0, 2)),
+              projects[1].setParanoidMembers(users.slice(4))
             ]);
 
-            const remaining = await this.User.findAll({
+            const remaining = await User.findAll({
               attributes: ['id'],
               groupedLimit: {
                 limit: 3,
-                on: this.User.ParanoidProjects,
-                values: this.projects.map((item) => item.get('id'))
+                on: User.ParanoidProjects,
+                values: projects.map((item) => item.get('id'))
               },
               order: [Sequelize.fn('ABS', Sequelize.col('age')), ['id', 'DESC']],
-              include: [this.User.Tasks]
+              include: [User.Tasks]
             });
 
             /*
@@ -225,20 +215,22 @@ if (current.dialect.supports['UNION ALL']) {
         });
 
         describe('on: hasMany', () => {
-          beforeEach(async function () {
-            this.User = this.sequelize.define('user');
-            this.Task = this.sequelize.define('task');
-            this.User.Tasks = this.User.hasMany(this.Task);
+          let hasManyUsers;
 
-            await this.sequelize.sync({ force: true });
+          beforeEach(async () => {
+            User = current.define('user');
+            Task = current.define('task');
+            User.Tasks = User.hasMany(Task);
+
+            await current.sync({ force: true });
 
             await Promise.all([
-              this.User.bulkCreate([{}, {}, {}]),
-              this.Task.bulkCreate([{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }, { id: 6 }])
+              User.bulkCreate([{}, {}, {}]),
+              Task.bulkCreate([{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }, { id: 6 }])
             ]);
 
-            const [users, tasks] = await Promise.all([this.User.findAll(), this.Task.findAll()]);
-            this.users = users;
+            const [users, tasks] = await Promise.all([User.findAll(), Task.findAll()]);
+            hasManyUsers = users;
 
             await Promise.all([
               users[0].setTasks(tasks[0]),
@@ -247,13 +239,13 @@ if (current.dialect.supports['UNION ALL']) {
             ]);
           });
 
-          it('Applies limit and order correctly', async function () {
-            const tasks = await this.Task.findAll({
+          it('Applies limit and order correctly', async () => {
+            const tasks = await Task.findAll({
               order: [['id', 'DESC']],
               groupedLimit: {
                 limit: 3,
-                on: this.User.Tasks,
-                values: this.users.map((item) => item.get('id'))
+                on: User.Tasks,
+                values: hasManyUsers.map((item) => item.get('id'))
               }
             });
 

@@ -174,7 +174,7 @@ describe(Support.getTestDialectTeaser('Consumer contract'), () => {
 
     if (current.dialect.supports.transactions) {
       describe('driving real transactions from an entered context', () => {
-        let ns;
+        let ns, User, context, rootTransaction;
 
         before(() => {
           ns = new HarnessNamespace();
@@ -185,99 +185,98 @@ describe(Support.getTestDialectTeaser('Consumer contract'), () => {
           delete Sequelize._cls;
         });
 
-        beforeEach(async function () {
-          this.ns = ns;
-          this.User = this.sequelize.define('CnUser', { name: Sequelize.STRING });
-          await this.sequelize.sync({ force: true });
+        beforeEach(async () => {
+          User = current.define('CnUser', { name: Sequelize.STRING });
+          await current.sync({ force: true });
 
           // The consumer's per-file setup, verbatim in shape: enter a context, open an unmanaged
           // transaction inside it, then park the transaction on the context by hand.
-          this.context = ns.createContext();
-          ns.enter(this.context);
-          this.rootTransaction = await this.sequelize.transaction({ autocommit: false });
-          ns.set('transaction', this.rootTransaction);
+          context = ns.createContext();
+          ns.enter(context);
+          rootTransaction = await current.transaction({ autocommit: false });
+          ns.set('transaction', rootTransaction);
         });
 
-        afterEach(async function () {
-          if (!this.rootTransaction.finished) {
-            await this.rootTransaction.rollback();
+        afterEach(async () => {
+          if (!rootTransaction.finished) {
+            await rootTransaction.rollback();
           }
-          ns.exit(this.context);
+          ns.exit(context);
         });
 
-        it('does not park an unmanaged transaction on the context by itself', function () {
+        it('does not park an unmanaged transaction on the context by itself', () => {
           // Why the consumer's `set()` call is load-bearing rather than belt-and-braces: only the
           // managed (callback) form of `sequelize.transaction()` writes to CLS.
-          expect(this.rootTransaction.options.autocommit).to.equal(false);
+          expect(rootTransaction.options.autocommit).to.equal(false);
 
           // The setup hook's explicit `set()` is what put it there — dropping the value shows the
           // transaction itself left nothing behind.
-          this.context.values.delete('transaction');
-          expect(this.ns.get('transaction')).to.be.undefined;
+          context.values.delete('transaction');
+          expect(ns.get('transaction')).to.be.undefined;
         });
 
-        it('is visible to a read from an async stack that never entered a run()', async function () {
+        it('is visible to a read from an async stack that never entered a run()', async () => {
           // Nothing here is inside `ns.run()`. The consumer's test bodies are ordinary async
           // functions invoked by a test runner, several ticks removed from the setup hook.
           await new Promise((resolve) => {
             setTimeout(resolve, 0);
           });
 
-          expect(this.ns.get('transaction')).to.equal(this.rootTransaction);
+          expect(ns.get('transaction')).to.equal(rootTransaction);
         });
 
-        it('is picked up automatically by a model write outside any run()', async function () {
-          await this.User.create({ name: 'ambient' });
+        it('is picked up automatically by a model write outside any run()', async () => {
+          await User.create({ name: 'ambient' });
 
           // Same connection: the row is there for the ambient transaction...
-          expect(await this.User.count()).to.equal(1);
+          expect(await User.count()).to.equal(1);
 
           // ...and absent for anything that opts out of CLS onto its own connection.
-          expect(await this.User.count({ transaction: null })).to.equal(0);
+          expect(await User.count({ transaction: null })).to.equal(0);
         });
 
-        it('is picked up automatically by a raw query outside any run()', async function () {
-          await this.User.create({ name: 'ambient' });
+        it('is picked up automatically by a raw query outside any run()', async () => {
+          await User.create({ name: 'ambient' });
 
-          const rows = await this.sequelize.query('SELECT name FROM "CnUsers"', {
-            type: this.sequelize.QueryTypes.SELECT
+          const rows = await current.query('SELECT name FROM "CnUsers"', {
+            type: current.QueryTypes.SELECT
           });
 
           expect(rows.map((row) => row.name)).to.deep.equal(['ambient']);
         });
 
-        it('becomes the parent of a managed transaction, which nests as a savepoint', async function () {
+        it('becomes the parent of a managed transaction, which nests as a savepoint', async () => {
           const statements = [];
 
-          await this.sequelize.transaction({ logging: (sql) => statements.push(sql) }, async (t) => {
-            expect(t.parent).to.equal(this.rootTransaction);
-            await this.User.create({ name: 'nested' });
+          await current.transaction({ logging: (sql) => statements.push(sql) }, async (t) => {
+            expect(t.parent).to.equal(rootTransaction);
+            await User.create({ name: 'nested' });
           });
 
           expect(statements.join('\n')).to.match(/SAVEPOINT/i);
-          expect(await this.User.count()).to.equal(1);
-          expect(await this.User.count({ transaction: null })).to.equal(0);
+          expect(await User.count()).to.equal(1);
+          expect(await User.count({ transaction: null })).to.equal(0);
         });
 
-        it('is shadowed by an in-flight savepoint for work scheduled inside it', async function () {
+        it('is shadowed by an in-flight savepoint for work scheduled inside it', async () => {
           // Context propagates through timers, so fire-and-forget work started inside a savepoint
           // stays on that savepoint and rolls back with it. This is the desirable direction — the
           // alternative would leak such writes into the root, where a savepoint rollback could not
           // reach them.
           let scheduledInside;
 
-          await this.sequelize.transaction(async (savepoint) => {
+          await current.transaction(async (savepoint) => {
             scheduledInside = await new Promise((resolve) => {
-              setTimeout(() => resolve(this.ns.get('transaction')), 0);
+              setTimeout(() => resolve(ns.get('transaction')), 0);
             });
 
             expect(scheduledInside).to.equal(savepoint);
           });
 
-          expect(scheduledInside).to.not.equal(this.rootTransaction);
+          expect(scheduledInside).to.not.equal(rootTransaction);
         });
 
-        it('stays ambient for a stack that originated outside the savepoint', async function () {
+        it('stays ambient for a stack that originated outside the savepoint', async () => {
           // The complement, and the one the entered context exists for: a callback scheduled
           // before the savepoint opened has no `AsyncLocalStorage` store of its own, so it falls
           // back to the entered context and sees the root even while a savepoint is in flight.
@@ -286,27 +285,27 @@ describe(Support.getTestDialectTeaser('Consumer contract'), () => {
             resolveDetached = resolve;
           });
 
-          setTimeout(() => resolveDetached(this.ns.get('transaction')), 0);
+          setTimeout(() => resolveDetached(ns.get('transaction')), 0);
 
-          await this.sequelize.transaction(async (savepoint) => {
-            expect(this.ns.get('transaction')).to.equal(savepoint);
-            await this.User.create({ name: 'nested' });
+          await current.transaction(async (savepoint) => {
+            expect(ns.get('transaction')).to.equal(savepoint);
+            await User.create({ name: 'nested' });
           });
 
-          expect(await detached).to.equal(this.rootTransaction);
+          expect(await detached).to.equal(rootTransaction);
         });
 
-        it('is reachable by walking parent from a savepoint', async function () {
+        it('is reachable by walking parent from a savepoint', async () => {
           // `legacy-data-layer/src/sequelize.ts` `getRootTransaction()` walks `.parent` up from
           // whatever is ambient to find the root, and uses it to key cache invalidation. The chain
           // has to terminate at the entered root rather than at a detached transaction.
           let root;
 
-          await this.sequelize.transaction(async () => {
-            await this.sequelize.transaction(async () => {
-              await this.User.create({ name: 'deep' });
+          await current.transaction(async () => {
+            await current.transaction(async () => {
+              await User.create({ name: 'deep' });
 
-              let transaction = this.ns.get('transaction');
+              let transaction = ns.get('transaction');
 
               while (transaction.parent) {
                 transaction = transaction.parent;
@@ -316,52 +315,52 @@ describe(Support.getTestDialectTeaser('Consumer contract'), () => {
             });
           });
 
-          expect(root).to.equal(this.rootTransaction);
-          expect(this.rootTransaction.parent).to.not.exist;
+          expect(root).to.equal(rootTransaction);
+          expect(rootTransaction.parent).to.not.exist;
         });
 
-        it('survives a savepoint rollback, leaving the root transaction usable', async function () {
+        it('survives a savepoint rollback, leaving the root transaction usable', async () => {
           await expect(
-            this.sequelize.transaction(async () => {
-              await this.User.create({ name: 'doomed' });
+            current.transaction(async () => {
+              await User.create({ name: 'doomed' });
               throw new Error('nope');
             })
           ).to.be.rejectedWith('nope');
 
           // The root transaction is still ambient and still usable — this is what lets the
           // consumer run a test that expects a rollback without poisoning the rest of the file.
-          expect(this.ns.get('transaction')).to.equal(this.rootTransaction);
-          await this.User.create({ name: 'after' });
+          expect(ns.get('transaction')).to.equal(rootTransaction);
+          await User.create({ name: 'after' });
 
-          expect(await this.User.count()).to.equal(1);
+          expect(await User.count()).to.equal(1);
         });
 
-        it('discards every write when the root transaction rolls back', async function () {
-          await this.User.create({ name: 'ambient' });
+        it('discards every write when the root transaction rolls back', async () => {
+          await User.create({ name: 'ambient' });
 
-          await this.rootTransaction.rollback();
+          await rootTransaction.rollback();
 
-          expect(await this.User.count({ transaction: null })).to.equal(0);
+          expect(await User.count({ transaction: null })).to.equal(0);
         });
 
-        it('clears itself from the entered context on rollback', async function () {
+        it('clears itself from the entered context on rollback', async () => {
           // `Transaction#_clearCls` writes through the same `_activeContext()` fallback. If it
           // missed, the consumer's next test file would inherit a finished transaction and every
           // query in it would fail.
-          await this.rootTransaction.rollback();
+          await rootTransaction.rollback();
 
-          expect(this.ns.get('transaction')).to.equal(null);
+          expect(ns.get('transaction')).to.equal(null);
         });
 
-        it('stops being ambient once the context is exited', async function () {
-          await this.rootTransaction.rollback();
-          this.ns.exit(this.context);
+        it('stops being ambient once the context is exited', async () => {
+          await rootTransaction.rollback();
+          ns.exit(context);
 
-          expect(this.ns.get('transaction')).to.be.undefined;
-          expect(this.ns.active).to.equal(null);
+          expect(ns.get('transaction')).to.be.undefined;
+          expect(ns.active).to.equal(null);
 
           // Re-entered so the afterEach hook's exit stays balanced.
-          this.ns.enter(this.context);
+          ns.enter(context);
         });
       });
     }

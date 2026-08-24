@@ -3,13 +3,17 @@ import { expect } from 'chai';
 import Sequelize from '../../../../index.js';
 import Support from '../../support.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('scope', () => {
     describe('associations', () => {
-      beforeEach(async function () {
-        const sequelize = this.sequelize;
+      let ScopeMe, Project, Company, Profile, UserAssociation;
 
-        this.ScopeMe = this.sequelize.define(
+      beforeEach(async () => {
+        const sequelize = current;
+
+        ScopeMe = current.define(
           'ScopeMe',
           {
             username: Sequelize.STRING,
@@ -46,7 +50,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        this.Project = this.sequelize.define(
+        Project = current.define(
           'project',
           {
             active: Sequelize.BOOLEAN
@@ -62,7 +66,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        this.Company = this.sequelize.define(
+        Company = current.define(
           'company',
           {
             active: Sequelize.BOOLEAN
@@ -84,7 +88,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        this.Profile = this.sequelize.define(
+        Profile = current.define(
           'profile',
           {
             active: Sequelize.BOOLEAN
@@ -103,18 +107,18 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        this.Project.belongsToMany(this.Company, { through: 'CompanyProjects' });
-        this.Company.belongsToMany(this.Project, { through: 'CompanyProjects' });
+        Project.belongsToMany(Company, { through: 'CompanyProjects' });
+        Company.belongsToMany(Project, { through: 'CompanyProjects' });
 
-        this.ScopeMe.hasOne(this.Profile, { foreignKey: 'userId' });
+        ScopeMe.hasOne(Profile, { foreignKey: 'userId' });
 
-        this.ScopeMe.belongsTo(this.Company);
-        this.UserAssociation = this.Company.hasMany(this.ScopeMe, { as: 'users' });
+        ScopeMe.belongsTo(Company);
+        UserAssociation = Company.hasMany(ScopeMe, { as: 'users' });
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
 
         const [u1, u2, u3, u4, u5, c1, c2] = await Promise.all([
-          this.ScopeMe.create({
+          ScopeMe.create({
             id: 1,
             username: 'dan',
             email: 'dan@sequelizejs.com',
@@ -122,7 +126,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             other_value: 10,
             parent_id: 1
           }),
-          this.ScopeMe.create({
+          ScopeMe.create({
             id: 2,
             username: 'tobi',
             email: 'tobi@fakeemail.com',
@@ -130,7 +134,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             other_value: 11,
             parent_id: 2
           }),
-          this.ScopeMe.create({
+          ScopeMe.create({
             id: 3,
             username: 'tony',
             email: 'tony@sequelizejs.com',
@@ -138,7 +142,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             other_value: 7,
             parent_id: 1
           }),
-          this.ScopeMe.create({
+          ScopeMe.create({
             id: 4,
             username: 'fred',
             email: 'fred@foobar.com',
@@ -146,7 +150,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             other_value: 7,
             parent_id: 1
           }),
-          this.ScopeMe.create({
+          ScopeMe.create({
             id: 5,
             username: 'bob',
             email: 'bob@foobar.com',
@@ -154,43 +158,43 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             other_value: 9,
             parent_id: 5
           }),
-          this.Company.create({ id: 1, active: true }),
-          this.Company.create({ id: 2, active: false })
+          Company.create({ id: 1, active: true }),
+          Company.create({ id: 2, active: false })
         ]);
 
         await Promise.all([c1.setUsers([u1, u2, u3, u4]), c2.setUsers([u5])]);
       });
 
       describe('include', () => {
-        it('should scope columns properly', function () {
+        it('should scope columns properly', () => {
           // Will error with ambigous column if id is not scoped properly to `Company`.`id`
           return expect(
-            this.Company.findAll({
+            Company.findAll({
               where: { id: 1 },
-              include: [this.UserAssociation]
+              include: [UserAssociation]
             })
           ).not.to.be.rejected;
         });
 
-        it('should apply default scope when including an associations', async function () {
-          const rows = await this.Company.findAll({
-            include: [this.UserAssociation]
+        it('should apply default scope when including an associations', async () => {
+          const rows = await Company.findAll({
+            include: [UserAssociation]
           });
 
           expect(rows[0].users).to.have.length(2);
         });
 
-        it('should apply default scope when including a model', async function () {
-          const rows = await this.Company.findAll({
-            include: [{ model: this.ScopeMe, as: 'users' }]
+        it('should apply default scope when including a model', async () => {
+          const rows = await Company.findAll({
+            include: [{ model: ScopeMe, as: 'users' }]
           });
 
           expect(rows[0].users).to.have.length(2);
         });
 
-        it('should be able to include a scoped model', async function () {
-          const rows = await this.Company.findAll({
-            include: [{ model: this.ScopeMe.scope('isTony'), as: 'users' }]
+        it('should be able to include a scoped model', async () => {
+          const rows = await Company.findAll({
+            include: [{ model: ScopeMe.scope('isTony'), as: 'users' }]
           });
 
           expect(rows[0].users).to.have.length(1);
@@ -199,40 +203,40 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       describe('get', () => {
-        beforeEach(async function () {
-          const [p, companies] = await Promise.all([this.Project.create(), this.Company.unscoped().findAll()]);
+        beforeEach(async () => {
+          const [p, companies] = await Promise.all([Project.create(), Company.unscoped().findAll()]);
           await p.setCompanies(companies);
         });
 
         describe('it should be able to unscope', () => {
-          it('hasMany', async function () {
-            const company = await this.Company.findByPk(1);
+          it('hasMany', async () => {
+            const company = await Company.findByPk(1);
 
             const users = await company.getUsers({ scope: false });
             expect(users).to.have.length(4);
           });
 
-          it('hasOne', async function () {
-            await this.Profile.create({
+          it('hasOne', async () => {
+            await Profile.create({
               active: false,
               userId: 1
             });
 
-            const user = await this.ScopeMe.findByPk(1);
+            const user = await ScopeMe.findByPk(1);
 
             const profile = await user.getProfile({ scope: false });
             expect(profile).to.be.ok;
           });
 
-          it('belongsTo', async function () {
-            const user = await this.ScopeMe.unscoped().findOne({ where: { username: 'bob' } });
+          it('belongsTo', async () => {
+            const user = await ScopeMe.unscoped().findOne({ where: { username: 'bob' } });
 
             const company = await user.getCompany({ scope: false });
             expect(company).to.be.ok;
           });
 
-          it('belongsToMany', async function () {
-            const rows = await this.Project.findAll();
+          it('belongsToMany', async () => {
+            const rows = await Project.findAll();
 
             const companies = await rows[0].getCompanies({ scope: false });
             expect(companies).to.have.length(2);
@@ -240,34 +244,34 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
 
         describe('it should apply default scope', () => {
-          it('hasMany', async function () {
-            const company = await this.Company.findByPk(1);
+          it('hasMany', async () => {
+            const company = await Company.findByPk(1);
 
             const users = await company.getUsers();
             expect(users).to.have.length(2);
           });
 
-          it('hasOne', async function () {
-            await this.Profile.create({
+          it('hasOne', async () => {
+            await Profile.create({
               active: false,
               userId: 1
             });
 
-            const user = await this.ScopeMe.findByPk(1);
+            const user = await ScopeMe.findByPk(1);
 
             const profile = await user.getProfile();
             expect(profile).not.to.be.ok;
           });
 
-          it('belongsTo', async function () {
-            const user = await this.ScopeMe.unscoped().findOne({ where: { username: 'bob' } });
+          it('belongsTo', async () => {
+            const user = await ScopeMe.unscoped().findOne({ where: { username: 'bob' } });
 
             const company = await user.getCompany();
             expect(company).not.to.be.ok;
           });
 
-          it('belongsToMany', async function () {
-            const rows = await this.Project.findAll();
+          it('belongsToMany', async () => {
+            const rows = await Project.findAll();
 
             const companies = await rows[0].getCompanies();
             expect(companies).to.have.length(1);
@@ -276,35 +280,35 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
 
         describe('it should be able to apply another scope', () => {
-          it('hasMany', async function () {
-            const company = await this.Company.findByPk(1);
+          it('hasMany', async () => {
+            const company = await Company.findByPk(1);
 
             const users = await company.getUsers({ scope: 'isTony' });
             expect(users).to.have.length(1);
             expect(users[0].get('username')).to.equal('tony');
           });
 
-          it('hasOne', async function () {
-            await this.Profile.create({
+          it('hasOne', async () => {
+            await Profile.create({
               active: true,
               userId: 1
             });
 
-            const user = await this.ScopeMe.findByPk(1);
+            const user = await ScopeMe.findByPk(1);
 
             const profile = await user.getProfile({ scope: 'notActive' });
             expect(profile).not.to.be.ok;
           });
 
-          it('belongsTo', async function () {
-            const user = await this.ScopeMe.unscoped().findOne({ where: { username: 'bob' } });
+          it('belongsTo', async () => {
+            const user = await ScopeMe.unscoped().findOne({ where: { username: 'bob' } });
 
             const company = await user.getCompany({ scope: 'notActive' });
             expect(company).to.be.ok;
           });
 
-          it('belongsToMany', async function () {
-            const rows = await this.Project.findAll();
+          it('belongsToMany', async () => {
+            const rows = await Project.findAll();
 
             const companies = await rows[0].getCompanies({ scope: 'reversed' });
             expect(companies).to.have.length(2);
@@ -315,22 +319,22 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       describe('scope with includes', () => {
-        beforeEach(async function () {
+        beforeEach(async () => {
           const [c, p1, p2] = await Promise.all([
-            this.Company.findByPk(1),
-            this.Project.create({ id: 1, active: true }),
-            this.Project.create({ id: 2, active: false })
+            Company.findByPk(1),
+            Project.create({ id: 1, active: true }),
+            Project.create({ id: 2, active: false })
           ]);
 
           await c.setProjects([p1, p2]);
         });
 
-        it('should scope columns properly', function () {
-          return expect(this.ScopeMe.scope('includeActiveProjects').findAll()).not.to.be.rejected;
+        it('should scope columns properly', () => {
+          return expect(ScopeMe.scope('includeActiveProjects').findAll()).not.to.be.rejected;
         });
 
-        it('should apply scope conditions', async function () {
-          const user = await this.ScopeMe.scope('includeActiveProjects').findOne({ where: { id: 1 } });
+        it('should apply scope conditions', async () => {
+          const user = await ScopeMe.scope('includeActiveProjects').findOne({ where: { id: 1 } });
           expect(user.company.projects).to.have.length(1);
         });
       });

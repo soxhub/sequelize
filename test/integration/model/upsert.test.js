@@ -8,20 +8,22 @@ import DataTypes from '../../../lib/data-types.js';
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser('Model'), () => {
-  before(function () {
-    this.clock = sinon.useFakeTimers();
+  let clock, SharedUser, ModelWithFieldPK;
+
+  before(() => {
+    clock = sinon.useFakeTimers();
   });
 
-  after(function () {
-    this.clock.restore();
+  after(() => {
+    clock.restore();
   });
 
-  beforeEach(function () {
-    this.clock.reset();
+  beforeEach(() => {
+    clock.reset();
   });
 
-  beforeEach(function () {
-    this.User = this.sequelize.define('user', {
+  beforeEach(() => {
+    SharedUser = current.define('user', {
       username: DataTypes.STRING,
       foo: {
         unique: 'foobar',
@@ -39,7 +41,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       blob: DataTypes.BLOB
     });
 
-    this.ModelWithFieldPK = this.sequelize.define('ModelWithFieldPK', {
+    ModelWithFieldPK = current.define('ModelWithFieldPK', {
       userId: {
         field: 'user_id',
         type: Sequelize.INTEGER,
@@ -52,43 +54,43 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       }
     });
 
-    return this.sequelize.sync({ force: true });
+    return current.sync({ force: true });
   });
 
   if (current.dialect.supports.upserts) {
     describe('upsert', () => {
-      it('works with upsert on id', async function () {
-        const created = await this.User.upsert({ id: 42, username: 'john' });
+      it('works with upsert on id', async () => {
+        const created = await SharedUser.upsert({ id: 42, username: 'john' });
         expect(created).to.be.ok;
 
-        this.clock.tick(1000);
+        clock.tick(1000);
 
-        const updated = await this.User.upsert({ id: 42, username: 'doe' });
+        const updated = await SharedUser.upsert({ id: 42, username: 'doe' });
         expect(updated).not.to.be.ok;
 
-        const user = await this.User.findByPk(42);
+        const user = await SharedUser.findByPk(42);
         expect(user.createdAt).to.be.ok;
         expect(user.username).to.equal('doe');
         expect(user.updatedAt).to.be.afterTime(user.createdAt);
       });
 
-      it('works with upsert on a composite key', async function () {
-        const created = await this.User.upsert({ foo: 'baz', bar: 19, username: 'john' });
+      it('works with upsert on a composite key', async () => {
+        const created = await SharedUser.upsert({ foo: 'baz', bar: 19, username: 'john' });
         expect(created).to.be.ok;
 
-        this.clock.tick(1000);
+        clock.tick(1000);
 
-        const updated = await this.User.upsert({ foo: 'baz', bar: 19, username: 'doe' });
+        const updated = await SharedUser.upsert({ foo: 'baz', bar: 19, username: 'doe' });
         expect(updated).not.to.be.ok;
 
-        const user = await this.User.findOne({ where: { foo: 'baz', bar: 19 } });
+        const user = await SharedUser.findOne({ where: { foo: 'baz', bar: 19 } });
         expect(user.createdAt).to.be.ok;
         expect(user.username).to.equal('doe');
         expect(user.updatedAt).to.be.afterTime(user.createdAt);
       });
 
-      it('should work with UUIDs wth default values', async function () {
-        const User = this.sequelize.define('User', {
+      it('should work with UUIDs wth default values', async () => {
+        const User = current.define('User', {
           id: {
             primaryKey: true,
             allowNull: false,
@@ -106,8 +108,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         await User.upsert({ name: 'John Doe' });
       });
 
-      it('works with upsert on a composite primary key', async function () {
-        const User = this.sequelize.define('user', {
+      it('works with upsert on a composite primary key', async () => {
+        const User = current.define('user', {
           a: {
             type: Sequelize.STRING,
             primaryKey: true
@@ -130,7 +132,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(created1).to.be.ok;
         expect(created2).to.be.ok;
 
-        this.clock.tick(1000);
+        clock.tick(1000);
 
         // Update the first one
         const updated = await User.upsert({ a: 'a', b: 'b', username: 'doe' });
@@ -148,8 +150,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(user2.updatedAt).to.equalTime(user2.createdAt);
       });
 
-      it('supports validations', function () {
-        const User = this.sequelize.define('user', {
+      it('supports validations', () => {
+        const User = current.define('user', {
           email: {
             type: Sequelize.STRING,
             validate: {
@@ -158,13 +160,11 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         });
 
-        return expect(User.upsert({ email: 'notanemail' })).to.eventually.be.rejectedWith(
-          this.sequelize.ValidationError
-        );
+        return expect(User.upsert({ email: 'notanemail' })).to.eventually.be.rejectedWith(current.ValidationError);
       });
 
-      it('supports skipping validations', async function () {
-        const User = this.sequelize.define('user', {
+      it('supports skipping validations', async () => {
+        const User = current.define('user', {
           email: {
             type: Sequelize.STRING,
             validate: {
@@ -181,109 +181,107 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(created).to.be.ok;
       });
 
-      it('works with BLOBs', async function () {
-        const created = await this.User.upsert({ id: 42, username: 'john', blob: Buffer.from('kaj') });
+      it('works with BLOBs', async () => {
+        const created = await SharedUser.upsert({ id: 42, username: 'john', blob: Buffer.from('kaj') });
         expect(created).to.be.ok;
 
-        this.clock.tick(1000);
+        clock.tick(1000);
 
-        const updated = await this.User.upsert({ id: 42, username: 'doe', blob: Buffer.from('andrea') });
+        const updated = await SharedUser.upsert({ id: 42, username: 'doe', blob: Buffer.from('andrea') });
         expect(updated).not.to.be.ok;
 
-        const user = await this.User.findByPk(42);
+        const user = await SharedUser.findByPk(42);
         expect(user.createdAt).to.be.ok;
         expect(user.username).to.equal('doe');
         expect(user.blob.toString()).to.equal('andrea');
         expect(user.updatedAt).to.be.afterTime(user.createdAt);
       });
 
-      it('works with .field', async function () {
-        const created = await this.User.upsert({ id: 42, baz: 'foo' });
+      it('works with .field', async () => {
+        const created = await SharedUser.upsert({ id: 42, baz: 'foo' });
         expect(created).to.be.ok;
 
-        const updated = await this.User.upsert({ id: 42, baz: 'oof' });
+        const updated = await SharedUser.upsert({ id: 42, baz: 'oof' });
         expect(updated).not.to.be.ok;
 
-        const user = await this.User.findByPk(42);
+        const user = await SharedUser.findByPk(42);
         expect(user.baz).to.equal('oof');
       });
 
-      it('works with primary key using .field', async function () {
-        const created = await this.ModelWithFieldPK.upsert({ userId: 42, foo: 'first' });
+      it('works with primary key using .field', async () => {
+        const created = await ModelWithFieldPK.upsert({ userId: 42, foo: 'first' });
         expect(created).to.be.ok;
 
-        this.clock.tick(1000);
+        clock.tick(1000);
 
-        const updated = await this.ModelWithFieldPK.upsert({ userId: 42, foo: 'second' });
+        const updated = await ModelWithFieldPK.upsert({ userId: 42, foo: 'second' });
         expect(updated).not.to.be.ok;
 
-        const instance = await this.ModelWithFieldPK.findOne({ where: { userId: 42 } });
+        const instance = await ModelWithFieldPK.findOne({ where: { userId: 42 } });
         expect(instance.foo).to.equal('second');
       });
 
-      it('works with database functions', async function () {
-        const created = await this.User.upsert({
+      it('works with database functions', async () => {
+        const created = await SharedUser.upsert({
           id: 42,
           username: 'john',
-          foo: this.sequelize.fn('upper', 'mixedCase1')
+          foo: current.fn('upper', 'mixedCase1')
         });
         expect(created).to.be.ok;
 
-        this.clock.tick(1000);
+        clock.tick(1000);
 
-        const updated = await this.User.upsert({
+        const updated = await SharedUser.upsert({
           id: 42,
           username: 'doe',
-          foo: this.sequelize.fn('upper', 'mixedCase2')
+          foo: current.fn('upper', 'mixedCase2')
         });
         expect(updated).not.to.be.ok;
 
-        const user = await this.User.findByPk(42);
+        const user = await SharedUser.findByPk(42);
         expect(user.createdAt).to.be.ok;
         expect(user.username).to.equal('doe');
         expect(user.foo).to.equal('MIXEDCASE2');
       });
 
-      it('does not overwrite createdAt time on update', async function () {
-        const clock = this.clock;
+      it('does not overwrite createdAt time on update', async () => {
+        await SharedUser.create({ id: 42, username: 'john' });
 
-        await this.User.create({ id: 42, username: 'john' });
-
-        const original = await this.User.findByPk(42);
+        const original = await SharedUser.findByPk(42);
         const originalCreatedAt = original.createdAt;
         const originalUpdatedAt = original.updatedAt;
 
         clock.tick(5000);
-        await this.User.upsert({ id: 42, username: 'doe' });
+        await SharedUser.upsert({ id: 42, username: 'doe' });
 
-        const user = await this.User.findByPk(42);
+        const user = await SharedUser.findByPk(42);
         expect(user.updatedAt).to.be.gt(originalUpdatedAt);
         expect(user.createdAt).to.deep.equal(originalCreatedAt);
       });
 
-      it('does not update using default values', async function () {
-        await this.User.create({ id: 42, username: 'john', baz: 'new baz value' });
+      it('does not update using default values', async () => {
+        await SharedUser.create({ id: 42, username: 'john', baz: 'new baz value' });
 
-        const original = await this.User.findByPk(42);
+        const original = await SharedUser.findByPk(42);
         // 'username' should be 'john' since it was set
         expect(original.username).to.equal('john');
         // 'baz' should be 'new baz value' since it was set
         expect(original.baz).to.equal('new baz value');
 
-        await this.User.upsert({ id: 42, username: 'doe' });
+        await SharedUser.upsert({ id: 42, username: 'doe' });
 
-        const user = await this.User.findByPk(42);
+        const user = await SharedUser.findByPk(42);
         // 'username' was updated
         expect(user.username).to.equal('doe');
         // 'baz' should still be 'new baz value' since it was not updated
         expect(user.baz).to.equal('new baz value');
       });
 
-      it('does not update when setting current values', async function () {
-        await this.User.create({ id: 42, username: 'john' });
+      it('does not update when setting current values', async () => {
+        await SharedUser.create({ id: 42, username: 'john' });
 
-        const user = await this.User.findByPk(42);
-        const created = await this.User.upsert({ id: user.id, username: user.username });
+        const user = await SharedUser.findByPk(42);
+        const created = await SharedUser.upsert({ id: user.id, username: user.username });
 
         // After set node-mysql flags = '-FOUND_ROWS' in connection of mysql,
         // result from upsert should be false when upsert a row to its current value
@@ -291,8 +289,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(created).to.equal(false);
       });
 
-      it('Works when two separate uniqueKeys are passed', async function () {
-        const User = this.sequelize.define('User', {
+      it('Works when two separate uniqueKeys are passed', async () => {
+        const User = current.define('User', {
           username: {
             type: Sequelize.STRING,
             unique: true
@@ -305,8 +303,6 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             type: Sequelize.STRING
           }
         });
-        const clock = this.clock;
-
         await User.sync({ force: true });
 
         const created = await User.upsert({ username: 'user1', email: 'user1@domain.ext', city: 'City' });
@@ -325,8 +321,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(user.updatedAt).to.be.afterTime(user.createdAt);
       });
 
-      it('works when indexes are created via indexes array', async function () {
-        const User = this.sequelize.define(
+      it('works when indexes are created via indexes array', async () => {
+        const User = current.define(
           'User',
           {
             username: Sequelize.STRING,
@@ -391,8 +387,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(user.city).to.equal('New City');
       });
 
-      it('works when deletedAt is Infinity and part of primary key', async function () {
-        const User = this.sequelize.define(
+      it('works when deletedAt is Infinity and part of primary key', async () => {
+        const User = current.define(
           'User',
           {
             name: {
@@ -433,20 +429,20 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       if (current.dialect.supports.returnValues) {
         describe('with returning option', () => {
-          it('works with upsert on id', async function () {
-            const [inserted, wasCreated] = await this.User.upsert({ id: 42, username: 'john' }, { returning: true });
+          it('works with upsert on id', async () => {
+            const [inserted, wasCreated] = await SharedUser.upsert({ id: 42, username: 'john' }, { returning: true });
             expect(inserted.get('id')).to.equal(42);
             expect(inserted.get('username')).to.equal('john');
             expect(wasCreated).to.be.true;
 
-            const [user, created] = await this.User.upsert({ id: 42, username: 'doe' }, { returning: true });
+            const [user, created] = await SharedUser.upsert({ id: 42, username: 'doe' }, { returning: true });
             expect(user.get('id')).to.equal(42);
             expect(user.get('username')).to.equal('doe');
             expect(created).to.be.false;
           });
 
-          it('works for table with custom primary key field', async function () {
-            const User = this.sequelize.define('User', {
+          it('works for table with custom primary key field', async () => {
+            const User = current.define('User', {
               id: {
                 type: DataTypes.INTEGER,
                 autoIncrement: true,
@@ -471,8 +467,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             expect(created).to.be.false;
           });
 
-          it('works for non incrementing primaryKey', async function () {
-            const User = this.sequelize.define('User', {
+          it('works for non incrementing primaryKey', async () => {
+            const User = current.define('User', {
               id: {
                 type: DataTypes.STRING,
                 primaryKey: true,

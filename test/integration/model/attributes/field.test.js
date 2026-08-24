@@ -5,21 +5,27 @@ import Sequelize from '../../../../index.js';
 import Support from '../../support.js';
 import DataTypes from '../../../../lib/data-types.js';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Model'), () => {
-  before(function () {
-    this.clock = sinon.useFakeTimers();
+  let clock;
+
+  before(() => {
+    clock = sinon.useFakeTimers();
   });
 
-  after(function () {
-    this.clock.restore();
+  after(() => {
+    clock.restore();
   });
 
   describe('attributes', () => {
     describe('field', () => {
-      beforeEach(function () {
-        const queryInterface = this.sequelize.getQueryInterface();
+      let SharedUser, Task, Comment;
 
-        this.User = this.sequelize.define(
+      beforeEach(() => {
+        const queryInterface = current.getQueryInterface();
+
+        SharedUser = current.define(
           'user',
           {
             id: {
@@ -46,7 +52,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        this.Task = this.sequelize.define(
+        Task = current.define(
           'task',
           {
             id: {
@@ -67,7 +73,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        this.Comment = this.sequelize.define(
+        Comment = current.define(
           'comment',
           {
             id: {
@@ -89,20 +95,20 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         );
 
-        this.User.hasMany(this.Task, {
+        SharedUser.hasMany(Task, {
           foreignKey: 'user_id'
         });
-        this.Task.belongsTo(this.User, {
+        Task.belongsTo(SharedUser, {
           foreignKey: 'user_id'
         });
-        this.Task.hasMany(this.Comment, {
+        Task.hasMany(Comment, {
           foreignKey: 'task_id'
         });
-        this.Comment.belongsTo(this.Task, {
+        Comment.belongsTo(Task, {
           foreignKey: 'task_id'
         });
 
-        this.User.belongsToMany(this.Comment, {
+        SharedUser.belongsToMany(Comment, {
           foreignKey: 'userId',
           otherKey: 'commentId',
           through: 'userComments'
@@ -179,8 +185,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       describe('primaryKey', () => {
         describe('in combination with allowNull', () => {
-          beforeEach(function () {
-            this.ModelUnderTest = this.sequelize.define('ModelUnderTest', {
+          let ModelUnderTest;
+
+          beforeEach(() => {
+            ModelUnderTest = current.define('ModelUnderTest', {
               identifier: {
                 primaryKey: true,
                 type: Sequelize.STRING,
@@ -188,24 +196,24 @@ describe(Support.getTestDialectTeaser('Model'), () => {
               }
             });
 
-            return this.ModelUnderTest.sync({ force: true });
+            return ModelUnderTest.sync({ force: true });
           });
 
-          it('sets the column to not allow null', async function () {
-            const fields = await this.ModelUnderTest.describe();
+          it('sets the column to not allow null', async () => {
+            const fields = await ModelUnderTest.describe();
             expect(fields.identifier).to.include({ allowNull: false });
           });
         });
 
-        it('should support instance.destroy()', async function () {
-          const user = await this.User.create();
+        it('should support instance.destroy()', async () => {
+          const user = await SharedUser.create();
           await user.destroy();
         });
 
-        it('should support Model.destroy()', async function () {
-          const user = await this.User.create();
+        it('should support Model.destroy()', async () => {
+          const user = await SharedUser.create();
 
-          await this.User.destroy({
+          await SharedUser.destroy({
             where: {
               id: user.get('id')
             }
@@ -214,29 +222,29 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       describe('field and attribute name is the same', () => {
-        beforeEach(function () {
-          return this.Comment.bulkCreate([{ notes: 'Number one' }, { notes: 'Number two' }]);
+        beforeEach(() => {
+          return Comment.bulkCreate([{ notes: 'Number one' }, { notes: 'Number two' }]);
         });
 
-        it('bulkCreate should work', async function () {
-          const comments = await this.Comment.findAll();
+        it('bulkCreate should work', async () => {
+          const comments = await Comment.findAll();
           expect(comments[0].notes).to.equal('Number one');
           expect(comments[1].notes).to.equal('Number two');
         });
 
-        it('find with where should work', async function () {
-          const comments = await this.Comment.findAll({ where: { notes: 'Number one' } });
+        it('find with where should work', async () => {
+          const comments = await Comment.findAll({ where: { notes: 'Number one' } });
           expect(comments).to.have.length(1);
           expect(comments[0].notes).to.equal('Number one');
         });
 
-        it('reload should work', async function () {
-          const comment = await this.Comment.findByPk(1);
+        it('reload should work', async () => {
+          const comment = await Comment.findByPk(1);
           await comment.reload();
         });
 
-        it('save should work', async function () {
-          const created = await this.Comment.create({ notes: 'my note' });
+        it('save should work', async () => {
+          const created = await Comment.create({ notes: 'my note' });
           created.notes = 'new note';
 
           const saved = await created.save();
@@ -246,40 +254,40 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
       });
 
-      it('increment should work', async function () {
-        await this.Comment.destroy({ truncate: true });
+      it('increment should work', async () => {
+        await Comment.destroy({ truncate: true });
 
-        const created = await this.Comment.create({ note: 'oh boy, here I go again', likes: 23 });
+        const created = await Comment.create({ note: 'oh boy, here I go again', likes: 23 });
         const incremented = await created.increment('likes');
         const comment = await incremented.reload();
 
         expect(comment.likes).to.be.equal(24);
       });
 
-      it('decrement should work', async function () {
-        await this.Comment.destroy({ truncate: true });
+      it('decrement should work', async () => {
+        await Comment.destroy({ truncate: true });
 
-        const created = await this.Comment.create({ note: 'oh boy, here I go again', likes: 23 });
+        const created = await Comment.create({ note: 'oh boy, here I go again', likes: 23 });
         const decremented = await created.decrement('likes');
         const comment = await decremented.reload();
 
         expect(comment.likes).to.be.equal(22);
       });
 
-      it('sum should work', async function () {
-        await this.Comment.destroy({ truncate: true });
-        await this.Comment.create({ note: 'oh boy, here I go again', likes: 23 });
+      it('sum should work', async () => {
+        await Comment.destroy({ truncate: true });
+        await Comment.create({ note: 'oh boy, here I go again', likes: 23 });
 
-        const likes = await this.Comment.sum('likes');
+        const likes = await Comment.sum('likes');
         expect(likes).to.be.equal(23);
       });
 
-      it('should create, fetch and update with alternative field names from a simple model', async function () {
-        await this.User.create({
+      it('should create, fetch and update with alternative field names from a simple model', async () => {
+        await SharedUser.create({
           name: 'Foobar'
         });
 
-        const found = await this.User.findOne({
+        const found = await SharedUser.findOne({
           limit: 1
         });
         expect(found.get('name')).to.equal('Foobar');
@@ -288,18 +296,18 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           name: 'Barfoo'
         });
 
-        const updated = await this.User.findOne({
+        const updated = await SharedUser.findOne({
           limit: 1
         });
         expect(updated.get('name')).to.equal('Barfoo');
       });
 
-      it('should bulk update', async function () {
-        const Entity = this.sequelize.define('Entity', {
+      it('should bulk update', async () => {
+        const Entity = current.define('Entity', {
           strField: { type: Sequelize.STRING, field: 'str_field' }
         });
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
         await Entity.create({ strField: 'foo' });
         await Entity.update({ strField: 'bar' }, { where: { strField: 'foo' } });
 
@@ -313,8 +321,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(entity.get('strField')).to.equal('bar');
       });
 
-      it('should not contain the field properties after create', async function () {
-        const Model = this.sequelize.define(
+      it('should not contain the field properties after create', async () => {
+        const Model = current.define(
           'test',
           {
             id: {
@@ -346,16 +354,16 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(data.get('test_id')).to.be.an('undefined');
       });
 
-      it('should make the aliased auto incremented primary key available after create', async function () {
-        const user = await this.User.create({
+      it('should make the aliased auto incremented primary key available after create', async () => {
+        const user = await SharedUser.create({
           name: 'Barfoo'
         });
 
         expect(user.get('id')).to.be.ok;
       });
 
-      it('should work with where on includes for find', async function () {
-        const user = await this.User.create({
+      it('should work with where on includes for find', async () => {
+        const user = await SharedUser.create({
           name: 'Barfoo'
         });
 
@@ -367,8 +375,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           text: 'Comment'
         });
 
-        const task = await this.Task.findOne({
-          include: [{ model: this.Comment }, { model: this.User }],
+        const task = await Task.findOne({
+          include: [{ model: Comment }, { model: SharedUser }],
           where: { title: 'DatDo' }
         });
 
@@ -377,8 +385,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(task.get('user')).to.be.ok;
       });
 
-      it('should work with where on includes for findAll', async function () {
-        const created = await this.User.create({
+      it('should work with where on includes for findAll', async () => {
+        const created = await SharedUser.create({
           name: 'Foobar'
         });
 
@@ -390,8 +398,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           text: 'Comment'
         });
 
-        const users = await this.User.findAll({
-          include: [{ model: this.Task, where: { title: 'DoDat' }, include: [{ model: this.Comment }] }]
+        const users = await SharedUser.findAll({
+          include: [{ model: Task, where: { title: 'DoDat' }, include: [{ model: Comment }] }]
         });
 
         users.forEach((user) => {
@@ -401,17 +409,17 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
       });
 
-      it('should work with increment', async function () {
-        const user = await this.User.create();
+      it('should work with increment', async () => {
+        const user = await SharedUser.create();
         await user.increment('taskCount');
       });
 
-      it('should work with a simple where', async function () {
-        await this.User.create({
+      it('should work with a simple where', async () => {
+        await SharedUser.create({
           name: 'Foobar'
         });
 
-        const user = await this.User.findOne({
+        const user = await SharedUser.findOne({
           where: {
             name: 'Foobar'
           }
@@ -420,13 +428,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(user).to.be.ok;
       });
 
-      it('should work with a where or', async function () {
-        await this.User.create({
+      it('should work with a where or', async () => {
+        await SharedUser.create({
           name: 'Foobar'
         });
 
-        const user = await this.User.findOne({
-          where: this.sequelize.or(
+        const user = await SharedUser.findOne({
+          where: current.or(
             {
               name: 'Foobar'
             },
@@ -439,8 +447,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(user).to.be.ok;
       });
 
-      it('should work with bulkCreate and findAll', async function () {
-        await this.User.bulkCreate([
+      it('should work with bulkCreate and findAll', async () => {
+        await SharedUser.bulkCreate([
           {
             name: 'Abc'
           },
@@ -452,18 +460,18 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         ]);
 
-        const users = await this.User.findAll();
+        const users = await SharedUser.findAll();
         users.forEach((user) => {
           expect(['Abc', 'Bcd', 'Cde'].indexOf(user.get('name')) !== -1).to.be.true;
         });
       });
 
-      it('should support renaming of sequelize method fields', async function () {
-        const Test = this.sequelize.define('test', {
+      it('should support renaming of sequelize method fields', async () => {
+        const Test = current.define('test', {
           someProperty: Sequelize.VIRTUAL // Since we specify the AS part as a part of the literal string, not with sequelize syntax, we have to tell sequelize about the field
         });
 
-        await this.sequelize.sync({ force: true });
+        await current.sync({ force: true });
         await Test.create({});
 
         const findAttributes = [
@@ -479,27 +487,27 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(tests[0].get('someProperty2')).to.be.ok;
       });
 
-      it('should sync foreign keys with custom field names', async function () {
-        await this.sequelize.sync({ force: true });
+      it('should sync foreign keys with custom field names', async () => {
+        await current.sync({ force: true });
 
-        const attrs = this.Task.tableAttributes;
+        const attrs = Task.tableAttributes;
         expect(attrs.user_id.references.model).to.equal('users');
         expect(attrs.user_id.references.key).to.equal('userId');
       });
 
-      it('should find the value of an attribute with a custom field name', async function () {
-        await this.User.create({ name: 'test user' });
+      it('should find the value of an attribute with a custom field name', async () => {
+        await SharedUser.create({ name: 'test user' });
 
-        const user = await this.User.findOne({ where: { name: 'test user' } });
+        const user = await SharedUser.findOne({ where: { name: 'test user' } });
         expect(user.name).to.equal('test user');
       });
 
-      it('field names that are the same as property names should create, update, and read correctly', async function () {
-        await this.Comment.create({
+      it('field names that are the same as property names should create, update, and read correctly', async () => {
+        await Comment.create({
           notes: 'Foobar'
         });
 
-        const found = await this.Comment.findOne({
+        const found = await Comment.findOne({
           limit: 1
         });
         expect(found.get('notes')).to.equal('Foobar');
@@ -508,20 +516,20 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           notes: 'Barfoo'
         });
 
-        const updated = await this.Comment.findOne({
+        const updated = await Comment.findOne({
           limit: 1
         });
         expect(updated.get('notes')).to.equal('Barfoo');
       });
 
-      it('should work with a belongsTo association getter', async function () {
+      it('should work with a belongsTo association getter', async () => {
         const userId = Math.floor(Math.random() * 100000);
 
         const [userA, task] = await Promise.all([
-          this.User.create({
+          SharedUser.create({
             id: userId
           }),
-          this.Task.create({
+          Task.create({
             user_id: userId
           })
         ]);
@@ -533,8 +541,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(userB.get('id')).to.equal(userId);
       });
 
-      it('should work with paranoid instance.destroy()', async function () {
-        const User = this.sequelize.define(
+      it('should work with paranoid instance.destroy()', async () => {
+        const User = current.define(
           'User',
           {
             deletedAt: {
@@ -553,14 +561,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         const user = await User.create();
         await user.destroy();
 
-        this.clock.tick(1000);
+        clock.tick(1000);
 
         const users = await User.findAll();
         expect(users.length).to.equal(0);
       });
 
-      it('should work with paranoid Model.destroy()', async function () {
-        const User = this.sequelize.define(
+      it('should work with paranoid Model.destroy()', async () => {
+        const User = current.define(
           'User',
           {
             deletedAt: {
@@ -583,8 +591,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(users.length).to.equal(0);
       });
 
-      it('should work with `belongsToMany` association `count`', async function () {
-        const user = await this.User.create({
+      it('should work with `belongsToMany` association `count`', async () => {
+        const user = await SharedUser.create({
           name: 'John'
         });
 
@@ -592,8 +600,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(commentCount).to.equal(0);
       });
 
-      it('should work with `hasMany` association `count`', async function () {
-        const user = await this.User.create({
+      it('should work with `hasMany` association `count`', async () => {
+        const user = await SharedUser.create({
           name: 'John'
         });
 

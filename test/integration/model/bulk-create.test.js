@@ -8,10 +8,12 @@ import _ from 'lodash';
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser('Model'), () => {
-  beforeEach(async function () {
-    this.sequelize = await Support.prepareTransactionTest(this.sequelize);
+  let sequelize, SharedUser;
 
-    this.User = this.sequelize.define('User', {
+  beforeEach(async () => {
+    sequelize = await Support.prepareTransactionTest(current);
+
+    SharedUser = sequelize.define('User', {
       username: DataTypes.STRING,
       secretValue: {
         type: DataTypes.STRING,
@@ -23,27 +25,28 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       aBool: DataTypes.BOOLEAN,
       uniqueName: { type: DataTypes.STRING, unique: true }
     });
-    this.Account = this.sequelize.define('Account', {
+    // Registered only so sync() creates their tables; no test references them directly.
+    sequelize.define('Account', {
       accountName: DataTypes.STRING
     });
-    this.Student = this.sequelize.define('Student', {
+    sequelize.define('Student', {
       no: { type: DataTypes.INTEGER, primaryKey: true },
       name: { type: DataTypes.STRING, allowNull: false }
     });
 
-    await this.sequelize.sync({ force: true });
+    await sequelize.sync({ force: true });
   });
 
   describe('bulkCreate', () => {
     if (current.dialect.supports.transactions) {
-      it('supports transactions', async function () {
-        const User = this.sequelize.define('User', {
+      it('supports transactions', async () => {
+        const User = sequelize.define('User', {
           username: DataTypes.STRING
         });
 
         await User.sync({ force: true });
 
-        const transaction = await this.sequelize.transaction();
+        const transaction = await sequelize.transaction();
         await User.bulkCreate([{ username: 'foo' }, { username: 'bar' }], { transaction });
 
         const count1 = await User.count();
@@ -56,8 +59,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
     }
 
-    it('should be able to set createdAt and updatedAt if using silent: true', async function () {
-      const User = this.sequelize.define(
+    it('should be able to set createdAt and updatedAt if using silent: true', async () => {
+      const User = sequelize.define(
         'user',
         {
           name: DataTypes.STRING
@@ -96,8 +99,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
     });
 
-    it('should not fail on validate: true and individualHooks: true', async function () {
-      const User = this.sequelize.define('user', {
+    it('should not fail on validate: true and individualHooks: true', async () => {
+      const User = sequelize.define('user', {
         name: Sequelize.STRING
       });
 
@@ -105,8 +108,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       await User.bulkCreate([{ name: 'James' }], { validate: true, individualHooks: true });
     });
 
-    it('should not insert NULL for unused fields', async function () {
-      const Beer = this.sequelize.define('Beer', {
+    it('should not insert NULL for unused fields', async () => {
+      const Beer = sequelize.define('Beer', {
         style: Sequelize.STRING,
         size: Sequelize.INTEGER
       });
@@ -129,30 +132,30 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       );
     });
 
-    it('properly handles disparate field lists', async function () {
+    it('properly handles disparate field lists', async () => {
       const data = [
         { username: 'Peter', secretValue: '42', uniqueName: '1' },
         { username: 'Paul', uniqueName: '2' },
         { username: 'Steve', uniqueName: '3' }
       ];
 
-      await this.User.bulkCreate(data);
+      await SharedUser.bulkCreate(data);
 
-      const users = await this.User.findAll({ where: { username: 'Paul' } });
+      const users = await SharedUser.findAll({ where: { username: 'Paul' } });
       expect(users.length).to.equal(1);
       expect(users[0].username).to.equal('Paul');
       expect(users[0].secretValue).to.be.null;
     });
 
-    it('inserts multiple values respecting the white list', async function () {
+    it('inserts multiple values respecting the white list', async () => {
       const data = [
         { username: 'Peter', secretValue: '42', uniqueName: '1' },
         { username: 'Paul', secretValue: '23', uniqueName: '2' }
       ];
 
-      await this.User.bulkCreate(data, { fields: ['username', 'uniqueName'] });
+      await SharedUser.bulkCreate(data, { fields: ['username', 'uniqueName'] });
 
-      const users = await this.User.findAll({ order: ['id'] });
+      const users = await SharedUser.findAll({ order: ['id'] });
       expect(users.length).to.equal(2);
       expect(users[0].username).to.equal('Peter');
       expect(users[0].secretValue).to.be.null;
@@ -160,15 +163,15 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(users[1].secretValue).to.be.null;
     });
 
-    it('should store all values if no whitelist is specified', async function () {
+    it('should store all values if no whitelist is specified', async () => {
       const data = [
         { username: 'Peter', secretValue: '42', uniqueName: '1' },
         { username: 'Paul', secretValue: '23', uniqueName: '2' }
       ];
 
-      await this.User.bulkCreate(data);
+      await SharedUser.bulkCreate(data);
 
-      const users = await this.User.findAll({ order: ['id'] });
+      const users = await SharedUser.findAll({ order: ['id'] });
       expect(users.length).to.equal(2);
       expect(users[0].username).to.equal('Peter');
       expect(users[0].secretValue).to.equal('42');
@@ -176,31 +179,31 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(users[1].secretValue).to.equal('23');
     });
 
-    it('should set isNewRecord = false', async function () {
+    it('should set isNewRecord = false', async () => {
       const data = [
         { username: 'Peter', secretValue: '42', uniqueName: '1' },
         { username: 'Paul', secretValue: '23', uniqueName: '2' }
       ];
 
-      await this.User.bulkCreate(data);
+      await SharedUser.bulkCreate(data);
 
-      const users = await this.User.findAll({ order: ['id'] });
+      const users = await SharedUser.findAll({ order: ['id'] });
       expect(users.length).to.equal(2);
       users.forEach((user) => {
         expect(user.isNewRecord).to.equal(false);
       });
     });
 
-    it('saves data with single quote', async function () {
+    it('saves data with single quote', async () => {
       const quote = "Single'Quote",
         data = [
           { username: 'Peter', data: quote, uniqueName: '1' },
           { username: 'Paul', data: quote, uniqueName: '2' }
         ];
 
-      await this.User.bulkCreate(data);
+      await SharedUser.bulkCreate(data);
 
-      const users = await this.User.findAll({ order: ['id'] });
+      const users = await SharedUser.findAll({ order: ['id'] });
       expect(users.length).to.equal(2);
       expect(users[0].username).to.equal('Peter');
       expect(users[0].data).to.equal(quote);
@@ -208,16 +211,16 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(users[1].data).to.equal(quote);
     });
 
-    it('saves data with double quote', async function () {
+    it('saves data with double quote', async () => {
       const quote = 'Double"Quote',
         data = [
           { username: 'Peter', data: quote, uniqueName: '1' },
           { username: 'Paul', data: quote, uniqueName: '2' }
         ];
 
-      await this.User.bulkCreate(data);
+      await SharedUser.bulkCreate(data);
 
-      const users = await this.User.findAll({ order: ['id'] });
+      const users = await SharedUser.findAll({ order: ['id'] });
       expect(users.length).to.equal(2);
       expect(users[0].username).to.equal('Peter');
       expect(users[0].data).to.equal(quote);
@@ -225,16 +228,16 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(users[1].data).to.equal(quote);
     });
 
-    it('saves stringified JSON data', async function () {
+    it('saves stringified JSON data', async () => {
       const json = JSON.stringify({ key: 'value' }),
         data = [
           { username: 'Peter', data: json, uniqueName: '1' },
           { username: 'Paul', data: json, uniqueName: '2' }
         ];
 
-      await this.User.bulkCreate(data);
+      await SharedUser.bulkCreate(data);
 
-      const users = await this.User.findAll({ order: ['id'] });
+      const users = await SharedUser.findAll({ order: ['id'] });
       expect(users.length).to.equal(2);
       expect(users[0].username).to.equal('Peter');
       expect(users[0].data).to.equal(json);
@@ -242,8 +245,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(users[1].data).to.equal(json);
     });
 
-    it('properly handles a model with a length column', async function () {
-      const UserWithLength = this.sequelize.define('UserWithLength', {
+    it('properly handles a model with a length column', async () => {
+      const UserWithLength = sequelize.define('UserWithLength', {
         length: Sequelize.INTEGER
       });
 
@@ -251,15 +254,15 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       await UserWithLength.bulkCreate([{ length: 42 }, { length: 11 }]);
     });
 
-    it('stores the current date in createdAt', async function () {
+    it('stores the current date in createdAt', async () => {
       const data = [
         { username: 'Peter', uniqueName: '1' },
         { username: 'Paul', uniqueName: '2' }
       ];
 
-      await this.User.bulkCreate(data);
+      await SharedUser.bulkCreate(data);
 
-      const users = await this.User.findAll({ order: ['id'] });
+      const users = await SharedUser.findAll({ order: ['id'] });
       expect(users.length).to.equal(2);
       expect(users[0].username).to.equal('Peter');
       expect(parseInt(+users[0].createdAt / 5000, 10)).to.be.closeTo(parseInt(+new Date() / 5000, 10), 1.5);
@@ -267,8 +270,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(parseInt(+users[1].createdAt / 5000, 10)).to.be.closeTo(parseInt(+new Date() / 5000, 10), 1.5);
     });
 
-    it('emits an error when validate is set to true', async function () {
-      const Tasks = this.sequelize.define('Task', {
+    it('emits an error when validate is set to true', async () => {
+      const Tasks = sequelize.define('Task', {
         name: {
           type: Sequelize.STRING,
           allowNull: false
@@ -307,8 +310,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(aggregate.errors[1].errors.get('code')[0].message).to.equal(expectedValidationError);
     });
 
-    it("doesn't emit an error when validate is set to true but our selectedValues are fine", async function () {
-      const Tasks = this.sequelize.define('Task', {
+    it("doesn't emit an error when validate is set to true but our selectedValues are fine", async () => {
+      const Tasks = sequelize.define('Task', {
         name: {
           type: Sequelize.STRING,
           validate: {
@@ -327,8 +330,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       await Tasks.bulkCreate([{ name: 'foo', code: '123' }, { code: '1234' }], { fields: ['code'], validate: true });
     });
 
-    it('should allow blank arrays (return immediatly)', async function () {
-      const Worker = this.sequelize.define('Worker', {});
+    it('should allow blank arrays (return immediatly)', async () => {
+      const Worker = sequelize.define('Worker', {});
 
       await Worker.sync();
 
@@ -337,8 +340,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(workers.length).to.equal(0);
     });
 
-    it('should allow blank creates (with timestamps: false)', async function () {
-      const Worker = this.sequelize.define('Worker', {}, { timestamps: false });
+    it('should allow blank creates (with timestamps: false)', async () => {
+      const Worker = sequelize.define('Worker', {}, { timestamps: false });
 
       await Worker.sync();
 
@@ -346,8 +349,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(workers).to.be.ok;
     });
 
-    it('should allow autoincremented attributes to be set', async function () {
-      const Worker = this.sequelize.define('Worker', {}, { timestamps: false });
+    it('should allow autoincremented attributes to be set', async () => {
+      const Worker = sequelize.define('Worker', {}, { timestamps: false });
 
       await Worker.sync();
       await Worker.bulkCreate([{ id: 5 }, { id: 10 }]);
@@ -357,8 +360,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(workers[1].id).to.equal(10);
     });
 
-    it('should support schemas', async function () {
-      const Dummy = this.sequelize.define(
+    it('should support schemas', async () => {
+      const Dummy = sequelize.define(
         'Dummy',
         {
           foo: DataTypes.STRING,
@@ -370,8 +373,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         }
       );
 
-      await this.sequelize.dropAllSchemas();
-      await this.sequelize.createSchema('space1');
+      await sequelize.dropAllSchemas();
+      await sequelize.createSchema('space1');
       await Dummy.sync({ force: true });
 
       await Dummy.bulkCreate([
@@ -381,19 +384,19 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
 
     if (current.dialect.supports.ignoreDuplicates || current.dialect.supports.onConflictDoNothing) {
-      it('should support the ignoreDuplicates option', async function () {
+      it('should support the ignoreDuplicates option', async () => {
         const data = [
           { uniqueName: 'Peter', secretValue: '42' },
           { uniqueName: 'Paul', secretValue: '23' }
         ];
 
-        await this.User.bulkCreate(data, { fields: ['uniqueName', 'secretValue'] });
+        await SharedUser.bulkCreate(data, { fields: ['uniqueName', 'secretValue'] });
 
         data.push({ uniqueName: 'Michael', secretValue: '26' });
 
-        await this.User.bulkCreate(data, { fields: ['uniqueName', 'secretValue'], ignoreDuplicates: true });
+        await SharedUser.bulkCreate(data, { fields: ['uniqueName', 'secretValue'], ignoreDuplicates: true });
 
-        const users = await this.User.findAll({ order: ['id'] });
+        const users = await SharedUser.findAll({ order: ['id'] });
         expect(users.length).to.equal(3);
         expect(users[0].uniqueName).to.equal('Peter');
         expect(users[0].secretValue).to.equal('42');
@@ -405,13 +408,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     }
 
     if (current.dialect.supports.updateOnDuplicate) {
-      it('should support the updateOnDuplicate option', async function () {
+      it('should support the updateOnDuplicate option', async () => {
         const data = [
           { uniqueName: 'Peter', secretValue: '42' },
           { uniqueName: 'Paul', secretValue: '23' }
         ];
 
-        await this.User.bulkCreate(data, {
+        await SharedUser.bulkCreate(data, {
           fields: ['uniqueName', 'secretValue'],
           updateOnDuplicate: ['secretValue']
         });
@@ -422,12 +425,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           { uniqueName: 'Michael', secretValue: '26' }
         ];
 
-        await this.User.bulkCreate(new_data, {
+        await SharedUser.bulkCreate(new_data, {
           fields: ['uniqueName', 'secretValue'],
           updateOnDuplicate: ['secretValue']
         });
 
-        const users = await this.User.findAll({ order: ['id'] });
+        const users = await SharedUser.findAll({ order: ['id'] });
         expect(users.length).to.equal(3);
         expect(users[0].uniqueName).to.equal('Peter');
         expect(users[0].secretValue).to.equal('43');
@@ -440,8 +443,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
     if (current.dialect.supports.returnValues) {
       describe('return values', () => {
-        it('should make the auto incremented values available on the returned instances', async function () {
-          const User = this.sequelize.define('user', {});
+        it('should make the auto incremented values available on the returned instances', async () => {
+          const User = sequelize.define('user', {});
 
           await User.sync({ force: true });
 
@@ -460,8 +463,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           });
         });
 
-        it('should make the auto incremented values available on the returned instances with custom fields', async function () {
-          const User = this.sequelize.define('user', {
+        it('should make the auto incremented values available on the returned instances with custom fields', async () => {
+          const User = sequelize.define('user', {
             maId: {
               type: DataTypes.INTEGER,
               primaryKey: true,
@@ -490,8 +493,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     }
 
     describe('enums', () => {
-      it('correctly restores enum values', async function () {
-        const Item = this.sequelize.define('Item', {
+      it('correctly restores enum values', async () => {
+        const Item = sequelize.define('Item', {
           state: { type: Sequelize.ENUM, values: ['available', 'in_cart', 'shipped'] },
           name: Sequelize.STRING
         });
@@ -508,8 +511,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
     });
 
-    it('should properly map field names to attribute names', async function () {
-      const Maya = this.sequelize.define('Maya', {
+    it('should properly map field names to attribute names', async () => {
+      const Maya = sequelize.define('Maya', {
         name: Sequelize.STRING,
         secret: {
           field: 'secret_given',
@@ -552,8 +555,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
 
     describe('handles auto increment values', () => {
-      it('should return auto increment primary key values', async function () {
-        const Maya = this.sequelize.define('Maya', {});
+      it('should return auto increment primary key values', async () => {
+        const Maya = sequelize.define('Maya', {});
 
         const M1 = {};
         const M2 = {};
@@ -565,8 +568,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(ms[1].id).to.be.eql(2);
       });
 
-      it('should return supplied values on primary keys', async function () {
-        const User = this.sequelize.define('user', {});
+      it('should return supplied values on primary keys', async () => {
+        const User = sequelize.define('user', {});
 
         await User.sync({ force: true });
 
@@ -580,8 +583,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(users[2].get('id')).to.equal(3).and.to.equal(actualUsers[2].get('id'));
       });
 
-      it('should return supplied values on primary keys when some instances already exists', async function () {
-        const User = this.sequelize.define('user', {});
+      it('should return supplied values on primary keys when some instances already exists', async () => {
+        const User = sequelize.define('user', {});
 
         await User.sync({ force: true });
         await User.bulkCreate([{ id: 1 }, { id: 3 }]);

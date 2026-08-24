@@ -4,26 +4,30 @@ import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import sinon from 'sinon';
 
+const current = Support.sequelize;
+
 describe(Support.getTestDialectTeaser('Model'), () => {
-  before(function () {
-    this.clock = sinon.useFakeTimers();
+  let clock, SharedUser;
+
+  before(() => {
+    clock = sinon.useFakeTimers();
   });
 
-  after(function () {
-    this.clock.restore();
+  after(() => {
+    clock.restore();
   });
 
-  beforeEach(async function () {
-    this.User = this.sequelize.define('User', {
+  beforeEach(async () => {
+    SharedUser = current.define('User', {
       id: { type: DataTypes.INTEGER, primaryKey: true },
       aNumber: { type: DataTypes.INTEGER },
       bNumber: { type: DataTypes.INTEGER },
       cNumber: { type: DataTypes.INTEGER, field: 'c_number' }
     });
 
-    await this.User.sync({ force: true });
+    await SharedUser.sync({ force: true });
 
-    await this.User.bulkCreate([
+    await SharedUser.bulkCreate([
       {
         id: 1,
         aNumber: 0,
@@ -50,97 +54,99 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
   ['increment', 'decrement'].forEach((method) => {
     describe(method, () => {
-      before(function () {
-        this.assert = (increment, decrement) => {
+      let assert;
+
+      before(() => {
+        assert = (increment, decrement) => {
           return method === 'increment' ? increment : decrement;
         };
       });
 
-      it('supports where conditions', async function () {
-        await this.User.findByPk(1);
-        await this.User[method](['aNumber'], { by: 2, where: { id: 1 } });
+      it('supports where conditions', async () => {
+        await SharedUser.findByPk(1);
+        await SharedUser[method](['aNumber'], { by: 2, where: { id: 1 } });
 
-        const user3 = await this.User.findByPk(2);
-        expect(user3.aNumber).to.be.equal(this.assert(0, 0));
+        const user3 = await SharedUser.findByPk(2);
+        expect(user3.aNumber).to.be.equal(assert(0, 0));
       });
 
-      it('uses correct column names for where conditions', async function () {
-        await this.User[method](['aNumber'], { by: 2, where: { cNumber: 0 } });
+      it('uses correct column names for where conditions', async () => {
+        await SharedUser[method](['aNumber'], { by: 2, where: { cNumber: 0 } });
 
-        const user4 = await this.User.findByPk(4);
-        expect(user4.aNumber).to.be.equal(this.assert(2, -2));
+        const user4 = await SharedUser.findByPk(4);
+        expect(user4.aNumber).to.be.equal(assert(2, -2));
       });
 
-      it('should still work right with other concurrent increments', async function () {
-        const aUsers = await this.User.findAll();
+      it('should still work right with other concurrent increments', async () => {
+        const aUsers = await SharedUser.findAll();
 
         await Promise.all([
-          this.User[method](['aNumber'], { by: 2, where: {} }),
-          this.User[method](['aNumber'], { by: 2, where: {} }),
-          this.User[method](['aNumber'], { by: 2, where: {} })
+          SharedUser[method](['aNumber'], { by: 2, where: {} }),
+          SharedUser[method](['aNumber'], { by: 2, where: {} }),
+          SharedUser[method](['aNumber'], { by: 2, where: {} })
         ]);
 
-        const bUsers = await this.User.findAll();
+        const bUsers = await SharedUser.findAll();
         for (let i = 0; i < bUsers.length; i++) {
-          expect(bUsers[i].aNumber).to.equal(this.assert(aUsers[i].aNumber + 6, aUsers[i].aNumber - 6));
+          expect(bUsers[i].aNumber).to.equal(assert(aUsers[i].aNumber + 6, aUsers[i].aNumber - 6));
         }
       });
 
-      it('with array', async function () {
-        const aUsers = await this.User.findAll();
-        await this.User[method](['aNumber'], { by: 2, where: {} });
+      it('with array', async () => {
+        const aUsers = await SharedUser.findAll();
+        await SharedUser[method](['aNumber'], { by: 2, where: {} });
 
-        const bUsers = await this.User.findAll();
+        const bUsers = await SharedUser.findAll();
         for (let i = 0; i < bUsers.length; i++) {
-          expect(bUsers[i].aNumber).to.equal(this.assert(aUsers[i].aNumber + 2, aUsers[i].aNumber - 2));
+          expect(bUsers[i].aNumber).to.equal(assert(aUsers[i].aNumber + 2, aUsers[i].aNumber - 2));
         }
       });
 
-      it('with single field', async function () {
-        const aUsers = await this.User.findAll();
-        await this.User[method]('aNumber', { by: 2, where: {} });
+      it('with single field', async () => {
+        const aUsers = await SharedUser.findAll();
+        await SharedUser[method]('aNumber', { by: 2, where: {} });
 
-        const bUsers = await this.User.findAll();
+        const bUsers = await SharedUser.findAll();
         for (let i = 0; i < bUsers.length; i++) {
-          expect(bUsers[i].aNumber).to.equal(this.assert(aUsers[i].aNumber + 2, aUsers[i].aNumber - 2));
+          expect(bUsers[i].aNumber).to.equal(assert(aUsers[i].aNumber + 2, aUsers[i].aNumber - 2));
         }
       });
 
-      it('with single field and no value', async function () {
-        const aUsers = await this.User.findAll();
-        await this.User[method]('aNumber', { where: {} });
+      it('with single field and no value', async () => {
+        const aUsers = await SharedUser.findAll();
+        await SharedUser[method]('aNumber', { where: {} });
 
-        const bUsers = await this.User.findAll();
+        const bUsers = await SharedUser.findAll();
         for (let i = 0; i < bUsers.length; i++) {
-          expect(bUsers[i].aNumber).to.equal(this.assert(aUsers[i].aNumber + 1, aUsers[i].aNumber - 1));
+          expect(bUsers[i].aNumber).to.equal(assert(aUsers[i].aNumber + 1, aUsers[i].aNumber - 1));
         }
       });
 
-      it('with key value pair', async function () {
-        const aUsers = await this.User.findAll();
-        await this.User[method]({ aNumber: 1, bNumber: 2 }, { where: {} });
+      it('with key value pair', async () => {
+        const aUsers = await SharedUser.findAll();
+        await SharedUser[method]({ aNumber: 1, bNumber: 2 }, { where: {} });
 
-        const bUsers = await this.User.findAll();
+        const bUsers = await SharedUser.findAll();
         for (let i = 0; i < bUsers.length; i++) {
-          expect(bUsers[i].aNumber).to.equal(this.assert(aUsers[i].aNumber + 1, aUsers[i].aNumber - 1));
-          expect(bUsers[i].bNumber).to.equal(this.assert(aUsers[i].bNumber + 2, aUsers[i].bNumber - 2));
+          expect(bUsers[i].aNumber).to.equal(assert(aUsers[i].aNumber + 1, aUsers[i].aNumber - 1));
+          expect(bUsers[i].bNumber).to.equal(assert(aUsers[i].bNumber + 2, aUsers[i].bNumber - 2));
         }
       });
 
-      it('should still work right with other concurrent updates', async function () {
-        const aUsers = await this.User.findAll();
-        await this.User.update({ aNumber: 2 }, { where: {} });
-        await this.User[method](['aNumber'], { by: 2, where: {} });
+      it('should still work right with other concurrent updates', async () => {
+        const aUsers = await SharedUser.findAll();
+        await SharedUser.update({ aNumber: 2 }, { where: {} });
+        await SharedUser[method](['aNumber'], { by: 2, where: {} });
 
-        const bUsers = await this.User.findAll();
+        const bUsers = await SharedUser.findAll();
         for (let i = 0; i < bUsers.length; i++) {
           // for decrement 2 - 2 = 0
-          expect(bUsers[i].aNumber).to.equal(this.assert(aUsers[i].aNumber + 4, aUsers[i].aNumber));
+          expect(bUsers[i].aNumber).to.equal(assert(aUsers[i].aNumber + 4, aUsers[i].aNumber));
         }
       });
 
-      it('with timestamps set to true', async function () {
-        const User = this.sequelize.define(
+      it('with timestamps set to true', async () => {
+        const User = current.define(
           'IncrementUser',
           {
             aNumber: DataTypes.INTEGER
@@ -152,14 +158,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         const user = await User.create({ aNumber: 1 });
         const oldDate = user.updatedAt;
 
-        this.clock.tick(1000);
+        clock.tick(1000);
         await User[method]('aNumber', { by: 1, where: {} });
 
         await expect(User.findByPk(1)).to.eventually.have.property('updatedAt').afterTime(oldDate);
       });
 
-      it('with timestamps set to true and options.silent set to true', async function () {
-        const User = this.sequelize.define(
+      it('with timestamps set to true and options.silent set to true', async () => {
+        const User = current.define(
           'IncrementUser',
           {
             aNumber: DataTypes.INTEGER
@@ -171,14 +177,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         const user = await User.create({ aNumber: 1 });
         const oldDate = user.updatedAt;
 
-        this.clock.tick(1000);
+        clock.tick(1000);
         await User[method]('aNumber', { by: 1, silent: true, where: {} });
 
         await expect(User.findByPk(1)).to.eventually.have.property('updatedAt').equalTime(oldDate);
       });
 
-      it('should work with scopes', async function () {
-        const User = this.sequelize.define(
+      it('should work with scopes', async () => {
+        const User = current.define(
           'User',
           {
             aNumber: DataTypes.INTEGER,
@@ -211,14 +217,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         await User.scope('jeff')[method]('aNumber', {});
 
         const jeff = await User.scope('jeff').findOne();
-        expect(jeff.aNumber).to.equal(this.assert(2, 0));
+        expect(jeff.aNumber).to.equal(assert(2, 0));
 
         const notJeff = await User.findOne({
           where: {
             name: 'Not Jeff'
           }
         });
-        expect(notJeff.aNumber).to.equal(this.assert(3, 3));
+        expect(notJeff.aNumber).to.equal(assert(3, 3));
       });
     });
   });

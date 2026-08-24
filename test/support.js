@@ -92,16 +92,13 @@ const Support = {
     return new Sequelize(db, user, pass, options);
   },
 
-  clearDatabase(sequelize) {
-    return sequelize
-      .getQueryInterface()
-      .dropAllTables()
-      .then(() => {
-        sequelize.modelManager.models = [];
-        sequelize.models = {};
+  async clearDatabase(sequelize) {
+    await sequelize.getQueryInterface().dropAllTables();
 
-        return sequelize.getQueryInterface().dropAllEnums();
-      });
+    sequelize.modelManager.models = [];
+    sequelize.models = {};
+
+    await sequelize.getQueryInterface().dropAllEnums();
   },
 
   getSupportedDialects() {

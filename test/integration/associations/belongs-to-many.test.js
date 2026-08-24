@@ -1151,9 +1151,9 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
       expect(ParanoidUser.options.paranoid).to.be.ok;
       expect(ParanoidTask.options.paranoid).to.be.ok;
 
-      _.forEach(ParanoidUser.associations, (association) => {
+      for (const association of Object.values(ParanoidUser.associations)) {
         expect(association.through.model.options.paranoid).not.to.be.ok;
-      });
+      }
     });
   });
 
@@ -1405,8 +1405,6 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
     });
 
     it('keeps the primary key if it was added by the user', function () {
-      let fk;
-
       this.UserTasks = this.sequelize.define('usertasks', {
         id: {
           type: Sequelize.INTEGER,
@@ -1431,10 +1429,10 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
       expect(Object.keys(this.UserTasks.primaryKeys)).to.deep.equal(['id']);
       expect(Object.keys(this.UserTasks2.primaryKeys)).to.deep.equal(['userTasksId']);
 
-      _.each([this.UserTasks, this.UserTasks2], (model) => {
-        fk = Object.keys(model.options.uniqueKeys)[0];
+      for (const model of [this.UserTasks, this.UserTasks2]) {
+        const fk = Object.keys(model.options.uniqueKeys)[0];
         expect(model.options.uniqueKeys[fk].fields.sort()).to.deep.equal(['TaskId', 'UserId']);
-      });
+      }
     });
 
     describe('without sync', () => {

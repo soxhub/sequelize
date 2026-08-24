@@ -2,7 +2,6 @@ import { describe, it, beforeEach, afterEach } from 'mocha';
 import { AssociationError } from '../../../lib/errors.js';
 import { expect } from 'chai';
 import sinon from 'sinon';
-import _ from 'lodash';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import BelongsTo from '../../../lib/associations/belongs-to.js';
@@ -80,21 +79,21 @@ describe(Support.getTestDialectTeaser('belongsToMany'), () => {
     const User = current.define('User');
     const Task = current.define('Task');
 
-    _.each(methods, (alias, method) => {
+    for (const [method, alias] of Object.entries(methods)) {
       User.prototype[method] = function () {
         const realMethod = this.constructor.associations.task[alias];
         expect(realMethod).to.be.a('function');
         return realMethod;
       };
-    });
+    }
 
     User.belongsToMany(Task, { through: 'UserTasks', as: 'task' });
 
     const user = User.build();
 
-    _.each(methods, (alias, method) => {
+    for (const method of Object.keys(methods)) {
       expect(user[method]()).to.be.a('function');
-    });
+    }
   });
 
   describe('proper syntax', () => {

@@ -2,7 +2,6 @@ import { describe, it, beforeEach } from 'mocha';
 import { expect } from 'chai';
 import DataTypes from '../../../../lib/data-types.js';
 import Support from '../../support.js';
-import _ from 'lodash';
 
 const Sequelize = Support.Sequelize;
 
@@ -34,9 +33,9 @@ describe('[POSTGRES Specific] ExclusionConstraintError', () => {
     };
     const err = new Sequelize.ExclusionConstraintError(errDetails);
 
-    _.each(errDetails, (value, key) => {
+    for (const [key, value] of Object.entries(errDetails)) {
       expect(value).to.be.deep.equal(err[key]);
-    });
+    }
   });
 
   it('should throw ExclusionConstraintError when "period" value overlaps existing', async function () {

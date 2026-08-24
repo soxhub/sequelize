@@ -107,27 +107,27 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
         this.sequelizeWithInvalidConnection = new Sequelize('wat', 'trololo', 'wow', options);
       });
 
-      it('triggers the error event', function () {
-        return this.sequelizeWithInvalidConnection.authenticate().catch((err) => {
-          expect(err).to.not.be.null;
-        });
+      it('triggers the error event', async function () {
+        const err = await expect(this.sequelizeWithInvalidConnection.authenticate()).to.be.rejected;
+
+        expect(err).to.not.be.null;
       });
 
-      it('triggers an actual RangeError or ConnectionError', function () {
-        return this.sequelizeWithInvalidConnection.authenticate().catch((err) => {
-          expect(err instanceof RangeError || err instanceof Sequelize.ConnectionError).to.be.ok;
-        });
+      it('triggers an actual RangeError or ConnectionError', async function () {
+        const err = await expect(this.sequelizeWithInvalidConnection.authenticate()).to.be.rejected;
+
+        expect(err instanceof RangeError || err instanceof Sequelize.ConnectionError).to.be.ok;
       });
 
-      it('triggers the actual adapter error', function () {
-        return this.sequelizeWithInvalidConnection.authenticate().catch((err) => {
-          expect(
-            err.message.match(/connect ECONNREFUSED/) ||
-              err.message.match(/invalid port number/) ||
-              err.message.match(/should be >=? 0 and < 65536/) ||
-              err.message.match(/Login failed for user/)
-          ).to.be.ok;
-        });
+      it('triggers the actual adapter error', async function () {
+        const err = await expect(this.sequelizeWithInvalidConnection.authenticate()).to.be.rejected;
+
+        expect(
+          err.message.match(/connect ECONNREFUSED/) ||
+            err.message.match(/invalid port number/) ||
+            err.message.match(/should be >=? 0 and < 65536/) ||
+            err.message.match(/Login failed for user/)
+        ).to.be.ok;
       });
     });
 
@@ -136,33 +136,33 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
         this.sequelizeWithInvalidCredentials = new Sequelize('localhost', 'wtf', 'lol', this.sequelize.options);
       });
 
-      it('triggers the error event', function () {
-        return this.sequelizeWithInvalidCredentials.authenticate().catch((err) => {
-          expect(err).to.not.be.null;
-        });
+      it('triggers the error event', async function () {
+        const err = await expect(this.sequelizeWithInvalidCredentials.authenticate()).to.be.rejected;
+
+        expect(err).to.not.be.null;
       });
 
-      it('triggers an actual sequlize error', function () {
-        return this.sequelizeWithInvalidCredentials.authenticate().catch((err) => {
-          expect(err).to.be.instanceof(Sequelize.Error);
-        });
+      it('triggers an actual sequlize error', async function () {
+        const err = await expect(this.sequelizeWithInvalidCredentials.authenticate()).to.be.rejected;
+
+        expect(err).to.be.instanceof(Sequelize.Error);
       });
 
-      it('triggers the error event when using replication', () => {
-        return new Sequelize('sequelize', null, null, {
-          dialect,
-          replication: {
-            read: {
-              host: 'localhost',
-              username: 'omg',
-              password: 'lol'
+      it('triggers the error event when using replication', async () => {
+        const err = await expect(
+          new Sequelize('sequelize', null, null, {
+            dialect,
+            replication: {
+              read: {
+                host: 'localhost',
+                username: 'omg',
+                password: 'lol'
+              }
             }
-          }
-        })
-          .authenticate()
-          .catch((err) => {
-            expect(err).to.not.be.null;
-          });
+          }).authenticate()
+        ).to.be.rejected;
+
+        expect(err).to.not.be.null;
       });
     });
   });
@@ -194,9 +194,8 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
 
   describe('model', () => {
     it('throws an error if the dao being accessed is undefined', function () {
-      const self = this;
       expect(() => {
-        self.sequelize.model('Project');
+        this.sequelize.model('Project');
       }).to.throw(/project has not been defined/i);
     });
 
@@ -245,205 +244,171 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       return this.sequelize.query(this.insertQuery);
     });
 
-    it('executes a query if a placeholder value is an array', function () {
-      return this.sequelize
-        .query(
-          `INSERT INTO ${qq(this.User.tableName)} (username, email_address, ` +
-            `${qq('createdAt')}, ${qq('updatedAt')}) VALUES ?;`,
-          {
-            replacements: [
-              [
-                ['john', 'john@gmail.com', '2012-01-01 10:10:10', '2012-01-01 10:10:10'],
-                ['michael', 'michael@gmail.com', '2012-01-01 10:10:10', '2012-01-01 10:10:10']
-              ]
+    it('executes a query if a placeholder value is an array', async function () {
+      await this.sequelize.query(
+        `INSERT INTO ${qq(this.User.tableName)} (username, email_address, ` +
+          `${qq('createdAt')}, ${qq('updatedAt')}) VALUES ?;`,
+        {
+          replacements: [
+            [
+              ['john', 'john@gmail.com', '2012-01-01 10:10:10', '2012-01-01 10:10:10'],
+              ['michael', 'michael@gmail.com', '2012-01-01 10:10:10', '2012-01-01 10:10:10']
             ]
-          }
-        )
-        .then(() =>
-          this.sequelize.query(`SELECT * FROM ${qq(this.User.tableName)};`, {
-            type: this.sequelize.QueryTypes.SELECT
-          })
-        )
-        .then((rows) => {
-          expect(rows).to.be.lengthOf(2);
-          expect(rows[0].username).to.be.equal('john');
-          expect(rows[1].username).to.be.equal('michael');
-        });
+          ]
+        }
+      );
+
+      const rows = await this.sequelize.query(`SELECT * FROM ${qq(this.User.tableName)};`, {
+        type: this.sequelize.QueryTypes.SELECT
+      });
+
+      expect(rows).to.be.lengthOf(2);
+      expect(rows[0].username).to.be.equal('john');
+      expect(rows[1].username).to.be.equal('michael');
     });
 
     describe('logging', () => {
-      it('executes a query with global benchmarking option and default logger', () => {
+      it('executes a query with global benchmarking option and default logger', async () => {
         const logger = sinon.spy(console, 'log');
         const sequelize = Support.createSequelizeInstance({
           logging: logger,
           benchmark: true
         });
 
-        return sequelize.query('select 1;').then(() => {
-          expect(logger.calledOnce).to.be.true;
-          expect(logger.args[0][0]).to.be.match(/Executed \(default\): select 1; Elapsed time: \d+ms/);
-        });
+        await sequelize.query('select 1;');
+
+        expect(logger.calledOnce).to.be.true;
+        expect(logger.args[0][0]).to.be.match(/Executed \(default\): select 1; Elapsed time: \d+ms/);
       });
 
       // We can only test MySQL warnings when using MySQL.
 
-      it('executes a query with global benchmarking option and custom logger', () => {
+      it('executes a query with global benchmarking option and custom logger', async () => {
         const logger = sinon.spy();
         const sequelize = Support.createSequelizeInstance({
           logging: logger,
           benchmark: true
         });
 
-        return sequelize.query('select 1;').then(() => {
-          expect(logger.calledOnce).to.be.true;
-          expect(logger.args[0][0]).to.be.equal('Executed (default): select 1;');
-          expect(typeof logger.args[0][1] === 'number').to.be.true;
-        });
+        await sequelize.query('select 1;');
+
+        expect(logger.calledOnce).to.be.true;
+        expect(logger.args[0][0]).to.be.equal('Executed (default): select 1;');
+        expect(typeof logger.args[0][1] === 'number').to.be.true;
       });
 
-      it('executes a query with benchmarking option and default logger', function () {
+      it('executes a query with benchmarking option and default logger', async function () {
         const logger = sinon.spy(console, 'log');
-        return this.sequelize
-          .query('select 1;', {
-            logging: logger,
-            benchmark: true
-          })
-          .then(() => {
-            expect(logger.calledOnce).to.be.true;
-            expect(logger.args[0][0]).to.be.match(/Executed \(default\): select 1; Elapsed time: \d+ms/);
-          });
+
+        await this.sequelize.query('select 1;', {
+          logging: logger,
+          benchmark: true
+        });
+
+        expect(logger.calledOnce).to.be.true;
+        expect(logger.args[0][0]).to.be.match(/Executed \(default\): select 1; Elapsed time: \d+ms/);
       });
 
-      it('executes a query with benchmarking option and custom logger', function () {
+      it('executes a query with benchmarking option and custom logger', async function () {
         const logger = sinon.spy();
 
-        return this.sequelize
-          .query('select 1;', {
-            logging: logger,
-            benchmark: true
-          })
-          .then(() => {
-            expect(logger.calledOnce).to.be.true;
-            expect(logger.args[0][0]).to.be.equal('Executed (default): select 1;');
-            expect(typeof logger.args[0][1] === 'number').to.be.true;
-          });
+        await this.sequelize.query('select 1;', {
+          logging: logger,
+          benchmark: true
+        });
+
+        expect(logger.calledOnce).to.be.true;
+        expect(logger.args[0][0]).to.be.equal('Executed (default): select 1;');
+        expect(typeof logger.args[0][1] === 'number').to.be.true;
       });
     });
 
-    it('executes select queries correctly', function () {
-      const self = this;
-      return self.sequelize
-        .query(this.insertQuery)
-        .then(() => {
-          return self.sequelize.query('select * from ' + qq(self.User.tableName) + '');
+    it('executes select queries correctly', async function () {
+      await this.sequelize.query(this.insertQuery);
+
+      const [users] = await this.sequelize.query('select * from ' + qq(this.User.tableName) + '');
+
+      expect(
+        users.map((u) => {
+          return u.username;
         })
-        .then(([users]) => {
-          expect(
-            users.map((u) => {
-              return u.username;
-            })
-          ).to.include('john');
-        });
+      ).to.include('john');
     });
 
-    it('executes select queries correctly when quoteIdentifiers is false', function () {
-      const self = this,
-        seq = Object.create(self.sequelize);
+    it('executes select queries correctly when quoteIdentifiers is false', async function () {
+      const seq = Object.create(this.sequelize);
 
       seq.options.quoteIdentifiers = false;
-      return seq
-        .query(this.insertQuery)
-        .then(() => {
-          return seq.query('select * from ' + qq(self.User.tableName) + '');
+
+      await seq.query(this.insertQuery);
+
+      const [users] = await seq.query('select * from ' + qq(this.User.tableName) + '');
+
+      expect(
+        users.map((u) => {
+          return u.username;
         })
-        .then(([users]) => {
-          expect(
-            users.map((u) => {
-              return u.username;
-            })
-          ).to.include('john');
-        });
+      ).to.include('john');
     });
 
-    it('executes select query with dot notation results', function () {
-      const self = this;
-      return self.sequelize
-        .query('DELETE FROM ' + qq(self.User.tableName))
-        .then(() => {
-          return self.sequelize.query(self.insertQuery);
-        })
-        .then(() => {
-          return self.sequelize.query(
-            'select username as ' + qq('user.username') + ' from ' + qq(self.User.tableName) + ''
-          );
-        })
-        .then(([users]) => {
-          expect(users).to.deep.equal([{ 'user.username': 'john' }]);
-        });
+    it('executes select query with dot notation results', async function () {
+      await this.sequelize.query('DELETE FROM ' + qq(this.User.tableName));
+      await this.sequelize.query(this.insertQuery);
+
+      const [users] = await this.sequelize.query(
+        'select username as ' + qq('user.username') + ' from ' + qq(this.User.tableName) + ''
+      );
+
+      expect(users).to.deep.equal([{ 'user.username': 'john' }]);
     });
 
-    it('executes select query with dot notation results and nest it', function () {
-      const self = this;
-      return self.sequelize
-        .query('DELETE FROM ' + qq(self.User.tableName))
-        .then(() => {
-          return self.sequelize.query(self.insertQuery);
+    it('executes select query with dot notation results and nest it', async function () {
+      await this.sequelize.query('DELETE FROM ' + qq(this.User.tableName));
+      await this.sequelize.query(this.insertQuery);
+
+      const users = await this.sequelize.query(
+        'select username as ' + qq('user.username') + ' from ' + qq(this.User.tableName) + '',
+        { raw: true, nest: true }
+      );
+
+      expect(
+        users.map((u) => {
+          return u.user;
         })
-        .then(() => {
-          return self.sequelize.query(
-            'select username as ' + qq('user.username') + ' from ' + qq(self.User.tableName) + '',
-            { raw: true, nest: true }
-          );
-        })
-        .then((users) => {
-          expect(
-            users.map((u) => {
-              return u.user;
-            })
-          ).to.deep.equal([{ username: 'john' }]);
-        });
+      ).to.deep.equal([{ username: 'john' }]);
     });
 
-    it('uses the passed model', function () {
-      return this.sequelize
-        .query(this.insertQuery)
-        .then(() => {
-          return this.sequelize.query('SELECT * FROM ' + qq(this.User.tableName) + ';', {
-            model: this.User
-          });
-        })
-        .then((users) => {
-          expect(users[0]).to.be.instanceof(this.User);
-        });
+    it('uses the passed model', async function () {
+      await this.sequelize.query(this.insertQuery);
+
+      const users = await this.sequelize.query('SELECT * FROM ' + qq(this.User.tableName) + ';', {
+        model: this.User
+      });
+
+      expect(users[0]).to.be.instanceof(this.User);
     });
 
-    it('maps the field names to attributes based on the passed model', function () {
-      return this.sequelize
-        .query(this.insertQuery)
-        .then(() => {
-          return this.sequelize.query('SELECT * FROM ' + qq(this.User.tableName) + ';', {
-            model: this.User,
-            mapToModel: true
-          });
-        })
-        .then((users) => {
-          expect(users[0].emailAddress).to.be.equal('john@gmail.com');
-        });
+    it('maps the field names to attributes based on the passed model', async function () {
+      await this.sequelize.query(this.insertQuery);
+
+      const users = await this.sequelize.query('SELECT * FROM ' + qq(this.User.tableName) + ';', {
+        model: this.User,
+        mapToModel: true
+      });
+
+      expect(users[0].emailAddress).to.be.equal('john@gmail.com');
     });
 
-    it('arbitrarily map the field names', function () {
-      return this.sequelize
-        .query(this.insertQuery)
-        .then(() => {
-          return this.sequelize.query('SELECT * FROM ' + qq(this.User.tableName) + ';', {
-            type: 'SELECT',
-            fieldMap: { username: 'userName', email_address: 'email' }
-          });
-        })
-        .then((users) => {
-          expect(users[0].userName).to.be.equal('john');
-          expect(users[0].email).to.be.equal('john@gmail.com');
-        });
+    it('arbitrarily map the field names', async function () {
+      await this.sequelize.query(this.insertQuery);
+
+      const users = await this.sequelize.query('SELECT * FROM ' + qq(this.User.tableName) + ';', {
+        type: 'SELECT',
+        fieldMap: { username: 'userName', email_address: 'email' }
+      });
+
+      expect(users[0].userName).to.be.equal('john');
+      expect(users[0].email).to.be.equal('john@gmail.com');
     });
 
     it('reject if `values` and `options.replacements` are both passed', function () {
@@ -482,7 +447,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
         .should.be.rejectedWith(Error, 'Both `replacements` and `bind` cannot be set at the same time');
     });
 
-    it('properly adds and escapes replacement value', function () {
+    it('properly adds and escapes replacement value', async function () {
       let logSql;
       const number = 1,
         date = new Date(),
@@ -491,38 +456,37 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
         buffer = new Buffer('t\'e"st');
 
       date.setMilliseconds(0);
-      return this.sequelize
-        .query(
-          {
-            query: 'select ? as number, ? as date,? as string,? as boolean,? as buffer',
-            values: [number, date, string, boolean, buffer]
-          },
-          {
-            type: this.sequelize.QueryTypes.SELECT,
-            logging(s) {
-              logSql = s;
-            }
+
+      const result = await this.sequelize.query(
+        {
+          query: 'select ? as number, ? as date,? as string,? as boolean,? as buffer',
+          values: [number, date, string, boolean, buffer]
+        },
+        {
+          type: this.sequelize.QueryTypes.SELECT,
+          logging(s) {
+            logSql = s;
           }
-        )
-        .then((result) => {
-          const res = result[0] || {};
-          res.date = res.date && new Date(res.date);
-          res.boolean = res.boolean && true;
-          if (typeof res.buffer === 'string' && res.buffer.indexOf('\\x') === 0) {
-            res.buffer = new Buffer(res.buffer.substring(2), 'hex');
-          }
-          expect(res).to.deep.equal({
-            number,
-            date,
-            string,
-            boolean,
-            buffer
-          });
-          expect(logSql.indexOf('?')).to.equal(-1);
-        });
+        }
+      );
+
+      const res = result[0] || {};
+      res.date = res.date && new Date(res.date);
+      res.boolean = res.boolean && true;
+      if (typeof res.buffer === 'string' && res.buffer.indexOf('\\x') === 0) {
+        res.buffer = new Buffer(res.buffer.substring(2), 'hex');
+      }
+      expect(res).to.deep.equal({
+        number,
+        date,
+        string,
+        boolean,
+        buffer
+      });
+      expect(logSql.indexOf('?')).to.equal(-1);
     });
 
-    it('it allows to pass custom class instances', function () {
+    it('it allows to pass custom class instances', async function () {
       let logSql;
       class SQLStatement {
         constructor() {
@@ -532,108 +496,113 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
           return 'select ? as foo, ? as bar';
         }
       }
-      return this.sequelize
-        .query(new SQLStatement(), { type: this.sequelize.QueryTypes.SELECT, logging: (s) => (logSql = s) })
-        .then((result) => {
-          expect(result).to.deep.equal([{ foo: 1, bar: 2 }]);
-          expect(logSql.indexOf('?')).to.equal(-1);
-        });
+
+      const result = await this.sequelize.query(new SQLStatement(), {
+        type: this.sequelize.QueryTypes.SELECT,
+        logging: (s) => (logSql = s)
+      });
+
+      expect(result).to.deep.equal([{ foo: 1, bar: 2 }]);
+      expect(logSql.indexOf('?')).to.equal(-1);
     });
 
-    it('uses properties `query` and `values` if query is tagged', function () {
+    it('uses properties `query` and `values` if query is tagged', async function () {
       let logSql;
-      return this.sequelize
-        .query(
-          { query: 'select ? as foo, ? as bar', values: [1, 2] },
-          {
-            type: this.sequelize.QueryTypes.SELECT,
-            logging(s) {
-              logSql = s;
-            }
+
+      const result = await this.sequelize.query(
+        { query: 'select ? as foo, ? as bar', values: [1, 2] },
+        {
+          type: this.sequelize.QueryTypes.SELECT,
+          logging(s) {
+            logSql = s;
           }
-        )
-        .then((result) => {
-          expect(result).to.deep.equal([{ foo: 1, bar: 2 }]);
-          expect(logSql.indexOf('?')).to.equal(-1);
-        });
+        }
+      );
+
+      expect(result).to.deep.equal([{ foo: 1, bar: 2 }]);
+      expect(logSql.indexOf('?')).to.equal(-1);
     });
 
-    it('uses properties `query` and `bind` if query is tagged', function () {
+    it('uses properties `query` and `bind` if query is tagged', async function () {
       const typeCast = '::int';
       let logSql;
-      return this.sequelize
-        .query(
-          { query: 'select $1' + typeCast + ' as foo, $2' + typeCast + ' as bar', bind: [1, 2] },
-          {
-            type: this.sequelize.QueryTypes.SELECT,
-            logging(s) {
-              logSql = s;
-            }
+
+      const result = await this.sequelize.query(
+        { query: 'select $1' + typeCast + ' as foo, $2' + typeCast + ' as bar', bind: [1, 2] },
+        {
+          type: this.sequelize.QueryTypes.SELECT,
+          logging(s) {
+            logSql = s;
           }
-        )
-        .then((result) => {
-          expect(result).to.deep.equal([{ foo: 1, bar: 2 }]);
-          expect(logSql.indexOf('$1')).to.be.above(-1);
-          expect(logSql.indexOf('$2')).to.be.above(-1);
-        });
+        }
+      );
+
+      expect(result).to.deep.equal([{ foo: 1, bar: 2 }]);
+      expect(logSql.indexOf('$1')).to.be.above(-1);
+      expect(logSql.indexOf('$2')).to.be.above(-1);
     });
 
-    it('dot separated attributes when doing a raw query without nest', function () {
+    it('dot separated attributes when doing a raw query without nest', async function () {
       const tickChar = '"',
         sql = 'select 1 as ' + Sequelize.Utils.addTicks('foo.bar.baz', tickChar);
 
-      return expect(
-        this.sequelize.query(sql, { raw: true, nest: false }).then((rows) => rows[0])
-      ).to.eventually.deep.equal([{ 'foo.bar.baz': 1 }]);
+      const rows = await this.sequelize.query(sql, { raw: true, nest: false });
+
+      expect(rows[0]).to.deep.equal([{ 'foo.bar.baz': 1 }]);
     });
 
-    it('destructs dot separated attributes when doing a raw query using nest', function () {
+    it('destructs dot separated attributes when doing a raw query using nest', async function () {
       const tickChar = '"',
         sql = 'select 1 as ' + Sequelize.Utils.addTicks('foo.bar.baz', tickChar);
 
-      return this.sequelize.query(sql, { raw: true, nest: true }).then((result) => {
-        expect(result).to.deep.equal([{ foo: { bar: { baz: 1 } } }]);
+      const result = await this.sequelize.query(sql, { raw: true, nest: true });
+
+      expect(result).to.deep.equal([{ foo: { bar: { baz: 1 } } }]);
+    });
+
+    it('replaces token with the passed array', async function () {
+      const result = await this.sequelize.query('select ? as foo, ? as bar', {
+        type: this.sequelize.QueryTypes.SELECT,
+        replacements: [1, 2]
       });
+
+      expect(result).to.deep.equal([{ foo: 1, bar: 2 }]);
     });
 
-    it('replaces token with the passed array', function () {
-      return this.sequelize
-        .query('select ? as foo, ? as bar', { type: this.sequelize.QueryTypes.SELECT, replacements: [1, 2] })
-        .then((result) => {
-          expect(result).to.deep.equal([{ foo: 1, bar: 2 }]);
-        });
+    it('replaces named parameters with the passed object', async function () {
+      const rows = await this.sequelize.query('select :one as foo, :two as bar', {
+        raw: true,
+        replacements: { one: 1, two: 2 }
+      });
+
+      expect(rows[0]).to.deep.equal([{ foo: 1, bar: 2 }]);
     });
 
-    it('replaces named parameters with the passed object', function () {
-      return expect(
-        this.sequelize
-          .query('select :one as foo, :two as bar', { raw: true, replacements: { one: 1, two: 2 } })
-          .then((rows) => rows[0])
-      ).to.eventually.deep.equal([{ foo: 1, bar: 2 }]);
+    it('replaces named parameters with the passed object and ignore those which does not qualify', async function () {
+      const rows = await this.sequelize.query("select :one as foo, :two as bar, '00:00' as baz", {
+        raw: true,
+        replacements: { one: 1, two: 2 }
+      });
+
+      expect(rows[0]).to.deep.equal([{ foo: 1, bar: 2, baz: '00:00' }]);
     });
 
-    it('replaces named parameters with the passed object and ignore those which does not qualify', function () {
-      return expect(
-        this.sequelize
-          .query("select :one as foo, :two as bar, '00:00' as baz", { raw: true, replacements: { one: 1, two: 2 } })
-          .then((rows) => rows[0])
-      ).to.eventually.deep.equal([{ foo: 1, bar: 2, baz: '00:00' }]);
+    it('replaces named parameters with the passed object using the same key twice', async function () {
+      const rows = await this.sequelize.query('select :one as foo, :two as bar, :one as baz', {
+        raw: true,
+        replacements: { one: 1, two: 2 }
+      });
+
+      expect(rows[0]).to.deep.equal([{ foo: 1, bar: 2, baz: 1 }]);
     });
 
-    it('replaces named parameters with the passed object using the same key twice', function () {
-      return expect(
-        this.sequelize
-          .query('select :one as foo, :two as bar, :one as baz', { raw: true, replacements: { one: 1, two: 2 } })
-          .then((rows) => rows[0])
-      ).to.eventually.deep.equal([{ foo: 1, bar: 2, baz: 1 }]);
-    });
+    it('replaces named parameters with the passed object having a null property', async function () {
+      const rows = await this.sequelize.query('select :one as foo, :two as bar', {
+        raw: true,
+        replacements: { one: 1, two: null }
+      });
 
-    it('replaces named parameters with the passed object having a null property', function () {
-      return expect(
-        this.sequelize
-          .query('select :one as foo, :two as bar', { raw: true, replacements: { one: 1, two: null } })
-          .then((rows) => rows[0])
-      ).to.eventually.deep.equal([{ foo: 1, bar: null }]);
+      expect(rows[0]).to.deep.equal([{ foo: 1, bar: null }]);
     });
 
     it('reject when key is missing in the passed object', function () {
@@ -669,107 +638,108 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
         .should.be.rejectedWith(Error, '"replacements" must be an array or a plain object');
     });
 
-    it('binds token with the passed array', function () {
+    it('binds token with the passed array', async function () {
       const typeCast = '::int';
       let logSql;
-      return this.sequelize
-        .query('select $1' + typeCast + ' as foo, $2' + typeCast + ' as bar', {
-          type: this.sequelize.QueryTypes.SELECT,
-          bind: [1, 2],
-          logging(s) {
-            logSql = s;
-          }
-        })
-        .then((result) => {
-          expect(result).to.deep.equal([{ foo: 1, bar: 2 }]);
 
-          expect(logSql.indexOf('$1')).to.be.above(-1);
-        });
+      const result = await this.sequelize.query('select $1' + typeCast + ' as foo, $2' + typeCast + ' as bar', {
+        type: this.sequelize.QueryTypes.SELECT,
+        bind: [1, 2],
+        logging(s) {
+          logSql = s;
+        }
+      });
+
+      expect(result).to.deep.equal([{ foo: 1, bar: 2 }]);
+
+      expect(logSql.indexOf('$1')).to.be.above(-1);
     });
 
-    it('binds named parameters with the passed object', function () {
+    it('binds named parameters with the passed object', async function () {
       const typeCast = '::int';
       let logSql;
-      return this.sequelize
-        .query('select $one' + typeCast + ' as foo, $two' + typeCast + ' as bar', {
+
+      const result = await this.sequelize.query('select $one' + typeCast + ' as foo, $two' + typeCast + ' as bar', {
+        raw: true,
+        bind: { one: 1, two: 2 },
+        logging(s) {
+          logSql = s;
+        }
+      });
+
+      expect(result[0]).to.deep.equal([{ foo: 1, bar: 2 }]);
+
+      expect(logSql.indexOf('$1')).to.be.above(-1);
+    });
+
+    it('binds named parameters with the passed object using the same key twice', async function () {
+      const typeCast = '::int';
+      let logSql;
+
+      const result = await this.sequelize.query(
+        'select $one' + typeCast + ' as foo, $two' + typeCast + ' as bar, $one' + typeCast + ' as baz',
+        {
           raw: true,
           bind: { one: 1, two: 2 },
           logging(s) {
             logSql = s;
           }
-        })
-        .then((result) => {
-          expect(result[0]).to.deep.equal([{ foo: 1, bar: 2 }]);
+        }
+      );
 
-          expect(logSql.indexOf('$1')).to.be.above(-1);
-        });
+      expect(result[0]).to.deep.equal([{ foo: 1, bar: 2, baz: 1 }]);
+
+      expect(logSql.indexOf('$1')).to.be.above(-1);
+      expect(logSql.indexOf('$2')).to.be.above(-1);
+      expect(logSql.indexOf('$3')).to.equal(-1);
     });
 
-    it('binds named parameters with the passed object using the same key twice', function () {
+    it('binds named parameters with the passed object having a null property', async function () {
+      const typeCast = '::int';
+
+      const result = await this.sequelize.query('select $one' + typeCast + ' as foo, $two' + typeCast + ' as bar', {
+        raw: true,
+        bind: { one: 1, two: null }
+      });
+
+      expect(result[0]).to.deep.equal([{ foo: 1, bar: null }]);
+    });
+
+    it('binds named parameters array handles escaped $$', async function () {
       const typeCast = '::int';
       let logSql;
-      return this.sequelize
-        .query('select $one' + typeCast + ' as foo, $two' + typeCast + ' as bar, $one' + typeCast + ' as baz', {
-          raw: true,
-          bind: { one: 1, two: 2 },
-          logging(s) {
-            logSql = s;
-          }
-        })
-        .then((result) => {
-          expect(result[0]).to.deep.equal([{ foo: 1, bar: 2, baz: 1 }]);
 
-          expect(logSql.indexOf('$1')).to.be.above(-1);
-          expect(logSql.indexOf('$2')).to.be.above(-1);
-          expect(logSql.indexOf('$3')).to.equal(-1);
-        });
+      const result = await this.sequelize.query('select $1' + typeCast + " as foo, '$$ / $$1' as bar", {
+        raw: true,
+        bind: [1],
+        logging(s) {
+          logSql = s;
+        }
+      });
+
+      expect(result[0]).to.deep.equal([{ foo: 1, bar: '$ / $1' }]);
+
+      expect(logSql.indexOf('$1')).to.be.above(-1);
     });
 
-    it('binds named parameters with the passed object having a null property', function () {
+    it('binds named parameters object handles escaped $$', async function () {
       const typeCast = '::int';
-      return this.sequelize
-        .query('select $one' + typeCast + ' as foo, $two' + typeCast + ' as bar', {
-          raw: true,
-          bind: { one: 1, two: null }
-        })
-        .then((result) => {
-          expect(result[0]).to.deep.equal([{ foo: 1, bar: null }]);
-        });
+
+      const result = await this.sequelize.query('select $one' + typeCast + " as foo, '$$ / $$one' as bar", {
+        raw: true,
+        bind: { one: 1 }
+      });
+
+      expect(result[0]).to.deep.equal([{ foo: 1, bar: '$ / $one' }]);
     });
 
-    it('binds named parameters array handles escaped $$', function () {
-      const typeCast = '::int';
-      let logSql;
-      return this.sequelize
-        .query('select $1' + typeCast + " as foo, '$$ / $$1' as bar", {
-          raw: true,
-          bind: [1],
-          logging(s) {
-            logSql = s;
-          }
-        })
-        .then((result) => {
-          expect(result[0]).to.deep.equal([{ foo: 1, bar: '$ / $1' }]);
+    it('does not improperly escape arrays of strings bound to named parameters', async function () {
+      const result = await this.sequelize.query('select :stringArray as foo', {
+        raw: true,
+        replacements: { stringArray: ['"string"'] }
+      });
 
-          expect(logSql.indexOf('$1')).to.be.above(-1);
-        });
-    });
-
-    it('binds named parameters object handles escaped $$', function () {
-      const typeCast = '::int';
-      return this.sequelize
-        .query('select $one' + typeCast + " as foo, '$$ / $$one' as bar", { raw: true, bind: { one: 1 } })
-        .then((result) => {
-          expect(result[0]).to.deep.equal([{ foo: 1, bar: '$ / $one' }]);
-        });
-    });
-
-    it('does not improperly escape arrays of strings bound to named parameters', function () {
-      return this.sequelize
-        .query('select :stringArray as foo', { raw: true, replacements: { stringArray: ['"string"'] } })
-        .then((result) => {
-          expect(result[0]).to.deep.equal([{ foo: '"string"' }]);
-        });
+      expect(result[0]).to.deep.equal([{ foo: '"string"' }]);
     });
 
     it('reject when binds passed with object and numeric $1 is also present', function () {
@@ -840,70 +810,64 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
         .should.be.rejectedWith(Error, /Named bind parameter "\$\w+" has no value in the given object\./g);
     });
 
-    it('handles AS in conjunction with functions just fine', function () {
+    it('handles AS in conjunction with functions just fine', async function () {
       const datetime = 'NOW()';
 
-      return this.sequelize.query('SELECT ' + datetime + ' AS t').then(([result]) => {
-        expect(moment(result[0].t).isValid()).to.be.true;
-      });
+      const [result] = await this.sequelize.query('SELECT ' + datetime + ' AS t');
+
+      expect(moment(result[0].t).isValid()).to.be.true;
     });
 
     if (Support.getTestDialect() === 'postgres') {
-      it('replaces named parameters with the passed object and ignores casts', function () {
-        return expect(
-          this.sequelize
-            .query("select :one as foo, :two as bar, '1000'::integer as baz", {
-              raw: true,
-              replacements: { one: 1, two: 2 }
-            })
-            .then((rows) => rows[0])
-        ).to.eventually.deep.equal([{ foo: 1, bar: 2, baz: 1000 }]);
+      it('replaces named parameters with the passed object and ignores casts', async function () {
+        const rows = await this.sequelize.query("select :one as foo, :two as bar, '1000'::integer as baz", {
+          raw: true,
+          replacements: { one: 1, two: 2 }
+        });
+
+        expect(rows[0]).to.deep.equal([{ foo: 1, bar: 2, baz: 1000 }]);
       });
 
-      it('supports WITH queries', function () {
-        return expect(
-          this.sequelize
-            .query(
-              'WITH RECURSIVE t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 100) SELECT sum(n) FROM t'
-            )
-            .then((rows) => rows[0])
-        ).to.eventually.deep.equal([{ sum: '5050' }]);
+      it('supports WITH queries', async function () {
+        const rows = await this.sequelize.query(
+          'WITH RECURSIVE t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 100) SELECT sum(n) FROM t'
+        );
+
+        expect(rows[0]).to.deep.equal([{ sum: '5050' }]);
       });
     }
 
     if (Support.getTestDialect() === 'sqlite') {
-      it('binds array parameters for upsert are replaced. $$ unescapes only once', function () {
+      it('binds array parameters for upsert are replaced. $$ unescapes only once', async function () {
         let logSql;
-        return this.sequelize
-          .query("select $1 as foo, $2 as bar, '$$$$' as baz", {
-            type: this.sequelize.QueryTypes.UPSERT,
-            bind: [1, 2],
-            logging(s) {
-              logSql = s;
-            }
-          })
-          .then(() => {
-            // sqlite.exec does not return a result
-            expect(logSql.indexOf('$one')).to.equal(-1);
-            expect(logSql.indexOf("'$$'")).to.be.above(-1);
-          });
+
+        await this.sequelize.query("select $1 as foo, $2 as bar, '$$$$' as baz", {
+          type: this.sequelize.QueryTypes.UPSERT,
+          bind: [1, 2],
+          logging(s) {
+            logSql = s;
+          }
+        });
+
+        // sqlite.exec does not return a result
+        expect(logSql.indexOf('$one')).to.equal(-1);
+        expect(logSql.indexOf("'$$'")).to.be.above(-1);
       });
 
-      it('binds named parameters for upsert are replaced. $$ unescapes only once', function () {
+      it('binds named parameters for upsert are replaced. $$ unescapes only once', async function () {
         let logSql;
-        return this.sequelize
-          .query("select $one as foo, $two as bar, '$$$$' as baz", {
-            type: this.sequelize.QueryTypes.UPSERT,
-            bind: { one: 1, two: 2 },
-            logging(s) {
-              logSql = s;
-            }
-          })
-          .then(() => {
-            // sqlite.exec does not return a result
-            expect(logSql.indexOf('$one')).to.equal(-1);
-            expect(logSql.indexOf("'$$'")).to.be.above(-1);
-          });
+
+        await this.sequelize.query("select $one as foo, $two as bar, '$$$$' as baz", {
+          type: this.sequelize.QueryTypes.UPSERT,
+          bind: { one: 1, two: 2 },
+          logging(s) {
+            logSql = s;
+          }
+        });
+
+        // sqlite.exec does not return a result
+        expect(logSql.indexOf('$one')).to.equal(-1);
+        expect(logSql.indexOf("'$$'")).to.be.above(-1);
       });
     }
   });
@@ -1006,22 +970,19 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       expect(DAO.options.rowFormat).to.equal('default');
     });
 
-    it('uses the passed tableName', function () {
-      const self = this,
-        Photo = this.sequelize.define('Foto', { name: DataTypes.STRING }, { tableName: 'photos' });
-      return Photo.sync({ force: true }).then(() => {
-        return self.sequelize
-          .getQueryInterface()
-          .showAllTables()
-          .then((tableNames) => {
-            expect(tableNames).to.include('photos');
-          });
-      });
+    it('uses the passed tableName', async function () {
+      const Photo = this.sequelize.define('Foto', { name: DataTypes.STRING }, { tableName: 'photos' });
+
+      await Photo.sync({ force: true });
+
+      const tableNames = await this.sequelize.getQueryInterface().showAllTables();
+
+      expect(tableNames).to.include('photos');
     });
   });
 
   describe('truncate', () => {
-    it('truncates all models', function () {
+    it('truncates all models', async function () {
       const Project = this.sequelize.define('project' + config.rand(), {
         id: {
           type: DataTypes.INTEGER,
@@ -1031,48 +992,44 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
         title: DataTypes.STRING
       });
 
-      return this.sequelize
-        .sync({ force: true })
-        .then(() => {
-          return Project.create({ title: 'bla' });
-        })
-        .then((project) => {
-          expect(project).to.exist;
-          expect(project.title).to.equal('bla');
-          expect(project.id).to.equal(1);
-          return this.sequelize.truncate().then(() => {
-            return Project.findAll({});
-          });
-        })
-        .then((projects) => {
-          expect(projects).to.exist;
-          expect(projects).to.have.length(0);
-        });
+      await this.sequelize.sync({ force: true });
+
+      const project = await Project.create({ title: 'bla' });
+
+      expect(project).to.exist;
+      expect(project.title).to.equal('bla');
+      expect(project.id).to.equal(1);
+
+      await this.sequelize.truncate();
+
+      const projects = await Project.findAll({});
+
+      expect(projects).to.exist;
+      expect(projects).to.have.length(0);
     });
   });
 
   describe('sync', () => {
-    it('synchronizes all models', function () {
+    it('synchronizes all models', async function () {
       const Project = this.sequelize.define('project' + config.rand(), { title: DataTypes.STRING });
       const Task = this.sequelize.define('task' + config.rand(), { title: DataTypes.STRING });
 
-      return Project.sync({ force: true }).then(() => {
-        return Task.sync({ force: true }).then(() => {
-          return Project.create({ title: 'bla' }).then(() => {
-            return Task.create({ title: 'bla' }).then((task) => {
-              expect(task).to.exist;
-              expect(task.title).to.equal('bla');
-            });
-          });
-        });
-      });
+      await Project.sync({ force: true });
+      await Task.sync({ force: true });
+      await Project.create({ title: 'bla' });
+
+      const task = await Task.create({ title: 'bla' });
+
+      expect(task).to.exist;
+      expect(task.title).to.equal('bla');
     });
 
-    it('works with correct database credentials', function () {
+    it('works with correct database credentials', async function () {
       const User = this.sequelize.define('User', { username: DataTypes.STRING });
-      return User.sync().then(() => {
-        expect(true).to.be.true;
-      });
+
+      await User.sync();
+
+      expect(true).to.be.true;
     });
 
     it('fails with incorrect match condition', function () {
@@ -1088,7 +1045,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       );
     });
 
-    it('fails with incorrect database credentials (1)', function () {
+    it('fails with incorrect database credentials (1)', async function () {
       this.sequelizeWithInvalidCredentials = new Sequelize(
         'omg',
         'bar',
@@ -1101,22 +1058,22 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
         bio: DataTypes.TEXT
       });
 
-      return User2.sync().catch((err) => {
-        const validMessages = [
-          'fe_sendauth: no password supplied',
-          'role "bar" does not exist',
-          'FATAL:  role "bar" does not exist',
-          'password authentication failed for user "bar"'
-        ];
-        const isValid =
-          validMessages.indexOf(err.message.trim()) !== -1 ||
-          err.name === 'SequelizeConnectionRefusedError' ||
-          err.message.includes('client password must be a string');
-        assert(isValid, `Unexpected error: ${err.name}: ${JSON.stringify(err.message)}`);
-      });
+      const err = await expect(User2.sync()).to.be.rejected;
+
+      const validMessages = [
+        'fe_sendauth: no password supplied',
+        'role "bar" does not exist',
+        'FATAL:  role "bar" does not exist',
+        'password authentication failed for user "bar"'
+      ];
+      const isValid =
+        validMessages.indexOf(err.message.trim()) !== -1 ||
+        err.name === 'SequelizeConnectionRefusedError' ||
+        err.message.includes('client password must be a string');
+      assert(isValid, `Unexpected error: ${err.name}: ${JSON.stringify(err.message)}`);
     });
 
-    it('fails with incorrect database credentials (2)', function () {
+    it('fails with incorrect database credentials (2)', async function () {
       const sequelize = new Sequelize('db', 'user', 'pass', {
         dialect: this.sequelize.options.dialect
       });
@@ -1124,12 +1081,12 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       sequelize.define('Project', { title: Sequelize.STRING });
       sequelize.define('Task', { title: Sequelize.STRING });
 
-      return sequelize.sync({ force: true }).catch((err) => {
-        expect(err).to.be.ok;
-      });
+      const err = await expect(sequelize.sync({ force: true })).to.be.rejected;
+
+      expect(err).to.be.ok;
     });
 
-    it('fails with incorrect database credentials (3)', function () {
+    it('fails with incorrect database credentials (3)', async function () {
       const sequelize = new Sequelize('db', 'user', 'pass', {
         dialect: this.sequelize.options.dialect,
         port: 99999
@@ -1138,12 +1095,12 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       sequelize.define('Project', { title: Sequelize.STRING });
       sequelize.define('Task', { title: Sequelize.STRING });
 
-      return sequelize.sync({ force: true }).catch((err) => {
-        expect(err).to.be.ok;
-      });
+      const err = await expect(sequelize.sync({ force: true })).to.be.rejected;
+
+      expect(err).to.be.ok;
     });
 
-    it('fails with incorrect database credentials (4)', function () {
+    it('fails with incorrect database credentials (4)', async function () {
       const sequelize = new Sequelize('db', 'user', 'pass', {
         dialect: this.sequelize.options.dialect,
         port: 99999,
@@ -1153,19 +1110,19 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       sequelize.define('Project', { title: Sequelize.STRING });
       sequelize.define('Task', { title: Sequelize.STRING });
 
-      return sequelize.sync({ force: true }).catch((err) => {
-        expect(err).to.be.ok;
-      });
+      const err = await expect(sequelize.sync({ force: true })).to.be.rejected;
+
+      expect(err).to.be.ok;
     });
 
-    it('returns an error correctly if unable to sync a foreign key referenced model', function () {
+    it('returns an error correctly if unable to sync a foreign key referenced model', async function () {
       this.sequelize.define('Application', {
         authorID: { type: Sequelize.BIGINT, allowNull: false, references: { model: 'User', key: 'id' } }
       });
 
-      return this.sequelize.sync().catch((error) => {
-        assert.ok(error);
-      });
+      const error = await expect(this.sequelize.sync()).to.be.rejected;
+
+      assert.ok(error);
     });
 
     it('handles self dependant foreign key constraints', function () {
@@ -1200,14 +1157,13 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       return this.sequelize.sync();
     });
 
-    it('return the sequelize instance after syncing', function () {
-      const self = this;
-      return this.sequelize.sync().then((sequelize) => {
-        expect(sequelize).to.deep.equal(self.sequelize);
-      });
+    it('return the sequelize instance after syncing', async function () {
+      const sequelize = await this.sequelize.sync();
+
+      expect(sequelize).to.deep.equal(this.sequelize);
     });
 
-    it('return the single dao after syncing', function () {
+    it('return the single dao after syncing', async function () {
       const block = this.sequelize.define(
         'block',
         {
@@ -1221,9 +1177,9 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
         }
       );
 
-      return block.sync().then((result) => {
-        expect(result).to.deep.equal(block);
-      });
+      const result = await block.sync();
+
+      expect(result).to.deep.equal(block);
     });
 
     describe("doesn't emit logging when explicitly saying not to", () => {
@@ -1233,33 +1189,32 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
 
       beforeEach(function () {
         this.spy = sinon.spy();
-        const self = this;
-        this.sequelize.options.logging = function () {
-          self.spy();
+        this.sequelize.options.logging = () => {
+          this.spy();
         };
         this.User = this.sequelize.define('UserTest', { username: DataTypes.STRING });
       });
 
-      it('through Sequelize.sync()', function () {
-        const self = this;
-        self.spy.resetHistory();
-        return this.sequelize.sync({ force: true, logging: false }).then(() => {
-          expect(self.spy.notCalled).to.be.true;
-        });
+      it('through Sequelize.sync()', async function () {
+        this.spy.resetHistory();
+
+        await this.sequelize.sync({ force: true, logging: false });
+
+        expect(this.spy.notCalled).to.be.true;
       });
 
-      it('through DAOFactory.sync()', function () {
-        const self = this;
-        self.spy.resetHistory();
-        return this.User.sync({ force: true, logging: false }).then(() => {
-          expect(self.spy.notCalled).to.be.true;
-        });
+      it('through DAOFactory.sync()', async function () {
+        this.spy.resetHistory();
+
+        await this.User.sync({ force: true, logging: false });
+
+        expect(this.spy.notCalled).to.be.true;
       });
     });
 
     describe('match', () => {
-      it('will return an error not matching', function () {
-        expect(
+      it('will return an error not matching', async function () {
+        await expect(
           this.sequelize.sync({
             force: true,
             match: /alibabaizshaek/
@@ -1270,11 +1225,11 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
   });
 
   describe('drop should work', () => {
-    it('correctly succeeds', function () {
+    it('correctly succeeds', async function () {
       const User = this.sequelize.define('Users', { username: DataTypes.STRING });
-      return User.sync({ force: true }).then(() => {
-        return User.drop();
-      });
+
+      await User.sync({ force: true });
+      await User.drop();
     });
   });
 
@@ -1316,34 +1271,32 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
         });
 
         it('raises an error if no values are defined', function () {
-          const self = this;
           expect(() => {
-            self.sequelize.define('omnomnom', {
+            this.sequelize.define('omnomnom', {
               bla: { type: DataTypes.ENUM }
             });
           }).to.throw(Error, 'Values for ENUM have not been defined.');
         });
 
-        it('correctly stores values', function () {
-          return this.Review.create({ status: 'active' }).then((review) => {
-            expect(review.status).to.equal('active');
-          });
+        it('correctly stores values', async function () {
+          const review = await this.Review.create({ status: 'active' });
+
+          expect(review.status).to.equal('active');
         });
 
-        it('correctly loads values', function () {
-          const self = this;
-          return this.Review.create({ status: 'active' }).then(() => {
-            return self.Review.findAll().then((reviews) => {
-              expect(reviews[0].status).to.equal('active');
-            });
-          });
+        it('correctly loads values', async function () {
+          await this.Review.create({ status: 'active' });
+
+          const reviews = await this.Review.findAll();
+
+          expect(reviews[0].status).to.equal('active');
         });
 
-        it("doesn't save an instance if value is not in the range of enums", function () {
-          return this.Review.create({ status: 'fnord' }).catch((err) => {
-            expect(err).to.be.instanceOf(Error);
-            expect(err.message).to.equal('"fnord" is not a valid choice in ["scheduled","active","finished"]');
-          });
+        it("doesn't save an instance if value is not in the range of enums", async function () {
+          const err = await expect(this.Review.create({ status: 'fnord' })).to.be.rejected;
+
+          expect(err).to.be.instanceOf(Error);
+          expect(err.message).to.equal('"fnord" is not a valid choice in ["scheduled","active","finished"]');
         });
       });
     });
@@ -1354,18 +1307,19 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
         { id: { type: DataTypes.STRING, allowNull: true, primaryKey: true } },
         { id: { type: DataTypes.BIGINT, allowNull: false, primaryKey: true, autoIncrement: true } }
       ].forEach((customAttributes) => {
-        it('should be able to override options on the default attributes', function () {
+        it('should be able to override options on the default attributes', async function () {
           const Picture = this.sequelize.define('picture', _.cloneDeep(customAttributes));
-          return Picture.sync({ force: true }).then(() => {
-            Object.keys(customAttributes).forEach((attribute) => {
-              Object.keys(customAttributes[attribute]).forEach((option) => {
-                const optionValue = customAttributes[attribute][option];
-                if (typeof optionValue === 'function' && optionValue() instanceof DataTypes.ABSTRACT) {
-                  expect(Picture.rawAttributes[attribute][option] instanceof optionValue).to.be.ok;
-                } else {
-                  expect(Picture.rawAttributes[attribute][option]).to.be.equal(optionValue);
-                }
-              });
+
+          await Picture.sync({ force: true });
+
+          Object.keys(customAttributes).forEach((attribute) => {
+            Object.keys(customAttributes[attribute]).forEach((option) => {
+              const optionValue = customAttributes[attribute][option];
+              if (typeof optionValue === 'function' && optionValue() instanceof DataTypes.ABSTRACT) {
+                expect(Picture.rawAttributes[attribute][option] instanceof optionValue).to.be.ok;
+              } else {
+                expect(Picture.rawAttributes[attribute][option]).to.be.equal(optionValue);
+              }
             });
           });
         });
@@ -1374,194 +1328,131 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
 
     if (current.dialect.supports.transactions) {
       describe('transaction', () => {
-        beforeEach(function () {
-          const self = this;
-
-          return Support.prepareTransactionTest(this.sequelize).then((sequelize) => {
-            self.sequelizeWithTransaction = sequelize;
-          });
+        beforeEach(async function () {
+          this.sequelizeWithTransaction = await Support.prepareTransactionTest(this.sequelize);
         });
 
         it('is a transaction method available', () => {
           expect(Support.Sequelize).to.respondTo('transaction');
         });
 
-        it('passes a transaction object to the callback', function () {
-          return this.sequelizeWithTransaction.transaction().then((t) => {
-            expect(t).to.be.instanceOf(Transaction);
-          });
+        it('passes a transaction object to the callback', async function () {
+          const t = await this.sequelizeWithTransaction.transaction();
+
+          expect(t).to.be.instanceOf(Transaction);
         });
 
-        it('allows me to define a callback on the result', function () {
-          return this.sequelizeWithTransaction.transaction().then((t) => {
-            return t.commit();
-          });
+        it('allows me to define a callback on the result', async function () {
+          const t = await this.sequelizeWithTransaction.transaction();
+
+          await t.commit();
         });
 
-        it('correctly handles multiple transactions', function () {
+        it('correctly handles multiple transactions', async function () {
           const TransactionTest = this.sequelizeWithTransaction.define(
-              'TransactionTest',
-              { name: DataTypes.STRING },
-              { timestamps: false }
-            ),
-            self = this;
+            'TransactionTest',
+            { name: DataTypes.STRING },
+            { timestamps: false }
+          );
 
-          const count = function (transaction) {
-            const sql = self.sequelizeWithTransaction
+          const count = async (transaction) => {
+            const sql = this.sequelizeWithTransaction
               .getQueryInterface()
               .QueryGenerator.selectQuery('TransactionTests', {
                 attributes: [[Sequelize.literal('count(*)'), 'cnt']]
               });
 
-            return self.sequelizeWithTransaction.query(sql, { plain: true, transaction }).then((result) => {
-              return parseInt(result.cnt, 10);
-            });
+            const result = await this.sequelizeWithTransaction.query(sql, { plain: true, transaction });
+
+            return parseInt(result.cnt, 10);
           };
 
-          return TransactionTest.sync({ force: true })
-            .then(() => {
-              return self.sequelizeWithTransaction.transaction();
-            })
-            .then((t1) => {
-              this.t1 = t1;
-              return self.sequelizeWithTransaction.query(
-                'INSERT INTO ' + qq('TransactionTests') + ' (' + qq('name') + ") VALUES ('foo');",
-                { transaction: t1 }
-              );
-            })
-            .then(() => {
-              return self.sequelizeWithTransaction.transaction();
-            })
-            .then((t2) => {
-              this.t2 = t2;
-              return self.sequelizeWithTransaction.query(
-                'INSERT INTO ' + qq('TransactionTests') + ' (' + qq('name') + ") VALUES ('bar');",
-                { transaction: t2 }
-              );
-            })
-            .then(() => {
-              return expect(count()).to.eventually.equal(0);
-            })
-            .then(() => {
-              return expect(count(this.t1)).to.eventually.equal(1);
-            })
-            .then(() => {
-              return expect(count(this.t2)).to.eventually.equal(1);
-            })
-            .then(() => {
-              return this.t2.rollback();
-            })
-            .then(() => {
-              return expect(count()).to.eventually.equal(0);
-            })
-            .then(() => {
-              return this.t1.commit();
-            })
-            .then(() => {
-              return expect(count()).to.eventually.equal(1);
-            });
+          await TransactionTest.sync({ force: true });
+
+          const t1 = await this.sequelizeWithTransaction.transaction();
+          await this.sequelizeWithTransaction.query(
+            'INSERT INTO ' + qq('TransactionTests') + ' (' + qq('name') + ") VALUES ('foo');",
+            { transaction: t1 }
+          );
+
+          const t2 = await this.sequelizeWithTransaction.transaction();
+          await this.sequelizeWithTransaction.query(
+            'INSERT INTO ' + qq('TransactionTests') + ' (' + qq('name') + ") VALUES ('bar');",
+            { transaction: t2 }
+          );
+
+          await expect(count()).to.eventually.equal(0);
+          await expect(count(t1)).to.eventually.equal(1);
+          await expect(count(t2)).to.eventually.equal(1);
+
+          await t2.rollback();
+          await expect(count()).to.eventually.equal(0);
+
+          await t1.commit();
+          await expect(count()).to.eventually.equal(1);
         });
 
-        it('supports nested transactions using savepoints', function () {
-          const self = this;
+        it('supports nested transactions using savepoints', async function () {
           const User = this.sequelizeWithTransaction.define('Users', { username: DataTypes.STRING });
 
-          return User.sync({ force: true }).then(() => {
-            return self.sequelizeWithTransaction.transaction().then((t1) => {
-              return User.create({ username: 'foo' }, { transaction: t1 }).then((user) => {
-                return self.sequelizeWithTransaction.transaction({ transaction: t1 }).then((t2) => {
-                  return user.updateAttributes({ username: 'bar' }, { transaction: t2 }).then(() => {
-                    return t2.commit().then(() => {
-                      return user.reload({ transaction: t1 }).then((newUser) => {
-                        expect(newUser.username).to.equal('bar');
-                        return t1.commit();
-                      });
-                    });
-                  });
-                });
-              });
-            });
-          });
+          await User.sync({ force: true });
+
+          const t1 = await this.sequelizeWithTransaction.transaction();
+          const user = await User.create({ username: 'foo' }, { transaction: t1 });
+          const t2 = await this.sequelizeWithTransaction.transaction({ transaction: t1 });
+
+          await user.updateAttributes({ username: 'bar' }, { transaction: t2 });
+          await t2.commit();
+
+          const newUser = await user.reload({ transaction: t1 });
+
+          expect(newUser.username).to.equal('bar');
+
+          await t1.commit();
         });
 
         describe('supports rolling back to savepoints', () => {
-          beforeEach(function () {
+          beforeEach(async function () {
             this.User = this.sequelizeWithTransaction.define('user', {});
-            return this.sequelizeWithTransaction.sync({ force: true });
+
+            await this.sequelizeWithTransaction.sync({ force: true });
           });
 
-          it('rolls back to the first savepoint, undoing everything', function () {
-            return this.sequelizeWithTransaction
-              .transaction()
-              .then((transaction) => {
-                this.transaction = transaction;
+          it('rolls back to the first savepoint, undoing everything', async function () {
+            const transaction = await this.sequelizeWithTransaction.transaction();
 
-                return this.sequelizeWithTransaction.transaction({ transaction });
-              })
-              .then((sp1) => {
-                this.sp1 = sp1;
-                return this.User.create({}, { transaction: this.transaction });
-              })
-              .then(() => {
-                return this.sequelizeWithTransaction.transaction({ transaction: this.transaction });
-              })
-              .then((sp2) => {
-                this.sp2 = sp2;
-                return this.User.create({}, { transaction: this.transaction });
-              })
-              .then(() => {
-                return this.User.findAll({ transaction: this.transaction });
-              })
-              .then((users) => {
-                expect(users).to.have.length(2);
+            const sp1 = await this.sequelizeWithTransaction.transaction({ transaction });
+            await this.User.create({}, { transaction });
 
-                return this.sp1.rollback();
-              })
-              .then(() => {
-                return this.User.findAll({ transaction: this.transaction });
-              })
-              .then((users) => {
-                expect(users).to.have.length(0);
+            // sp2 is never rolled back directly; rolling back sp1 discards it too.
+            await this.sequelizeWithTransaction.transaction({ transaction });
+            await this.User.create({}, { transaction });
 
-                return this.transaction.rollback();
-              });
+            expect(await this.User.findAll({ transaction })).to.have.length(2);
+
+            await sp1.rollback();
+
+            expect(await this.User.findAll({ transaction })).to.have.length(0);
+
+            await transaction.rollback();
           });
 
-          it('rolls back to the most recent savepoint, only undoing recent changes', function () {
-            return this.sequelizeWithTransaction
-              .transaction()
-              .then((transaction) => {
-                this.transaction = transaction;
+          it('rolls back to the most recent savepoint, only undoing recent changes', async function () {
+            const transaction = await this.sequelizeWithTransaction.transaction();
 
-                return this.sequelizeWithTransaction.transaction({ transaction });
-              })
-              .then((sp1) => {
-                this.sp1 = sp1;
-                return this.User.create({}, { transaction: this.transaction });
-              })
-              .then(() => {
-                return this.sequelizeWithTransaction.transaction({ transaction: this.transaction });
-              })
-              .then((sp2) => {
-                this.sp2 = sp2;
-                return this.User.create({}, { transaction: this.transaction });
-              })
-              .then(() => {
-                return this.User.findAll({ transaction: this.transaction });
-              })
-              .then((users) => {
-                expect(users).to.have.length(2);
+            await this.sequelizeWithTransaction.transaction({ transaction });
+            await this.User.create({}, { transaction });
 
-                return this.sp2.rollback();
-              })
-              .then(() => {
-                return this.User.findAll({ transaction: this.transaction });
-              })
-              .then((users) => {
-                expect(users).to.have.length(1);
+            const sp2 = await this.sequelizeWithTransaction.transaction({ transaction });
+            await this.User.create({}, { transaction });
 
-                return this.transaction.rollback();
-              });
+            expect(await this.User.findAll({ transaction })).to.have.length(2);
+
+            await sp2.rollback();
+
+            expect(await this.User.findAll({ transaction })).to.have.length(1);
+
+            await transaction.rollback();
           });
         });
 
@@ -1641,63 +1532,56 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
           });
         });
 
-        it('supports rolling back a nested transaction', function () {
-          const self = this;
+        it('supports rolling back a nested transaction', async function () {
           const User = this.sequelizeWithTransaction.define('Users', { username: DataTypes.STRING });
 
-          return User.sync({ force: true }).then(() => {
-            return self.sequelizeWithTransaction.transaction().then((t1) => {
-              return User.create({ username: 'foo' }, { transaction: t1 }).then((user) => {
-                return self.sequelizeWithTransaction.transaction({ transaction: t1 }).then((t2) => {
-                  return user.updateAttributes({ username: 'bar' }, { transaction: t2 }).then(() => {
-                    return t2.rollback().then(() => {
-                      return user.reload({ transaction: t1 }).then((newUser) => {
-                        expect(newUser.username).to.equal('foo');
-                        return t1.commit();
-                      });
-                    });
-                  });
-                });
-              });
-            });
-          });
+          await User.sync({ force: true });
+
+          const t1 = await this.sequelizeWithTransaction.transaction();
+          const user = await User.create({ username: 'foo' }, { transaction: t1 });
+          const t2 = await this.sequelizeWithTransaction.transaction({ transaction: t1 });
+
+          await user.updateAttributes({ username: 'bar' }, { transaction: t2 });
+          await t2.rollback();
+
+          const newUser = await user.reload({ transaction: t1 });
+
+          expect(newUser.username).to.equal('foo');
+
+          await t1.commit();
         });
 
-        it('supports rolling back outermost transaction', function () {
-          const self = this;
+        it('supports rolling back outermost transaction', async function () {
           const User = this.sequelizeWithTransaction.define('Users', { username: DataTypes.STRING });
 
-          return User.sync({ force: true }).then(() => {
-            return self.sequelizeWithTransaction.transaction().then((t1) => {
-              return User.create({ username: 'foo' }, { transaction: t1 }).then((user) => {
-                return self.sequelizeWithTransaction.transaction({ transaction: t1 }).then((t2) => {
-                  return user.updateAttributes({ username: 'bar' }, { transaction: t2 }).then(() => {
-                    return t1.rollback().then(() => {
-                      return User.findAll().then((users) => {
-                        expect(users.length).to.equal(0);
-                      });
-                    });
-                  });
-                });
-              });
-            });
-          });
+          await User.sync({ force: true });
+
+          const t1 = await this.sequelizeWithTransaction.transaction();
+          const user = await User.create({ username: 'foo' }, { transaction: t1 });
+          const t2 = await this.sequelizeWithTransaction.transaction({ transaction: t1 });
+
+          await user.updateAttributes({ username: 'bar' }, { transaction: t2 });
+          await t1.rollback();
+
+          const users = await User.findAll();
+
+          expect(users.length).to.equal(0);
         });
       });
     }
   });
 
   describe('databaseVersion', () => {
-    it('should database/dialect version', function () {
-      return this.sequelize.databaseVersion().then((version) => {
-        expect(typeof version).to.equal('string');
-        expect(version).to.be.ok;
-      });
+    it('should database/dialect version', async function () {
+      const version = await this.sequelize.databaseVersion();
+
+      expect(typeof version).to.equal('string');
+      expect(version).to.be.ok;
     });
   });
 
   describe('paranoid deletedAt non-null default value', () => {
-    it('should use defaultValue of deletedAt in paranoid clause and restore', function () {
+    it('should use defaultValue of deletedAt in paranoid clause and restore', async function () {
       const epochObj = new Date(0),
         epoch = Number(epochObj);
       const User = this.sequelize.define(
@@ -1714,54 +1598,44 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
         }
       );
 
-      return this.sequelize.sync({ force: true }).then(() => {
-        return User.create({ username: 'user1' }).then((user) => {
-          expect(Number(user.deletedAt)).to.equal(epoch);
-          return User.findOne({
-            where: {
-              username: 'user1'
-            }
-          })
-            .then((foundUser) => {
-              expect(foundUser).to.exist;
-              expect(Number(foundUser.deletedAt)).to.equal(epoch);
-              return foundUser.destroy();
-            })
-            .then((destroyedUser) => {
-              expect(destroyedUser.deletedAt).to.exist;
-              expect(Number(destroyedUser.deletedAt)).not.to.equal(epoch);
-              return User.findById(destroyedUser.id, { paranoid: false });
-            })
-            .then((fetchedDestroyedUser) => {
-              expect(fetchedDestroyedUser.deletedAt).to.exist;
-              expect(Number(fetchedDestroyedUser.deletedAt)).not.to.equal(epoch);
-              return fetchedDestroyedUser.restore();
-            })
-            .then((restoredUser) => {
-              expect(Number(restoredUser.deletedAt)).to.equal(epoch);
-              return User.destroy({
-                where: {
-                  username: 'user1'
-                }
-              });
-            })
-            .then(() => {
-              return User.count();
-            })
-            .then((count) => {
-              expect(count).to.equal(0);
-              return User.restore();
-            })
-            .then(() => {
-              return User.findAll();
-            })
-            .then((nonDeletedUsers) => {
-              expect(nonDeletedUsers.length).to.equal(1);
-              nonDeletedUsers.forEach((u) => {
-                expect(Number(u.deletedAt)).to.equal(epoch);
-              });
-            });
-        });
+      await this.sequelize.sync({ force: true });
+
+      const user = await User.create({ username: 'user1' });
+      expect(Number(user.deletedAt)).to.equal(epoch);
+
+      const foundUser = await User.findOne({
+        where: {
+          username: 'user1'
+        }
+      });
+      expect(foundUser).to.exist;
+      expect(Number(foundUser.deletedAt)).to.equal(epoch);
+
+      const destroyedUser = await foundUser.destroy();
+      expect(destroyedUser.deletedAt).to.exist;
+      expect(Number(destroyedUser.deletedAt)).not.to.equal(epoch);
+
+      const fetchedDestroyedUser = await User.findById(destroyedUser.id, { paranoid: false });
+      expect(fetchedDestroyedUser.deletedAt).to.exist;
+      expect(Number(fetchedDestroyedUser.deletedAt)).not.to.equal(epoch);
+
+      const restoredUser = await fetchedDestroyedUser.restore();
+      expect(Number(restoredUser.deletedAt)).to.equal(epoch);
+
+      await User.destroy({
+        where: {
+          username: 'user1'
+        }
+      });
+
+      expect(await User.count()).to.equal(0);
+
+      await User.restore();
+
+      const nonDeletedUsers = await User.findAll();
+      expect(nonDeletedUsers.length).to.equal(1);
+      nonDeletedUsers.forEach((u) => {
+        expect(Number(u.deletedAt)).to.equal(epoch);
       });
     });
   });

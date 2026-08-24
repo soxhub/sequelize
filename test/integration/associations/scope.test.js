@@ -8,7 +8,13 @@ const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser('associations'), () => {
   describe('scope', () => {
-    let Post, Image, Question, Comment, Tag, ItemTag, PostTag;
+    let Post;
+    let Image;
+    let Question;
+    let Comment;
+    let Tag;
+    let ItemTag;
+    let PostTag;
 
     beforeEach(() => {
       Post = current.define('post', {});
@@ -322,14 +328,18 @@ describe(Support.getTestDialectTeaser('associations'), () => {
               Tag.create({ type: 'tag' })
             ]);
 
-            await Promise.all([
-              postA.addCategory(categoryA),
-              postB.setCategories([categoryB]),
-              postC.createCategory(),
-              postA.createTag(),
-              postB.addTag(tagA),
-              postC.setTags([tagB])
-            ]);
+            // Sequential, and each post's `set` before its other alias: `set` deletes every
+            // through-row for the post that is not in the new list, and it filters that query by
+            // the *through* scope -- never by the target-side scope these aliases use. Adding the
+            // sibling alias first would leave a row that the `set` then deletes.
+            await postA.addCategory(categoryA);
+            await postA.createTag();
+
+            await postB.setCategories([categoryB]);
+            await postB.addTag(tagA);
+
+            await postC.setTags([tagB]);
+            await postC.createCategory();
 
             const [postACategories, postATags, postBCategories, postBTags, postCCategories, postCTags] =
               await Promise.all([

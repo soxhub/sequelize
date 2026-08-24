@@ -11,7 +11,8 @@ import moment from 'moment';
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser('Model'), () => {
-  let clock, SharedUser;
+  let clock;
+  let SharedUser;
 
   before(() => {
     // Only fake `Date` — faking timers/immediates freezes the timer pg's pool
@@ -1810,7 +1811,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
 
     describe('options sent to aggregate', () => {
-      let options, aggregateSpy;
+      let options;
+      let aggregateSpy;
 
       beforeEach(() => {
         options = { where: { username: 'user1' } };
@@ -1923,7 +1925,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
   });
 
   describe('min', () => {
-    let UserWithAge, UserWithDec;
+    let UserWithAge;
+    let UserWithDec;
 
     beforeEach(async () => {
       UserWithAge = current.define('UserWithAge', {
@@ -2008,7 +2011,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
   });
 
   describe('max', () => {
-    let UserWithAge, UserWithDec;
+    let UserWithAge;
+    let UserWithDec;
 
     beforeEach(async () => {
       UserWithAge = current.define('UserWithAge', {
@@ -2105,7 +2109,9 @@ describe(Support.getTestDialectTeaser('Model'), () => {
   });
 
   describe('sum', () => {
-    let UserWithAge, UserWithDec, UserWithFields;
+    let UserWithAge;
+    let UserWithDec;
+    let UserWithFields;
 
     beforeEach(() => {
       UserWithAge = current.define('UserWithAge', {
@@ -2206,7 +2212,9 @@ describe(Support.getTestDialectTeaser('Model'), () => {
   });
 
   describe('schematic support', () => {
-    let UserPublic, UserSpecial, UserSpecialSync;
+    let UserPublic;
+    let UserSpecial;
+    let UserSpecialSync;
 
     beforeEach(async () => {
       UserPublic = current.define('UserPublic', {

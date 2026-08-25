@@ -1,11 +1,26 @@
-import { describe, it } from 'vitest';
+import { describe, it, beforeAll, afterAll } from 'vitest';
 import { expect } from 'chai';
+import sinon from 'sinon';
 import Support from './support.js';
+import * as Utils from '../../lib/utils.js';
 
 const Sequelize = Support.Sequelize;
 const dialect = Support.getTestDialect();
 
 describe('Sequelize', () => {
+  // Every spec here constructs Sequelize with the default `operatorsAliases`, which
+  // deprecation-warns once per process. Nothing in this file asserts on that warning
+  // (test/integration/sequelize.test.js covers it), so keep it out of the runner output.
+  let deprecate;
+
+  beforeAll(() => {
+    deprecate = sinon.stub(Utils.getLogger(), 'deprecate');
+  });
+
+  afterAll(() => {
+    deprecate.restore();
+  });
+
   describe('dialect is required', () => {
     it('throw error when no dialect is supplied', () => {
       expect(() => {

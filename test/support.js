@@ -63,7 +63,12 @@ const Support = {
       dialect: options.dialect,
       port: options.port || process.env.SEQ_PORT || config.port,
       pool: config.pool,
-      dialectOptions: options.dialectOptions || config.dialectOptions || {}
+      dialectOptions: options.dialectOptions || config.dialectOptions || {},
+      // Exactly what the `operatorsAliases: true` default resolves to, but passing them
+      // explicitly skips the deprecation warning that default emits, which would otherwise
+      // print once per test process. Tests that care about the warning itself must build
+      // their own instance rather than going through this helper.
+      operatorsAliases: Sequelize.Op.LegacyAliases
     });
 
     if (process.env.DIALECT === 'postgres-native') {

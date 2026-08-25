@@ -1,4 +1,4 @@
-import { describe, it, before, after } from 'mocha';
+import { describe, it, beforeAll, afterAll } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import Model from '../../../lib/model.js';
@@ -694,10 +694,10 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
   });
 
   describe('queryIdentifiersFalse', () => {
-    before(() => {
+    beforeAll(() => {
       sql.options.quoteIdentifiers = false;
     });
-    after(() => {
+    afterAll(() => {
       sql.options.quoteIdentifiers = true;
     });
 

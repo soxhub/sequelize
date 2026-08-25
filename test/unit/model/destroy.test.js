@@ -1,4 +1,4 @@
-import { describe, it, before, after, beforeEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest';
 import { expect } from 'chai';
 import Support from '../support.js';
 import sinon from 'sinon';
@@ -15,7 +15,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
     let stubDelete;
 
-    before(() => {
+    beforeAll(() => {
       stubDelete = sinon.stub(current.getQueryInterface(), 'bulkDelete').callsFake(() => {
         return Promise.resolve([]);
       });
@@ -25,7 +25,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       stubDelete.resetHistory();
     });
 
-    after(() => {
+    afterAll(() => {
       stubDelete.restore();
     });
 

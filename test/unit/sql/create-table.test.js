@@ -1,4 +1,4 @@
-import { describe, it, before, after } from 'mocha';
+import { describe, it, beforeAll, afterAll } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import _ from 'lodash';
@@ -38,14 +38,14 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
     });
 
     describe('Attempt to use different lodash template settings', () => {
-      before(() => {
+      beforeAll(() => {
         // make handlebars
         _.templateSettings.evaluate = /{{([\s\S]+?)}}/g;
         _.templateSettings.interpolate = /{{=([\s\S]+?)}}/g;
         _.templateSettings.escape = /{{-([\s\S]+?)}}/g;
       });
 
-      after(() => {
+      afterAll(() => {
         // reset
         const __ = _.runInContext();
         _.templateSettings.evaluate = __.templateSettings.evaluate;

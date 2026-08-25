@@ -1,4 +1,4 @@
-import { describe, it, before, after } from 'mocha';
+import { describe, it, beforeAll, afterAll } from 'vitest';
 import { expect } from 'chai';
 import Support from '../support.js';
 import sinon from 'sinon';
@@ -25,7 +25,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
         }
       });
 
-      before(() => {
+      beforeAll(() => {
         stub = sinon.stub(current, 'query').returns(
           Promise.resolve([
             {
@@ -37,7 +37,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
         );
       });
 
-      after(() => {
+      afterAll(() => {
         stub.restore();
       });
 

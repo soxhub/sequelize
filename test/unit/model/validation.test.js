@@ -1,4 +1,4 @@
-import { describe, it, before, after } from 'mocha';
+import { describe, it, beforeAll, afterAll } from 'vitest';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import Sequelize from '../../../index.js';
@@ -287,7 +287,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
 
     let queryStub;
 
-    before(() => {
+    beforeAll(() => {
       queryStub = sinon.stub(typeValidating, 'query').callsFake(() => {
         return new Promise((resolve) => {
           resolve([User.build({}), 1]);
@@ -295,7 +295,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
       });
     });
 
-    after(() => {
+    afterAll(() => {
       queryStub.restore();
     });
 
@@ -494,11 +494,11 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
 
     let queryStub;
 
-    before(() => {
+    beforeAll(() => {
       queryStub = sinon.stub(current, 'query').returns(Promise.resolve([User.build(), 1]));
     });
 
-    after(() => {
+    afterAll(() => {
       queryStub.restore();
     });
 
@@ -594,11 +594,11 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
 
     let queryStub;
 
-    before(() => {
+    beforeAll(() => {
       queryStub = sinon.stub(current, 'query').returns(Promise.resolve([User.build(), 1]));
     });
 
-    after(() => {
+    afterAll(() => {
       queryStub.restore();
     });
 

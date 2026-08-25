@@ -50,15 +50,18 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
     });
 
     it('should log deprecated warning if operators aliases were not set', () => {
+      // Deliberately not createSequelizeInstance() — that helper passes the aliases
+      // explicitly to keep the warning out of every test process, which is the exact
+      // behaviour under test here.
       const deprecate = sinon.stub(Utils.getLogger(), 'deprecate');
       try {
-        Support.createSequelizeInstance();
+        Support.getSequelizeInstance('db', 'user', 'pass', { logging: false });
         expect(deprecate.calledOnce).to.be.true;
         expect(deprecate.args[0][0]).to.be.equal(
           'String based operators are now deprecated. Please use Symbol based operators for better security, read more at http://docs.sequelizejs.com/manual/tutorial/querying.html#operators'
         );
         deprecate.resetHistory();
-        Support.createSequelizeInstance({ operatorsAliases: {} });
+        Support.getSequelizeInstance('db', 'user', 'pass', { logging: false, operatorsAliases: {} });
         expect(deprecate.called).to.be.false;
       } finally {
         deprecate.restore();

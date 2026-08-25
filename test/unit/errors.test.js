@@ -1,4 +1,4 @@
-import { describe, it } from 'mocha';
+import { describe, it } from 'vitest';
 import { expect } from 'chai';
 import * as errors from '../../lib/errors.js';
 
@@ -58,7 +58,10 @@ describe('errors', () => {
       const stackParts = err.stack.split('\n');
 
       const fullErrorName = 'Sequelize' + errorName;
-      expect(stackParts[0]).to.equal(fullErrorName);
+      // The message is empty, so the header is just the error name. Vitest's source-mapping
+      // `Error.prepareStackTrace` always emits the `: ` separator where V8's default drops it,
+      // hence the optional suffix.
+      expect(stackParts[0]).to.match(new RegExp('^' + fullErrorName + ':? *$'));
       expect(stackParts[1]).to.match(/^    at throwError \(.*errors.test.js:\d+:\d+\)$/);
     });
   });

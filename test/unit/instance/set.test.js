@@ -1,4 +1,4 @@
-import { describe, it, before, after } from 'mocha';
+import { describe, it, beforeAll, afterAll } from 'vitest';
 import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
@@ -126,13 +126,13 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     describe('custom setter', () => {
       let stubCreate;
 
-      before(() => {
+      beforeAll(() => {
         stubCreate = sinon.stub(current.getQueryInterface(), 'insert').callsFake((instance) => {
           return Promise.resolve([instance, 1]);
         });
       });
 
-      after(() => {
+      afterAll(() => {
         stubCreate.restore();
       });
 

@@ -1,4 +1,4 @@
-import { describe, it, before, after, beforeEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import Support from './support.js';
@@ -9,7 +9,7 @@ const current = Support.sequelize;
 describe('Transaction', () => {
   let queryStub, stubConnection, stubRelease;
 
-  before(() => {
+  beforeAll(() => {
     queryStub = sinon.stub(current, 'query').returns(Promise.resolve({}));
 
     stubConnection = sinon.stub(current.connectionManager, 'getConnection').returns(
@@ -28,7 +28,7 @@ describe('Transaction', () => {
     stubRelease.resetHistory();
   });
 
-  after(() => {
+  afterAll(() => {
     queryStub.restore();
     stubConnection.restore();
   });

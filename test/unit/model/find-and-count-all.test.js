@@ -1,4 +1,4 @@
-import { describe, it, before, after } from 'mocha';
+import { describe, it, beforeAll, afterAll } from 'vitest';
 import { expect } from 'chai';
 import Support from '../support.js';
 import sinon from 'sinon';
@@ -11,7 +11,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     describe('should handle promise rejection', () => {
       let unhandledSpy, unhandledListener, User, findAllStub, countStub;
 
-      before(() => {
+      beforeAll(() => {
         unhandledSpy = sinon.stub();
         unhandledListener = () => unhandledSpy();
         process.on('unhandledRejection', unhandledListener);
@@ -30,7 +30,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
       });
 
-      after(() => {
+      afterAll(() => {
         process.removeListener('unhandledRejection', unhandledListener);
         findAllStub.resetBehavior();
         countStub.resetBehavior();

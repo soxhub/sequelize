@@ -2,9 +2,9 @@ name: Lint & Format
 
 on:
   push:
-    branches: [main, 'release/**', 'develop-v4']
+    branches: ['develop-v4']
   pull_request:
-    branches: [main, 'release/**', 'develop-v4']
+    branches: ['develop-v4']
   workflow_dispatch:
 
 jobs:
@@ -13,9 +13,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-
       - uses: pnpm/action-setup@v6
-
       - uses: actions/setup-node@v7
         with:
           node-version: 24
@@ -31,7 +29,7 @@ jobs:
 
       - name: No focused tests
         run: |
-          if grep -rnE '\b(describe|context|it|specify|before|after|beforeEach|afterEach)\.only\b' test; then
+          if grep -rnE '\b(describe|context|it|test|specify|before|after|beforeEach|afterEach)\.only\b' test; then
             echo "::error::Found focused test(s) (.only). Remove before merging."
             exit 1
           fi
@@ -41,9 +39,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-
       - uses: pnpm/action-setup@v6
-
       - uses: actions/setup-node@v7
         with:
           node-version: 24

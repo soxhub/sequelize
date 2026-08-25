@@ -1,4 +1,4 @@
-import { describe, it, before, after, beforeEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import sinon from 'sinon';
@@ -26,7 +26,7 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
 
     let queryStub;
 
-    before(() => {
+    beforeAll(() => {
       queryStub = sinon.stub(current, 'query').callsFake((sql) => {
         return Promise.resolve(sql);
       });
@@ -36,7 +36,7 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
       queryStub.resetHistory();
     });
 
-    after(() => {
+    afterAll(() => {
       queryStub.restore();
     });
 

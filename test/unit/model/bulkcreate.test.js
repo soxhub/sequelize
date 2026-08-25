@@ -1,4 +1,4 @@
-import { describe, it, before, after, afterEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, afterEach } from 'vitest';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import Support from '../support.js';
@@ -11,7 +11,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
   describe('bulkCreate', () => {
     let Model, bulkInsertStub;
 
-    before(() => {
+    beforeAll(() => {
       // capture warning from pg
       const warnStub = sinon.stub(Utils.getLogger(), 'warn');
 
@@ -38,7 +38,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       bulkInsertStub.resetHistory();
     });
 
-    after(() => {
+    afterAll(() => {
       bulkInsertStub.restore();
     });
 

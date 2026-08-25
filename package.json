@@ -50,16 +50,14 @@
     "test-docker-unit": "pnpm run test-unit",
     "test-docker-integration": "env-cmd -f ./test/config/.docker.env pnpm run test-integration",
     "teaser": "node -e \"console.log('#'.repeat(process.env.DIALECT.length + 22) + '\\n# Running tests for ' + process.env.DIALECT + ' #\\n' + '#'.repeat(process.env.DIALECT.length + 22))\"",
-    "test-unit": "mocha --exit --colors -t 30000 --reporter spec \"test/unit/**/*.js\"",
-    "test-unit-postgres": "cross-env DIALECT=postgres pnpm run test-unit",
-    "test-unit-postgres-native": "cross-env DIALECT=postgres-native pnpm run test-unit",
     "test-integration": "mocha --exit --colors -t 30000 --reporter spec \"test/integration/**/*.test.js\"",
+    "test-unit": "vitest run",
+    "test-unit-watch": "vitest",
     "test-integration-postgres": "cross-env DIALECT=postgres pnpm run test-integration",
     "test-integration-postgres-native": "cross-env DIALECT=postgres-native pnpm run test-integration",
     "test-postgres": "cross-env DIALECT=postgres pnpm test",
     "test-postgres-docker": "DIALECT=postgres SEQ_PORT=8996 SEQ_USER=sequelize_test SEQ_PW=sequelize_test SEQ_DB=sequelize_test pnpm test",
     "test-integration-postgres-docker": "DIALECT=postgres SEQ_PORT=8996 SEQ_USER=sequelize_test SEQ_PW=sequelize_test SEQ_DB=sequelize_test pnpm run test-integration",
-    "test-pgsql": "pnpm run test-postgres",
     "test-postgres-native": "cross-env DIALECT=postgres-native pnpm test",
     "test-postgresn": "pnpm run test-postgres-native",
     "test-all": "pnpm run test-postgres && pnpm run test-postgres-native",
@@ -99,7 +97,8 @@
     "pg-native": "3.9.0",
     "pg-types": "2.2.0",
     "sinon": "22.1.0",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
   },
   "peerDependencies": {
     "pg": "^8.19.0"

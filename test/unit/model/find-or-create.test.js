@@ -1,4 +1,4 @@
-import { describe, it, before, after, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { expect } from 'chai';
 import Support from '../support.js';
 import sinon from 'sinon';
@@ -9,11 +9,11 @@ const stub = sinon.stub;
 
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('method findOrCreate', () => {
-    before(() => {
+    beforeAll(() => {
       current.constructor.useCLS(current.constructor.createCLSNamespace());
     });
 
-    after(() => {
+    afterAll(() => {
       delete current.constructor._cls;
     });
 

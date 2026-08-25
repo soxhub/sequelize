@@ -1,4 +1,4 @@
-import { describe, it } from 'mocha';
+import { describe, it } from 'vitest';
 import _getQueryGeneratorMod from '../../support.js';
 import { expect } from 'chai';
 import Op from '../../../../lib/operators.js';

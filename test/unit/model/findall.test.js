@@ -1,4 +1,4 @@
-import { describe, it, before, after, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { expect } from 'chai';
 import Support from '../support.js';
 import sinon from 'sinon';
@@ -54,7 +54,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
     let selectStub, warnOnInvalidOptionsStub;
 
-    before(() => {
+    beforeAll(() => {
       selectStub = sinon.stub(current.getQueryInterface(), 'select').callsFake(() => {
         return Model.build({});
       });
@@ -66,7 +66,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       warnOnInvalidOptionsStub.resetHistory();
     });
 
-    after(() => {
+    afterAll(() => {
       selectStub.restore();
       warnOnInvalidOptionsStub.restore();
     });

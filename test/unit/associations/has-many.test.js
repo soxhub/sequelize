@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeEach, afterEach } from 'vitest';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import Support from '../support.js';

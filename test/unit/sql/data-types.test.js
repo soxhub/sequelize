@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeEach, afterEach } from 'vitest';
 import sinon from 'sinon';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';

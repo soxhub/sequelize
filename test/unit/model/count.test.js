@@ -1,4 +1,4 @@
-import { describe, it, before, after, beforeEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest';
 import { expect } from 'chai';
 import Support from '../support.js';
 import sinon from 'sinon';
@@ -10,7 +10,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
   describe('method count', () => {
     let oldFindAll, oldAggregate, User, Project, aggregateStub;
 
-    before(() => {
+    beforeAll(() => {
       oldFindAll = current.Model.findAll;
       oldAggregate = current.Model.aggregate;
 
@@ -28,7 +28,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       Project.belongsTo(User);
     });
 
-    after(() => {
+    afterAll(() => {
       current.Model.findAll = oldFindAll;
       current.Model.aggregate = oldAggregate;
     });

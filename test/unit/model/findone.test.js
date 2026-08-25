@@ -1,4 +1,4 @@
-import { describe, it, before, after, beforeEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest';
 import { expect } from 'chai';
 import Support from '../support.js';
 import sinon from 'sinon';
@@ -10,10 +10,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
   describe('method findOne', () => {
     let oldFindAll, findAllStub;
 
-    before(() => {
+    beforeAll(() => {
       oldFindAll = current.Model.findAll;
     });
-    after(() => {
+    afterAll(() => {
       current.Model.findAll = oldFindAll;
     });
 

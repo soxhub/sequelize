@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeEach, afterEach } from 'vitest';
 import { expect } from 'chai';
 import { CLSContext, CLSNamespace, getClsTransactionFor } from '../../lib/cls.js';
 import { delay } from '../../lib/utils/promise-helpers.js';

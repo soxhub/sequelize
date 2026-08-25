@@ -1,4 +1,4 @@
-import { describe, it } from 'mocha';
+import { describe, it } from 'vitest';
 import { AssociationError } from '../../../lib/errors.js';
 import { expect } from 'chai';
 import Support from '../support.js';

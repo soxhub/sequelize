@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeEach, afterEach } from 'vitest';
 import { assert, expect } from 'chai';
 import sinon from 'sinon';
 import defaultInflection from 'inflection';

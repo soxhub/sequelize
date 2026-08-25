@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from 'mocha';
+import { describe, it, beforeEach } from 'vitest';
 import { ValidationError as SequelizeValidationError } from '../../lib/errors.js';
 import { expect } from 'chai';
 import Support from './support.js';

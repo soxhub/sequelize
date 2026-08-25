@@ -1,4 +1,4 @@
-import { describe, it, before, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeAll, beforeEach, afterEach } from 'vitest';
 import { expect } from 'chai';
 import Support from '../support.js';
 import sinon from 'sinon';
@@ -11,7 +11,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
   describe('method update', () => {
     let User, stubUpdate, updates, cloneUpdates;
 
-    before(() => {
+    beforeAll(() => {
       User = current.define('User', {
         name: DataTypes.STRING,
         secretValue: DataTypes.INTEGER

@@ -4,6 +4,7 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
+import * as Utils from '../../../lib/utils.js';
 import BelongsTo from '../../../lib/associations/belongs-to.js';
 import HasMany from '../../../lib/associations/has-many.js';
 import HasOne from '../../../lib/associations/has-one.js';
@@ -605,6 +606,16 @@ describe(Support.getTestDialectTeaser('belongsToMany'), () => {
   });
 
   describe('constraints', () => {
+    let warnStub;
+
+    beforeEach(() => {
+      warnStub = sinon.stub(Utils.getLogger(), 'warn');
+    });
+
+    afterEach(() => {
+      warnStub.restore();
+    });
+
     it('work properly when through is a string', () => {
       const User = current.define('User', {}),
         Group = current.define('Group', {});

@@ -4,10 +4,25 @@ import Operators from '../../../../lib/operators.js';
 import QueryGenerator from '../../../../lib/dialects/postgres/query-generator.js';
 import Support from '../../support.js';
 import DataTypes from '../../../../lib/data-types.js';
+import * as Utils from '../../../../lib/utils.js';
 import moment from 'moment';
+import sinon from 'sinon';
 import _ from 'lodash';
 
 const current = Support.sequelize;
+
+// `BLOB('long')` below is normalized while this suite is being *declared*, and
+// the dialect warns that Postgres cannot express the length. That warning is
+// asserted in test/unit/sql/data-types.test.js; here it is only reporter noise.
+const withoutWarnings = (fn) => {
+  const warn = sinon.stub(Utils.getLogger(), 'warn');
+
+  try {
+    return fn();
+  } finally {
+    warn.restore();
+  }
+};
 
 describe('[POSTGRES Specific] QueryGenerator', () => {
   const suites = {
@@ -176,7 +191,10 @@ describe('[POSTGRES Specific] QueryGenerator', () => {
         expectation: 'CREATE TABLE IF NOT EXISTS "myTable" ("data" BYTEA);'
       },
       {
-        arguments: ['myTable', { data: current.normalizeDataType(DataTypes.BLOB('long')).toSql() }],
+        arguments: [
+          'myTable',
+          { data: withoutWarnings(() => current.normalizeDataType(DataTypes.BLOB('long')).toSql()) }
+        ],
         expectation: 'CREATE TABLE IF NOT EXISTS "myTable" ("data" BYTEA);'
       },
       {

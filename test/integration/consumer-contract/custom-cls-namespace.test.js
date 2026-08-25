@@ -1,4 +1,4 @@
-import { describe, it, before, after, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { expect } from 'chai';
 import Support from '../support.js';
 import { CLSNamespace } from '../../../index.js';
@@ -176,12 +176,12 @@ describe(Support.getTestDialectTeaser('Consumer contract'), () => {
       describe('driving real transactions from an entered context', () => {
         let ns, User, context, rootTransaction;
 
-        before(() => {
+        beforeAll(() => {
           ns = new HarnessNamespace();
           Sequelize.useCLS(ns);
         });
 
-        after(() => {
+        afterAll(() => {
           delete Sequelize._cls;
         });
 

@@ -1,4 +1,4 @@
-import { describe, it, before, after } from 'mocha';
+import { describe, it, beforeAll, afterAll } from 'vitest';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import Support from '../support.js';
@@ -9,11 +9,11 @@ const current = Support.sequelize;
 describe(Support.getTestDialectTeaser('Include'), () => {
   let clock;
 
-  before(() => {
+  beforeAll(() => {
     clock = sinon.useFakeTimers({ toFake: ['Date'] });
   });
 
-  after(() => {
+  afterAll(() => {
     clock.restore();
   });
 

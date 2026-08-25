@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeEach, afterEach } from 'vitest';
 import { assert, expect } from 'chai';
 import Support from './support.js';
 import DataTypes from '../../lib/data-types.js';
@@ -24,6 +24,9 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       Utils.deprecate.restore && Utils.deprecate.restore();
     });
 
+    // Skipped long before the vitest migration: pool `min` is filled lazily, so the spy has not been
+    // called by the time the assertion runs. Left in place as a record of the intended behaviour.
+    // oxlint-disable-next-line no-disabled-tests
     it.skip('should work with min connections', () => {
       const ConnectionManager = current.dialect.connectionManager,
         connectionSpy = (ConnectionManager.connect = sinon.spy(ConnectionManager.connect));
@@ -222,7 +225,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
 
     let User, insertQuery;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       User = current.define('User', {
         username: DataTypes.STRING,
         emailAddress: {
@@ -240,7 +243,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
         qq('updatedAt') +
         ") VALUES ('john', 'john@gmail.com', '2012-01-01 10:10:10', '2012-01-01 10:10:10')";
 
-      return User.sync({ force: true });
+      await User.sync({ force: true });
     });
 
     it('executes a query the internal way', () => {
@@ -890,6 +893,10 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
         customGetterMethod = sinon.spy(),
         customOverrideGetterMethod = sinon.spy();
 
+      // Restored below: `current` is shared by the whole run, so leaving global getterMethods behind
+      // adds `default`/`override` keys to every model defined afterwards, which breaks the deep
+      // equality assertions in the toJSON tests.
+      const previousDefine = current.options.define;
       current.options.define = {
         setterMethods: {
           default: defaultSetterMethod,
@@ -915,28 +922,32 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
         }
       );
 
-      // Create Instance to test
-      const instance = testEntity.build();
+      try {
+        // Create Instance to test
+        const instance = testEntity.build();
 
-      // Call Getters
-      instance.default;
-      instance.custom;
-      instance.override;
+        // Call Getters
+        instance.default;
+        instance.custom;
+        instance.override;
 
-      expect(defaultGetterMethod.calledOnce).to.be.true;
-      expect(customGetterMethod.calledOnce).to.be.true;
-      expect(overrideGetterMethod.callCount).to.be.eql(0);
-      expect(customOverrideGetterMethod.calledOnce).to.be.true;
+        expect(defaultGetterMethod.calledOnce).to.be.true;
+        expect(customGetterMethod.calledOnce).to.be.true;
+        expect(overrideGetterMethod.callCount).to.be.eql(0);
+        expect(customOverrideGetterMethod.calledOnce).to.be.true;
 
-      // Call Setters
-      instance.default = 'test';
-      instance.custom = 'test';
-      instance.override = 'test';
+        // Call Setters
+        instance.default = 'test';
+        instance.custom = 'test';
+        instance.override = 'test';
 
-      expect(defaultSetterMethod.calledOnce).to.be.true;
-      expect(customSetterMethod.calledOnce).to.be.true;
-      expect(overrideSetterMethod.callCount).to.be.eql(0);
-      expect(customOverrideSetterMethod.calledOnce).to.be.true;
+        expect(defaultSetterMethod.calledOnce).to.be.true;
+        expect(customSetterMethod.calledOnce).to.be.true;
+        expect(overrideSetterMethod.callCount).to.be.eql(0);
+        expect(customOverrideSetterMethod.calledOnce).to.be.true;
+      } finally {
+        current.options.define = previousDefine;
+      }
     });
   });
 
@@ -1272,13 +1283,13 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       describe('enum', () => {
         let enumSequelize, Review;
 
-        beforeEach(() => {
+        beforeEach(async () => {
           enumSequelize = Support.createSequelizeInstance({
             typeValidation: true
           });
 
           Review = enumSequelize.define('review', { status });
-          return Review.sync({ force: true });
+          await Review.sync({ force: true });
         });
 
         it('raises an error if no values are defined', () => {

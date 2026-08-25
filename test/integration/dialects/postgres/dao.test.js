@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeEach, afterEach } from 'vitest';
 import { expect } from 'chai';
 import DataTypes from '../../../../lib/data-types.js';
 import sequelize from '../../../../lib/sequelize.js';
@@ -9,7 +9,7 @@ const current = Support.sequelize;
 describe('[POSTGRES Specific] DAO', () => {
   let SharedUser;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     current.options.quoteIdentifiers = true;
     SharedUser = current.define('User', {
       username: DataTypes.STRING,
@@ -33,7 +33,7 @@ describe('[POSTGRES Specific] DAO', () => {
       holidays: DataTypes.ARRAY(DataTypes.RANGE(DataTypes.DATE)),
       location: DataTypes.GEOMETRY()
     });
-    return SharedUser.sync({ force: true });
+    await SharedUser.sync({ force: true });
   });
 
   afterEach(() => {
@@ -473,12 +473,12 @@ describe('[POSTGRES Specific] DAO', () => {
 
   describe('integers', () => {
     describe('integer', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         SharedUser = current.define('User', {
           aNumber: DataTypes.INTEGER
         });
 
-        return SharedUser.sync({ force: true });
+        await SharedUser.sync({ force: true });
       });
 
       it('positive', async () => {
@@ -499,12 +499,12 @@ describe('[POSTGRES Specific] DAO', () => {
     });
 
     describe('bigint', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         SharedUser = current.define('User', {
           aNumber: DataTypes.BIGINT
         });
 
-        return SharedUser.sync({ force: true });
+        await SharedUser.sync({ force: true });
       });
 
       it('positive', async () => {
@@ -526,11 +526,11 @@ describe('[POSTGRES Specific] DAO', () => {
   });
 
   describe('timestamps', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       SharedUser = current.define('User', {
         dates: DataTypes.ARRAY(DataTypes.DATE)
       });
-      return SharedUser.sync({ force: true });
+      await SharedUser.sync({ force: true });
     });
 
     it('should use postgres "TIMESTAMP WITH TIME ZONE" instead of "DATETIME"', () => {

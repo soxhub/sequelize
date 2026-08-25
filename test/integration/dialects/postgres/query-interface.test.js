@@ -1,4 +1,4 @@
-import { describe, it, after, beforeEach } from 'mocha';
+import { describe, it, afterAll, beforeEach } from 'vitest';
 import { expect } from 'chai';
 import DataTypes from '../../../../lib/data-types.js';
 import _ from 'lodash';
@@ -105,7 +105,7 @@ describe('[POSTGRES Specific] QueryInterface', () => {
       }
     });
 
-    after(async () => {
+    afterAll(async () => {
       // cleanup
       try {
         await queryInterface.dropFunction('create_job', [{ type: 'varchar', name: 'test' }]);

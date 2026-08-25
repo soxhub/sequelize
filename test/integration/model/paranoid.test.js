@@ -1,4 +1,4 @@
-import { describe, it, before, after, beforeEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import { expect } from 'chai';
@@ -10,11 +10,11 @@ describe(Support.getTestDialectTeaser('Model'), () => {
   describe('paranoid', () => {
     let clock;
 
-    before(() => {
+    beforeAll(() => {
       clock = sinon.useFakeTimers({ toFake: ['Date'] });
     });
 
-    after(() => {
+    afterAll(() => {
       clock.restore();
     });
 
@@ -99,7 +99,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       describe('JSON', () => {
         let Model;
 
-        before(() => {
+        beforeAll(() => {
           Model = current.define(
             'Model',
             {
@@ -123,8 +123,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           );
         });
 
-        beforeEach(() => {
-          return Model.sync({ force: true });
+        beforeEach(async () => {
+          await Model.sync({ force: true });
         });
 
         it('should soft delete with JSON condition', async () => {

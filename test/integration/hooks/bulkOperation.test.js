@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from 'mocha';
+import { describe, it, beforeEach } from 'vitest';
 import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
@@ -87,7 +87,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
     });
 
     describe('with the {individualHooks: true} option', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         User = current.define('User', {
           username: {
             type: DataTypes.STRING,
@@ -103,7 +103,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           }
         });
 
-        return User.sync({ force: true });
+        await User.sync({ force: true });
       });
 
       it('should run the afterCreate/beforeCreate functions for each item created successfully', async () => {
@@ -230,7 +230,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
     });
 
     describe('with the {individualHooks: true} option', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         User = current.define('User', {
           username: {
             type: DataTypes.STRING,
@@ -246,7 +246,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           }
         });
 
-        return User.sync({ force: true });
+        await User.sync({ force: true });
       });
 
       it('should run the after/before functions for each item created successfully', async () => {
@@ -359,7 +359,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
     });
 
     describe('with the {individualHooks: true} option', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         User = current.define('User', {
           username: {
             type: DataTypes.STRING,
@@ -375,7 +375,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           }
         });
 
-        return User.sync({ force: true });
+        await User.sync({ force: true });
       });
 
       it('should run the after/before functions for each item created successfully', async () => {
@@ -496,7 +496,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
     });
 
     describe('with the {individualHooks: true} option', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         ParanoidUser = current.define(
           'ParanoidUser',
           {
@@ -510,7 +510,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           }
         );
 
-        return ParanoidUser.sync({ force: true });
+        await ParanoidUser.sync({ force: true });
       });
 
       it('should run the after/before functions for each item restored successfully', async () => {

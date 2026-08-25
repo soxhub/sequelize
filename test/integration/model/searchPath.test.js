@@ -1,4 +1,4 @@
-import { describe, it, before, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeAll, beforeEach, afterEach } from 'vitest';
 import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
@@ -19,7 +19,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     describe('SEARCH PATH', () => {
       let Restaurant, Location, Employee;
 
-      before(() => {
+      beforeAll(() => {
         Restaurant = current.define(
           'restaurant',
           {
@@ -58,14 +58,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
       });
 
-      beforeEach('build restaurant tables', async () => {
+      beforeEach(async () => {
         await current.createSchema('schema_one');
         await current.createSchema('schema_two');
         await Restaurant.sync({ force: true, searchPath: SEARCH_PATH_ONE });
         await Restaurant.sync({ force: true, searchPath: SEARCH_PATH_TWO });
       });
 
-      afterEach('drop schemas', async () => {
+      afterEach(async () => {
         await current.dropSchema('schema_one');
         await current.dropSchema('schema_two');
       });

@@ -1,4 +1,4 @@
-import { describe, it, before, after, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { delay } from '../../lib/utils/promise-helpers.js';
 import { expect } from 'chai';
 import Support from './support.js';
@@ -22,12 +22,12 @@ for (const [implementation, createNamespace] of implementations) {
   describe(`${Support.getTestDialectTeaser('Continuation local storage')} (${implementation})`, () => {
     let ns, sequelize, User;
 
-    before(() => {
+    beforeAll(() => {
       ns = createNamespace();
       Sequelize.useCLS(ns);
     });
 
-    after(() => {
+    afterAll(() => {
       delete Sequelize._cls;
     });
 

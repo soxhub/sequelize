@@ -1,4 +1,4 @@
-import { describe, it, before, after, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { expect } from 'chai';
 import Sequelize from '../../index.js';
 import Support from './support.js';
@@ -15,7 +15,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
   let clock;
   let SharedUser;
 
-  before(() => {
+  beforeAll(() => {
     clock = sinon.useFakeTimers({ toFake: ['Date'] });
   });
 
@@ -23,11 +23,11 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     clock.reset();
   });
 
-  after(() => {
+  afterAll(() => {
     clock.restore();
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     SharedUser = current.define('User', {
       username: { type: DataTypes.STRING },
       uuidv1: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV1 },
@@ -59,7 +59,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       }
     });
 
-    return SharedUser.sync({ force: true });
+    await SharedUser.sync({ force: true });
   });
 
   describe('Escaping', () => {
@@ -1574,7 +1574,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
   describe('findAll', () => {
     let ParanoidUser;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       ParanoidUser = current.define(
         'ParanoidUser',
         {
@@ -1584,7 +1584,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       );
 
       ParanoidUser.hasOne(ParanoidUser);
-      return ParanoidUser.sync({ force: true });
+      await ParanoidUser.sync({ force: true });
     });
 
     it('sql should have paranoid condition', async () => {
@@ -2017,7 +2017,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
   describe('isSoftDeleted', () => {
     let ParanoidUser;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       ParanoidUser = current.define(
         'ParanoidUser',
         {
@@ -2026,7 +2026,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
         { paranoid: true }
       );
 
-      return ParanoidUser.sync({ force: true });
+      await ParanoidUser.sync({ force: true });
     });
 
     it('returns false if user is not soft deleted', async () => {

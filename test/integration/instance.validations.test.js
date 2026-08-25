@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from 'mocha';
+import { describe, it, beforeEach } from 'vitest';
 import { expect } from 'chai';
 import Sequelize from '../../index.js';
 import Support from './support.js';
@@ -233,7 +233,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
       describe("primaryKey with the name as id with arguments for it's validatio", () => {
         let User;
 
-        beforeEach(() => {
+        beforeEach(async () => {
           User = current.define('UserId', {
             id: {
               type: Sequelize.INTEGER,
@@ -245,7 +245,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
             }
           });
 
-          return User.sync({ force: true });
+          await User.sync({ force: true });
         });
 
         it('should emit an error when we try to enter in a string for the id key with validation arguments', async () => {

@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from 'mocha';
+import { describe, it, beforeEach } from 'vitest';
 import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
@@ -10,13 +10,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     describe('GEOMETRY', () => {
       let User;
 
-      beforeEach(() => {
+      beforeEach(async () => {
         User = current.define('User', {
           username: DataTypes.STRING,
           geometry: DataTypes.GEOMETRY
         });
 
-        return User.sync({ force: true });
+        await User.sync({ force: true });
       });
 
       it('works with aliases fields', async () => {
@@ -56,13 +56,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     describe('GEOMETRY(POINT)', () => {
       let User;
 
-      beforeEach(() => {
+      beforeEach(async () => {
         User = current.define('User', {
           username: DataTypes.STRING,
           geometry: DataTypes.GEOMETRY('POINT')
         });
 
-        return User.sync({ force: true });
+        await User.sync({ force: true });
       });
 
       it('should create a geometry object', async () => {
@@ -89,13 +89,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     describe('GEOMETRY(LINESTRING)', () => {
       let User;
 
-      beforeEach(() => {
+      beforeEach(async () => {
         User = current.define('User', {
           username: DataTypes.STRING,
           geometry: DataTypes.GEOMETRY('LINESTRING')
         });
 
-        return User.sync({ force: true });
+        await User.sync({ force: true });
       });
 
       it('should create a geometry object', async () => {
@@ -140,13 +140,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     describe('GEOMETRY(POLYGON)', () => {
       let User;
 
-      beforeEach(() => {
+      beforeEach(async () => {
         User = current.define('User', {
           username: DataTypes.STRING,
           geometry: DataTypes.GEOMETRY('POLYGON')
         });
 
-        return User.sync({ force: true });
+        await User.sync({ force: true });
       });
 
       it('should create a geometry object', async () => {

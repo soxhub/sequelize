@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeEach, afterEach } from 'vitest';
 import { delay } from '../../lib/utils/promise-helpers.js';
 import { expect } from 'chai';
 import Support from './support.js';
@@ -41,9 +41,7 @@ if (current.dialect.supports.transactions) {
       });
 
       if (Support.getTestDialect() !== 'sqlite') {
-        it('works for long running transactions', async function () {
-          this.timeout(30000);
-
+        it('works for long running transactions', async () => {
           const sequelize = await Support.prepareTransactionTest(current);
 
           const User = sequelize.define(

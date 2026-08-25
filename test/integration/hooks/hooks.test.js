@@ -1,4 +1,4 @@
-import { describe, it, before, after, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
@@ -45,7 +45,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
   describe('#define', () => {
     let model;
 
-    before(() => {
+    beforeAll(() => {
       current.addHook('beforeDefine', (attributes, options) => {
         options.modelName = 'bar';
         options.name.plural = 'barrs';
@@ -75,7 +75,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
       expect(model.options.name.singular).to.equal('barr');
     });
 
-    after(() => {
+    afterAll(() => {
       current.options.hooks = {};
       current.modelManager.removeModel(model);
     });
@@ -84,7 +84,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
   describe('#init', () => {
     let seq;
 
-    before(() => {
+    beforeAll(() => {
       Sequelize.addHook('beforeInit', (config, options) => {
         config.database = 'db2';
         options.host = 'server9';
@@ -109,7 +109,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
       expect(seq.options.protocol).to.equal('udp');
     });
 
-    after(() => {
+    afterAll(() => {
       Sequelize.options.hooks = {};
     });
   });

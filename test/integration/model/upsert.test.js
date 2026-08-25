@@ -1,4 +1,4 @@
-import { describe, it, before, after, beforeEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import Sequelize from '../../../index.js';
@@ -10,11 +10,11 @@ const current = Support.sequelize;
 describe(Support.getTestDialectTeaser('Model'), () => {
   let clock, SharedUser, ModelWithFieldPK;
 
-  before(() => {
+  beforeAll(() => {
     clock = sinon.useFakeTimers({ toFake: ['Date'] });
   });
 
-  after(() => {
+  afterAll(() => {
     clock.restore();
   });
 

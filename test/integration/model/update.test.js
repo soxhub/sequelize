@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from 'mocha';
+import { describe, it, beforeEach } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import { expect } from 'chai';
@@ -10,7 +10,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
   describe('update', () => {
     let Account;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       Account = current.define('Account', {
         ownerId: {
           type: DataTypes.INTEGER,
@@ -21,7 +21,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           type: DataTypes.STRING
         }
       });
-      return Account.sync({ force: true });
+      await Account.sync({ force: true });
     });
 
     it('should only update the passed fields', async () => {

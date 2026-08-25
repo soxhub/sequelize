@@ -1,4 +1,4 @@
-import { describe, it, before, after, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { mapWithConcurrency } from '../../lib/utils/promise-helpers.js';
 import { expect } from 'chai';
 import Sequelize from '../../index.js';
@@ -14,18 +14,18 @@ describe(Support.getTestDialectTeaser('Model'), () => {
   let clock;
   let SharedUser;
 
-  before(() => {
+  beforeAll(() => {
     // Only fake `Date` — faking timers/immediates freezes the timer pg's pool
     // and retry logic rely on, which hangs queries like `CREATE INDEX CONCURRENTLY`
     // (see the "indexes in options" test). sinon >=11 fakes those by default.
     clock = sinon.useFakeTimers({ toFake: ['Date'] });
   });
 
-  after(() => {
+  afterAll(() => {
     clock.restore();
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     SharedUser = current.define('User', {
       username: DataTypes.STRING,
       secretValue: DataTypes.STRING,
@@ -35,7 +35,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       aBool: DataTypes.BOOLEAN
     });
 
-    return SharedUser.sync({ force: true });
+    await SharedUser.sync({ force: true });
   });
 
   describe('constructor', () => {
@@ -1741,7 +1741,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
     let userKey;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       userKey = current.define('userKeys', {
         foo: { type: Sequelize.STRING, primaryKey: true },
         bar: { type: Sequelize.STRING, primaryKey: true },
@@ -1749,7 +1749,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         bio: Sequelize.TEXT
       });
 
-      return userKey.sync({ force: true });
+      await userKey.sync({ force: true });
     });
 
     it('determines equality if one is matching', async () => {
@@ -2431,12 +2431,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
   describe('blob', () => {
     let BlobUser;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       BlobUser = current.define('blobUser', {
         data: Sequelize.BLOB
       });
 
-      return BlobUser.sync({ force: true });
+      await BlobUser.sync({ force: true });
     });
 
     describe('buffers', () => {
@@ -2609,10 +2609,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
   });
 
-  // Stays a `function` so `this.timeout()` still resolves to the mocha context.
-  it('supports multiple async transactions', async function () {
-    this.timeout(90000);
-
+  // 1000 transactions against a pool of 5 needs far more than the suite-wide 30s budget.
+  it('supports multiple async transactions', async () => {
     const sequelize = await Support.prepareTransactionTest(current);
     const User = sequelize.define('User', { username: Sequelize.STRING });
 
@@ -2659,7 +2657,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       // Needs to be one less than ??? else the non transaction query won't ever get a connection
       concurrency: ((sequelize.config.pool && sequelize.config.pool.max) || 5) - 1
     });
-  });
+  }, 90000);
 
   describe('Unique', () => {
     it('should set unique when unique is true', () => {

@@ -1,4 +1,4 @@
-import { describe, it, before, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeAll, beforeEach, afterEach } from 'vitest';
 import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
@@ -15,7 +15,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     let Restaurant, Location, Employee, EmployeeOne;
 
     describe('global schema', () => {
-      before(() => {
+      beforeAll(() => {
         current.options.schema = null;
         RestaurantOne = current.define('restaurant', {
           foo: DataTypes.STRING,
@@ -43,12 +43,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         current.options.schema = null;
       });
 
-      beforeEach('build restaurant tables', async () => {
+      beforeEach(async () => {
         await current.createSchema(SCHEMA_TWO);
         await Promise.all([RestaurantOne.sync({ force: true }), RestaurantTwo.sync({ force: true })]);
       });
 
-      afterEach('drop schemas', () => {
+      afterEach(() => {
         return current.dropSchema(SCHEMA_TWO);
       });
 
@@ -135,7 +135,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
 
     describe('schemas', () => {
-      before(() => {
+      beforeAll(() => {
         Restaurant = current.define(
           'restaurant',
           {
@@ -176,12 +176,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         RestaurantTwo = Restaurant.schema(SCHEMA_TWO);
       });
 
-      beforeEach('build restaurant tables', async () => {
+      beforeEach(async () => {
         await Promise.all([current.createSchema('schema_one'), current.createSchema('schema_two')]);
         await Promise.all([RestaurantOne.sync({ force: true }), RestaurantTwo.sync({ force: true })]);
       });
 
-      afterEach('drop schemas', () => {
+      afterEach(() => {
         return Promise.all([current.dropSchema('schema_one'), current.dropSchema('schema_two')]);
       });
 

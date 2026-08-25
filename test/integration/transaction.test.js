@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeEach, afterEach } from 'vitest';
 import { delay } from '../../lib/utils/promise-helpers.js';
 import { expect } from 'chai';
 import Support from './support.js';
@@ -368,10 +368,8 @@ if (current.dialect.supports.transactions) {
     }
 
     if (current.dialect.supports.lock) {
-      describe('row locking', function () {
-        this.timeout(30000);
-        it('supports for update', async function () {
-          this.timeout(30000);
+      describe('row locking', () => {
+        it('supports for update', async () => {
           const User = current.define('user', {
               username: Support.Sequelize.STRING,
               awesome: Support.Sequelize.BOOLEAN

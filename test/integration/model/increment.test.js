@@ -1,4 +1,4 @@
-import { describe, it, before, after, beforeEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest';
 import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
@@ -9,11 +9,11 @@ const current = Support.sequelize;
 describe(Support.getTestDialectTeaser('Model'), () => {
   let clock, SharedUser;
 
-  before(() => {
+  beforeAll(() => {
     clock = sinon.useFakeTimers({ toFake: ['Date'] });
   });
 
-  after(() => {
+  afterAll(() => {
     clock.restore();
   });
 
@@ -56,7 +56,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     describe(method, () => {
       let assert;
 
-      before(() => {
+      beforeAll(() => {
         assert = (increment, decrement) => {
           return method === 'increment' ? increment : decrement;
         };

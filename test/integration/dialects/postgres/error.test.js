@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from 'mocha';
+import { describe, it, beforeEach } from 'vitest';
 import { expect } from 'chai';
 import DataTypes from '../../../../lib/data-types.js';
 import Support from '../../support.js';

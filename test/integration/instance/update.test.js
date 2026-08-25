@@ -1,4 +1,4 @@
-import { describe, it, before, after, beforeEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import Sequelize from '../../../index.js';
@@ -11,17 +11,17 @@ const current = Support.sequelize;
 describe(Support.getTestDialectTeaser('Instance'), () => {
   let clock;
 
-  before(() => {
+  beforeAll(() => {
     clock = sinon.useFakeTimers({ toFake: ['Date'] });
   });
-  after(() => {
+  afterAll(() => {
     clock.restore();
   });
 
   describe('update', () => {
     let SharedUser;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       SharedUser = current.define('User', {
         username: { type: DataTypes.STRING },
         uuidv1: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV1 },
@@ -61,7 +61,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
           allowNull: true
         }
       });
-      return SharedUser.sync({ force: true });
+      await SharedUser.sync({ force: true });
     });
 
     if (current.dialect.supports.transactions) {

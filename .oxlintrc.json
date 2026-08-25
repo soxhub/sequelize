@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["unicorn", "oxc", "promise", "node", "import"],
+  "plugins": ["unicorn", "oxc", "promise", "node", "import", "vitest"],
   "categories": {
     "correctness": "error"
   },
@@ -80,7 +80,19 @@
     "unicorn/no-array-method-this-argument": "error",
     "unicorn/no-useless-promise-resolve-reject": "error",
     "unicorn/error-message": "error",
-    "unicorn/no-abusive-eslint-disable": "error"
+    "unicorn/no-abusive-eslint-disable": "error",
+    "vitest/no-focused-tests": "error",
+    // Every suite here is gated on `current.dialect.supports.*`, so a conditional around a test is
+    // the norm rather than a smell.
+    "vitest/no-conditional-tests": "off",
+    // Assertions come from chai, which the rule does not recognise: 301 false positives.
+    "vitest/expect-expect": "off",
+    // Titles are built by `Support.getTestDialectTeaser()`, not string literals.
+    "vitest/valid-title": "off",
+    // Wants chai's `expect` imported from vitest.
+    "vitest/prefer-importing-vitest-globals": "off",
+    // 11 real duplicate titles predate the vitest migration; turn this on once they are renamed.
+    "vitest/no-identical-title": "off"
   },
   "overrides": [
     {

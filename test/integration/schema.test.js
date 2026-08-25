@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeEach, afterEach } from 'vitest';
 import { expect } from 'chai';
 import Support from './support.js';
 import DataTypes from '../../lib/data-types.js';
@@ -16,7 +16,7 @@ describe(Support.getTestDialectTeaser('Schema'), () => {
     return current.dropSchema('testschema');
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     User = current.define(
       'User',
       {
@@ -27,7 +27,7 @@ describe(Support.getTestDialectTeaser('Schema'), () => {
       }
     );
 
-    return User.sync({ force: true });
+    await User.sync({ force: true });
   });
 
   it('supports increment', async () => {

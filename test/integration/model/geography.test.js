@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from 'mocha';
+import { describe, it, beforeEach } from 'vitest';
 import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
@@ -10,13 +10,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     describe('GEOGRAPHY', () => {
       let User;
 
-      beforeEach(() => {
+      beforeEach(async () => {
         User = current.define('User', {
           username: DataTypes.STRING,
           geography: DataTypes.GEOGRAPHY
         });
 
-        return User.sync({ force: true });
+        await User.sync({ force: true });
       });
 
       it('works with aliases fields', async () => {
@@ -56,13 +56,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     describe('GEOGRAPHY(POINT)', () => {
       let User;
 
-      beforeEach(() => {
+      beforeEach(async () => {
         User = current.define('User', {
           username: DataTypes.STRING,
           geography: DataTypes.GEOGRAPHY('POINT')
         });
 
-        return User.sync({ force: true });
+        await User.sync({ force: true });
       });
 
       it('should create a geography object', async () => {
@@ -89,13 +89,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     describe('GEOGRAPHY(LINESTRING)', () => {
       let User;
 
-      beforeEach(() => {
+      beforeEach(async () => {
         User = current.define('User', {
           username: DataTypes.STRING,
           geography: DataTypes.GEOGRAPHY('LINESTRING')
         });
 
-        return User.sync({ force: true });
+        await User.sync({ force: true });
       });
 
       it('should create a geography object', async () => {
@@ -140,13 +140,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     describe('GEOGRAPHY(POLYGON)', () => {
       let User;
 
-      beforeEach(() => {
+      beforeEach(async () => {
         User = current.define('User', {
           username: DataTypes.STRING,
           geography: DataTypes.GEOGRAPHY('POLYGON')
         });
 
-        return User.sync({ force: true });
+        await User.sync({ force: true });
       });
 
       it('should create a geography object', async () => {
@@ -206,13 +206,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     describe('GEOGRAPHY(POLYGON, SRID)', () => {
       let User;
 
-      beforeEach(() => {
+      beforeEach(async () => {
         User = current.define('User', {
           username: DataTypes.STRING,
           geography: DataTypes.GEOGRAPHY('POLYGON', 4326)
         });
 
-        return User.sync({ force: true });
+        await User.sync({ force: true });
       });
 
       it('should create a geography object', async () => {

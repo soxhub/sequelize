@@ -1,4 +1,4 @@
-import { describe, it, before, after, beforeEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import Sequelize from '../../../../index.js';
@@ -10,11 +10,11 @@ const current = Support.sequelize;
 describe(Support.getTestDialectTeaser('Model'), () => {
   let clock;
 
-  before(() => {
+  beforeAll(() => {
     clock = sinon.useFakeTimers({ toFake: ['Date'] });
   });
 
-  after(() => {
+  afterAll(() => {
     clock.restore();
   });
 
@@ -187,7 +187,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         describe('in combination with allowNull', () => {
           let ModelUnderTest;
 
-          beforeEach(() => {
+          beforeEach(async () => {
             ModelUnderTest = current.define('ModelUnderTest', {
               identifier: {
                 primaryKey: true,
@@ -196,7 +196,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
               }
             });
 
-            return ModelUnderTest.sync({ force: true });
+            await ModelUnderTest.sync({ force: true });
           });
 
           it('sets the column to not allow null', async () => {

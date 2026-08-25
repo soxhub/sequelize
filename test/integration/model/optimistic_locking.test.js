@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from 'mocha';
+import { describe, it, beforeEach } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import { expect } from 'chai';
@@ -8,7 +8,7 @@ const current = Support.sequelize;
 describe(Support.getTestDialectTeaser('Model'), () => {
   describe('optimistic locking', () => {
     let Account;
-    beforeEach(() => {
+    beforeEach(async () => {
       Account = current.define(
         'Account',
         {
@@ -20,7 +20,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           version: true
         }
       );
-      return Account.sync({ force: true });
+      await Account.sync({ force: true });
     });
 
     it('should increment the version on save', async () => {

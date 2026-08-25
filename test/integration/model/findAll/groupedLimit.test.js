@@ -1,4 +1,4 @@
-import { describe, it, before, after, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import Support from '../../support.js';
@@ -15,7 +15,7 @@ if (current.dialect.supports['UNION ALL']) {
       describe('groupedLimit', () => {
         let clock, User, Project, Task, ProjectUserParanoid, projects;
 
-        before(() => {
+        beforeAll(() => {
           clock = sinon.useFakeTimers({ toFake: ['Date'] });
         });
 
@@ -23,7 +23,7 @@ if (current.dialect.supports['UNION ALL']) {
           clock.reset();
         });
 
-        after(() => {
+        afterAll(() => {
           clock.restore();
         });
 

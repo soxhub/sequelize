@@ -121,7 +121,7 @@ $ docker-compose up postgres-95 mysql-57
 ### 4. Running tests
 
 All tests are located in the `test` folder (which contains the
-lovely [Mocha](http://visionmedia.github.io/mocha/) tests).
+lovely [Vitest](https://vitest.dev/) tests).
 
 ```sh
 $ pnpm run test-all || test-mysql || test-sqlite || test-mssql || test-postgres || test-postgres-native

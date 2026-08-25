@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from 'mocha';
+import { describe, it, beforeEach } from 'vitest';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import Sequelize from '../../../index.js';
@@ -12,7 +12,7 @@ const current = Support.sequelize;
 describe(Support.getTestDialectTeaser('Model'), () => {
   let SharedUser;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     SharedUser = current.define('User', {
       username: DataTypes.STRING,
       secretValue: DataTypes.STRING,
@@ -23,7 +23,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       binary: DataTypes.STRING(16, true)
     });
 
-    return SharedUser.sync({ force: true });
+    await SharedUser.sync({ force: true });
   });
 
   describe('findAll', () => {

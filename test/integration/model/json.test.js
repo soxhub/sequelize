@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from 'mocha';
+import { describe, it, beforeEach } from 'vitest';
 import { expect } from 'chai';
 import moment from 'moment';
 import Support from '../support.js';
@@ -11,7 +11,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     describe('JSON', () => {
       let Event;
 
-      beforeEach(() => {
+      beforeEach(async () => {
         Event = current.define('Event', {
           data: {
             type: DataTypes.JSON,
@@ -21,7 +21,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           json: DataTypes.JSON
         });
 
-        return Event.sync({ force: true });
+        await Event.sync({ force: true });
       });
 
       if (current.dialect.supports.lock) {

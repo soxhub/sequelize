@@ -1,6 +1,8 @@
-import { describe, it } from 'mocha';
+import { describe, it, beforeEach, afterEach } from 'mocha';
+import sinon from 'sinon';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
+import * as Utils from '../../../lib/utils.js';
 import { expect } from 'chai';
 import { format } from 'node:util';
 import * as uuid from 'uuid';
@@ -14,6 +16,20 @@ const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser('SQL'), () => {
   describe('DataTypes', () => {
+    let warnStub;
+
+    beforeEach(() => {
+      // capture warnings from pg misconfiguration so we can assert against the messages
+      warnStub = sinon.stub(Utils.getLogger(), 'warn');
+      // The warnings dedupe per process, so clear the cache to keep each test
+      // independent of whatever ran before it.
+      DataTypes.ABSTRACT.clearWarnings();
+    });
+
+    afterEach(() => {
+      warnStub.restore();
+    });
+
     const testsql = function (description, dataType, expectation) {
       it(description, () => {
         return expectsql(current.normalizeDataType(dataType).toSql(), expectation);
@@ -1406,5 +1422,76 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
         });
       });
     }
+
+    describe('unsupported option warnings', () => {
+      const checkLink = 'https://www.postgresql.org/docs/current/datatype.html';
+
+      const testwarn = function (description, dataType, message) {
+        it(description, () => {
+          current.normalizeDataType(dataType).toSql();
+
+          expect(warnStub.callCount).to.equal(1);
+          expect(warnStub.firstCall.args).to.deep.equal([`${message}\n>> Check: ${checkLink}`]);
+        });
+      };
+
+      testwarn(
+        "TEXT('tiny')",
+        DataTypes.TEXT('tiny'),
+        'PostgreSQL does not support TEXT with options. Plain `TEXT` will be used instead.'
+      );
+
+      testwarn(
+        'INTEGER(11)',
+        DataTypes.INTEGER(11),
+        'PostgreSQL does not support INTEGER with options. Plain `INTEGER` will be used instead.'
+      );
+
+      testwarn(
+        'BIGINT.UNSIGNED',
+        DataTypes.BIGINT.UNSIGNED,
+        'PostgreSQL does not support BIGINT with options. Plain `BIGINT` will be used instead.'
+      );
+
+      testwarn(
+        'DOUBLE(11)',
+        DataTypes.DOUBLE(11),
+        'PostgreSQL does not support DOUBLE PRECISION with options. Plain `DOUBLE PRECISION` will be used instead.'
+      );
+
+      testwarn(
+        'FLOAT(11,12)',
+        DataTypes.FLOAT(11, 12),
+        'PostgreSQL does not support FLOAT with decimals. Plain `FLOAT` will be used instead.'
+      );
+
+      testwarn(
+        'FLOAT.UNSIGNED',
+        DataTypes.FLOAT.UNSIGNED,
+        'PostgreSQL does not support FLOAT unsigned. `UNSIGNED` was removed.'
+      );
+
+      testwarn(
+        'FLOAT.ZEROFILL',
+        DataTypes.FLOAT.ZEROFILL,
+        'PostgreSQL does not support FLOAT zerofill. `ZEROFILL` was removed.'
+      );
+
+      testwarn(
+        "BLOB('long')",
+        DataTypes.BLOB('long'),
+        'PostgreSQL does not support BLOB (BYTEA) with options. Plain `BYTEA` will be used instead.'
+      );
+
+      it('warns once per distinct message', () => {
+        // Separate instances: the dialect type strips the offending option off
+        // the one it normalizes, so re-normalizing the same instance would say
+        // nothing regardless of the dedupe.
+        current.normalizeDataType(DataTypes.INTEGER(11)).toSql();
+        current.normalizeDataType(DataTypes.INTEGER(11)).toSql();
+
+        expect(warnStub.callCount).to.equal(1);
+      });
+    });
   });
 });

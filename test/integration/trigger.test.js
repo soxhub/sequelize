@@ -1,7 +1,7 @@
 import { describe, it, beforeEach } from 'mocha';
 import { expect } from 'chai';
 import Sequelize from '../../index.js';
-import Support from '../support.js';
+import Support from './support.js';
 
 const current = Support.sequelize;
 

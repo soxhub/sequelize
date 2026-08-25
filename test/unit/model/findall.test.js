@@ -13,7 +13,9 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     let loggerSpy;
 
     beforeEach(() => {
-      loggerSpy = sinon.spy(Utils.getLogger(), 'warn');
+      // A stub rather than a spy: the warning is the assertion target, so there
+      // is no reason to let it through into the reporter output as well.
+      loggerSpy = sinon.stub(Utils.getLogger(), 'warn');
     });
 
     afterEach(() => {

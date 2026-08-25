@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
+import * as Utils from '../../../lib/utils.js';
 
 const current = Support.sequelize;
 
@@ -11,17 +12,24 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     let Model, bulkInsertStub;
 
     before(() => {
-      Model = current.define(
-        'model',
-        {
-          accountId: {
-            type: DataTypes.INTEGER(11).UNSIGNED,
-            allowNull: false,
-            field: 'account_id'
-          }
-        },
-        { timestamps: false }
-      );
+      // capture warning from pg
+      const warnStub = sinon.stub(Utils.getLogger(), 'warn');
+
+      try {
+        Model = current.define(
+          'model',
+          {
+            accountId: {
+              type: DataTypes.INTEGER(11).UNSIGNED,
+              allowNull: false,
+              field: 'account_id'
+            }
+          },
+          { timestamps: false }
+        );
+      } finally {
+        warnStub.restore();
+      }
 
       bulkInsertStub = sinon.stub(current.getQueryInterface(), 'bulkInsert').returns(Promise.resolve([]));
     });

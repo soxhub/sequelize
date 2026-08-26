@@ -1,5 +1,4 @@
-import { describe, it } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, expect } from 'vitest';
 import sinon from 'sinon';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
@@ -234,13 +233,11 @@ describe(Support.getTestDialectTeaser('BelongsTo'), () => {
 
       await current.sync({ force: true });
 
-      await expect(Task.create({ title: 'task', UserXYZId: 5 })).to.be.rejectedWith(
-        Sequelize.ForeignKeyConstraintError
-      );
+      await expect(Task.create({ title: 'task', UserXYZId: 5 })).rejects.toThrow(Sequelize.ForeignKeyConstraintError);
 
       const task = await Task.create({ title: 'task' });
 
-      await expect(Task.update({ title: 'taskUpdate', UserXYZId: 5 }, { where: { id: task.id } })).to.be.rejectedWith(
+      await expect(Task.update({ title: 'taskUpdate', UserXYZId: 5 }, { where: { id: task.id } })).rejects.toThrow(
         Sequelize.ForeignKeyConstraintError
       );
     });
@@ -346,7 +343,7 @@ describe(Support.getTestDialectTeaser('BelongsTo'), () => {
       await home.setUser(user);
       await home.setUser(user);
 
-      await expect(home.getUser()).to.eventually.have.property('id', user.get('id'));
+      await expect(home.getUser()).resolves.to.have.property('id', user.get('id'));
     });
   });
 
@@ -484,7 +481,7 @@ describe(Support.getTestDialectTeaser('BelongsTo'), () => {
 
       await Task.create({ title: 'task', UserId: user.id });
 
-      await expect(user.destroy()).to.eventually.be.rejectedWith(Sequelize.ForeignKeyConstraintError);
+      await expect(user.destroy()).rejects.toThrow(Sequelize.ForeignKeyConstraintError);
 
       const tasks = await Task.findAll();
 
@@ -542,7 +539,7 @@ describe(Support.getTestDialectTeaser('BelongsTo'), () => {
 
         await task.setUser(user);
 
-        await expect(user.destroy()).to.eventually.be.rejectedWith(Sequelize.ForeignKeyConstraintError);
+        await expect(user.destroy()).rejects.toThrow(Sequelize.ForeignKeyConstraintError);
 
         const tasks = await Task.findAll();
 
@@ -569,7 +566,7 @@ describe(Support.getTestDialectTeaser('BelongsTo'), () => {
         const tableName = user.sequelize.getQueryInterface().QueryGenerator.addSchema(user.constructor);
         await expect(
           user.sequelize.getQueryInterface().update(user, tableName, { id: 999 }, { id: user.id })
-        ).to.eventually.be.rejectedWith(Sequelize.ForeignKeyConstraintError);
+        ).rejects.toThrow(Sequelize.ForeignKeyConstraintError);
 
         // Should fail due to FK restriction
         const tasks = await Task.findAll();

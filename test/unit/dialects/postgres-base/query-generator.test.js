@@ -1,6 +1,5 @@
-import { describe, it } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import _getQueryGeneratorMod from '../../support.js';
-import { expect } from 'chai';
 import Op from '../../../../lib/operators.js';
 
 const getQueryGenerator = _getQueryGeneratorMod.getQueryGenerator;

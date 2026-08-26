@@ -1,6 +1,5 @@
-import { describe, it, beforeEach, afterEach } from 'vitest';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import { delay } from '../../lib/utils/promise-helpers.js';
-import { expect } from 'chai';
 import Support from './support.js';
 import QueryTypes from '../../lib/query-types.js';
 import Transaction from '../../lib/transaction.js';
@@ -20,7 +19,7 @@ async function expectInvalidAfterCommitHook(sequelize, hook) {
         transaction.afterCommit(hook);
         await transaction.commit();
       })()
-    ).to.eventually.be.rejectedWith('"fn" must be a function');
+    ).rejects.toThrow('"fn" must be a function');
   } finally {
     if (!transaction.finished) {
       await transaction.rollback();
@@ -84,7 +83,7 @@ if (current.dialect.supports.transactions) {
             t = transaction;
             throw new Error('Yolo');
           })
-        ).to.eventually.be.rejected;
+        ).rejects.toThrow();
 
         expect(t.finished).to.be.equal('rollback');
       });
@@ -97,7 +96,7 @@ if (current.dialect.supports.transactions) {
             t = transaction;
             return Promise.reject(new Error('Swag'));
           })
-        ).to.eventually.be.rejected;
+        ).rejects.toThrow();
 
         expect(t.finished).to.be.equal('rollback');
       });
@@ -124,7 +123,7 @@ if (current.dialect.supports.transactions) {
             transaction.afterCommit(hook);
             return Promise.reject(new Error('Rollback'));
           })
-        ).to.eventually.be.rejected;
+        ).rejects.toThrow();
 
         expect(hook.called, 'hook should not have been called').to.be.false;
       });
@@ -147,7 +146,7 @@ if (current.dialect.supports.transactions) {
         // Attention: this test is a bit racy. If you find a nicer way to test this: go ahead
         await SumSumSum.sync({ force: true });
 
-        await expect(Promise.all([transTest(80), transTest(80), transTest(80)])).to.eventually.be.rejectedWith(
+        await expect(Promise.all([transTest(80), transTest(80), transTest(80)])).rejects.toThrow(
           'could not serialize access due to read/write dependencies among transactions'
         );
 
@@ -169,7 +168,7 @@ if (current.dialect.supports.transactions) {
       await current.query('SELECT 1+1', { transaction: t, raw: true });
       await t.commit();
 
-      const err = await expect(current.query('SELECT 1+1', { transaction: t, raw: true })).to.be.rejected;
+      const err = await Support.expectRejection(current.query('SELECT 1+1', { transaction: t, raw: true }));
 
       expect(err.message).to.match(
         /commit has been called on this transaction\([^)]+\), you can no longer use it\. \(The rejected query is attached as the 'sql' property of this error\)/
@@ -185,8 +184,8 @@ if (current.dialect.supports.transactions) {
       // The commit and the query must be issued together so the query lands
       // while the commit is still in flight.
       const [, err] = await Promise.all([
-        expect(t.commit()).to.eventually.be.fulfilled,
-        expect(current.query('SELECT 1+1', { transaction: t, raw: true })).to.be.rejected
+        t.commit(),
+        Support.expectRejection(current.query('SELECT 1+1', { transaction: t, raw: true }))
       ]);
 
       expect(err.message).to.match(
@@ -201,7 +200,7 @@ if (current.dialect.supports.transactions) {
       await current.query('SELECT 1+1', { transaction: t, raw: true });
       await t.rollback();
 
-      await expect(current.query('SELECT 1+1', { transaction: t, raw: true })).to.eventually.be.rejected;
+      await expect(current.query('SELECT 1+1', { transaction: t, raw: true })).rejects.toThrow();
     });
 
     it('should not rollback if connection was not acquired', async () => {
@@ -209,7 +208,7 @@ if (current.dialect.supports.transactions) {
 
       const transaction = new Transaction(current);
 
-      await expect(transaction.rollback()).to.eventually.be.rejectedWith(
+      await expect(transaction.rollback()).rejects.toThrow(
         'Transaction cannot be rolled back because it never started'
       );
     });
@@ -220,8 +219,8 @@ if (current.dialect.supports.transactions) {
       // The rollback and the query must be issued together so the query lands
       // while the rollback is still in flight.
       const [, err] = await Promise.all([
-        expect(t.rollback()).to.eventually.be.fulfilled,
-        expect(current.query('SELECT 1+1', { transaction: t, raw: true })).to.be.rejected
+        t.rollback(),
+        Support.expectRejection(current.query('SELECT 1+1', { transaction: t, raw: true }))
       ]);
 
       expect(err.message).to.match(
@@ -235,7 +234,7 @@ if (current.dialect.supports.transactions) {
 
       await t.commit();
 
-      await expect(t.commit()).to.be.rejectedWith(
+      await expect(t.commit()).rejects.toThrow(
         'Transaction cannot be committed because it has been finished with state: commit'
       );
     });
@@ -286,7 +285,7 @@ if (current.dialect.supports.transactions) {
 
       await t.rollback();
 
-      await expect(t.commit()).to.be.rejectedWith(
+      await expect(t.commit()).rejects.toThrow(
         'Transaction cannot be committed because it has been finished with state: rollback'
       );
     });
@@ -296,7 +295,7 @@ if (current.dialect.supports.transactions) {
 
       await t.commit();
 
-      await expect(t.rollback()).to.be.rejectedWith(
+      await expect(t.rollback()).rejects.toThrow(
         'Transaction cannot be rolled back because it has been finished with state: commit'
       );
     });
@@ -306,7 +305,7 @@ if (current.dialect.supports.transactions) {
 
       await t.rollback();
 
-      await expect(t.rollback()).to.be.rejectedWith(
+      await expect(t.rollback()).rejects.toThrow(
         'Transaction cannot be rolled back because it has been finished with state: rollback'
       );
     });
@@ -354,7 +353,7 @@ if (current.dialect.supports.transactions) {
         });
 
         Object.keys(Transaction.TYPES).forEach((key) => {
-          it('should allow specification of ' + key + ' type', async function () {
+          it('should allow specification of ' + key + ' type', async () => {
             const t = await current.transaction({
               type: key
             });
@@ -454,7 +453,7 @@ if (current.dialect.supports.transactions) {
             });
 
             if (current.dialect.supports.lockOuterJoinFailure) {
-              return await expect(find).to.be.rejectedWith(
+              return await expect(find).rejects.toThrow(
                 'FOR UPDATE cannot be applied to the nullable side of an outer join'
               );
             }

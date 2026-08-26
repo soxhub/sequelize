@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 
@@ -49,7 +48,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           options.where.username = 'adam';
         });
 
-        return expect(User.count({ where: { username: 'joe' } })).to.eventually.equal(1);
+        return expect(User.count({ where: { username: 'joe' } })).resolves.to.equal(1);
       });
     });
 
@@ -59,7 +58,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           throw new Error('Oops!');
         });
 
-        return expect(User.count({ where: { username: 'adam' } })).to.be.rejectedWith('Oops!');
+        return expect(User.count({ where: { username: 'adam' } })).rejects.toThrow('Oops!');
       });
     });
   });

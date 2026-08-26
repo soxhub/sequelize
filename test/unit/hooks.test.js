@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import sinon from 'sinon';
 import Support from './support.js';
 
@@ -187,7 +186,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
       });
       Model.beforeCreate(hook2);
 
-      await expect(Model.runHooks('beforeCreate')).to.be.rejected;
+      await expect(Model.runHooks('beforeCreate')).rejects.toThrow();
       expect(hook1.calledOnce).to.be.true;
       expect(hook2.called, 'hook2 should not have been called').to.be.false;
     });
@@ -200,7 +199,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
       });
       Model.beforeCreate(hook2);
 
-      await expect(Model.runHooks('beforeCreate')).to.be.rejected;
+      await expect(Model.runHooks('beforeCreate')).rejects.toThrow();
       expect(hook1.calledOnce).to.be.true;
       expect(hook2.called, 'hook2 should not have been called').to.be.false;
     });
@@ -414,7 +413,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         return Promise.resolve();
       });
 
-      return expect(Model.runHooks('beforeBulkCreate')).to.be.fulfilled;
+      return expect(Model.runHooks('beforeBulkCreate')).resolves.toBeUndefined();
     });
 
     it('can return undefined', () => {
@@ -422,7 +421,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         // This space intentionally left blank
       });
 
-      return expect(Model.runHooks('beforeBulkCreate')).to.be.fulfilled;
+      return expect(Model.runHooks('beforeBulkCreate')).resolves.toBeUndefined();
     });
 
     it('can return an error by rejecting', () => {
@@ -430,7 +429,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         return Promise.reject(new Error('Forbidden'));
       });
 
-      return expect(Model.runHooks('beforeCreate')).to.be.rejectedWith('Forbidden');
+      return expect(Model.runHooks('beforeCreate')).rejects.toThrow('Forbidden');
     });
 
     it('can return an error by throwing', () => {
@@ -438,7 +437,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         throw new Error('Forbidden');
       });
 
-      return expect(Model.runHooks('beforeCreate')).to.be.rejectedWith('Forbidden');
+      return expect(Model.runHooks('beforeCreate')).rejects.toThrow('Forbidden');
     });
   });
 

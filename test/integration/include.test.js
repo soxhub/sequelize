@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Sequelize from '../../index.js';
 import Support from './support.js';
 import DataTypes from '../../lib/data-types.js';
@@ -758,7 +757,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
             }
           ]
         })
-      ).to.eventually.have.length(2);
+      ).resolves.to.have.length(2);
     });
   });
 

@@ -1,7 +1,6 @@
-import { describe, it, beforeEach } from 'vitest';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
-import { expect } from 'chai';
 import _ from 'lodash';
 
 const current = Support.sequelize;

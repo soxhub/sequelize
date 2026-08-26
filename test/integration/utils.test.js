@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import * as Utils from '../../lib/utils.js';
 import Support from './support.js';
 import DataTypes from '../../lib/data-types.js';

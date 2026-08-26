@@ -1,6 +1,5 @@
-import { describe, it, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
+import { describe, it, beforeAll, afterAll, beforeEach, afterEach, expect } from 'vitest';
 import { mapWithConcurrency } from '../../lib/utils/promise-helpers.js';
-import { expect } from 'chai';
 import Sequelize from '../../index.js';
 import Support from './support.js';
 import DataTypes from '../../lib/data-types.js';
@@ -70,7 +69,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       await User.sync({ force: true });
 
-      await expect(User.create({ id: 'My own ID!' })).to.eventually.have.property('id', 'My own ID!');
+      await expect(User.create({ id: 'My own ID!' })).resolves.to.have.property('id', 'My own ID!');
     });
 
     it('throws an error if 2 autoIncrements are passed', () => {
@@ -333,13 +332,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       await User.sync({ force: true });
 
-      const err = await expect(
+      const err = await Support.expectRejection(
         Promise.all([
           User.create({ username: 'tobi', email: 'tobi@tobi.me' }),
           User.create({ username: 'tobi', email: 'tobi@tobi.me' })
         ])
-      ).to.be.rejectedWith(current.UniqueConstraintError);
+      );
 
+      expect(err).to.be.instanceof(current.UniqueConstraintError);
       expect(err.message).to.equal('User and email must be unique');
     });
 
@@ -377,13 +377,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         email: { type: Sequelize.STRING, unique: 'user_and_email_index' }
       });
 
-      const err = await expect(
+      const err = await Support.expectRejection(
         Promise.all([
           User.create({ user_id: 1, email: 'tobi@tobi.me' }),
           User.create({ user_id: 1, email: 'tobi@tobi.me' })
         ])
-      ).to.be.rejectedWith(current.UniqueConstraintError);
+      );
 
+      expect(err).to.be.instanceof(current.UniqueConstraintError);
       expect(err.message).to.equal('User and email must be unique');
     });
 
@@ -821,7 +822,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       await current.sync({ force: true });
 
-      const err = await expect(User.update()).to.be.rejectedWith(Error);
+      const err = await Support.expectRejection(User.update());
 
       expect(err.message).to.equal('Missing where attribute in the options parameter');
     });
@@ -1243,7 +1244,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       await User.bulkCreate(data);
       await User.truncate();
 
-      await expect(User.findAll()).to.eventually.have.length(0);
+      await expect(User.findAll()).resolves.to.have.length(0);
     });
 
     it('truncate should clear the table', async () => {
@@ -1254,7 +1255,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       await User.bulkCreate(data);
       await User.destroy({ truncate: true });
 
-      await expect(User.findAll()).to.eventually.have.length(0);
+      await expect(User.findAll()).resolves.to.have.length(0);
     });
 
     it('throws an error if no where clause is given', async () => {
@@ -1262,7 +1263,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       await current.sync({ force: true });
 
-      const err = await expect(User.destroy()).to.be.rejectedWith(Error);
+      const err = await Support.expectRejection(User.destroy());
 
       expect(err.message).to.equal('Missing where or truncate attribute in the options parameter of model.destroy.');
     });
@@ -1579,7 +1580,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       await bob.destroy({ force: true });
 
-      await expect(User.findOne({ where: { username: 'Bob' } })).to.eventually.be.null;
+      await expect(User.findOne({ where: { username: 'Bob' } })).resolves.toBeNull();
 
       const tobi = await User.findOne({ where: { username: 'Tobi' } });
 
@@ -1674,10 +1675,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     it('returns an error if the model is not paranoid', async () => {
       await SharedUser.create({ username: 'Peter', secretValue: '42' });
 
-      await expect(SharedUser.restore({ where: { secretValue: '42' } })).to.be.rejectedWith(
-        Error,
-        'Model is not paranoid'
-      );
+      await expect(SharedUser.restore({ where: { secretValue: '42' } })).rejects.toThrow('Model is not paranoid');
     });
 
     it('restores a previously deleted model', async () => {
@@ -2193,7 +2191,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         UserWithFields.sum('age', {
           where: { gender: 'male' }
         })
-      ).to.eventually.equal(2);
+      ).resolves.to.equal(2);
     });
 
     it('allows sql logging', async () => {
@@ -2405,7 +2403,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       Post.belongsTo(Author);
 
       // The posts table gets dropped in the before filter.
-      const err = await expect(Post.sync()).to.be.rejected;
+      const err = await Support.expectRejection(Post.sync());
 
       expect(err.message).to.match(/relation "4uth0r5" does not exist/);
     });
@@ -2558,10 +2556,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         SharedUser.findAll({
           where: ['this is a mistake', ['dont do it!']]
         })
-      ).to.eventually.be.rejectedWith(
-        Error,
-        'Support for literal replacements in the `where` object has been removed.'
-      );
+      ).rejects.toThrow('Support for literal replacements in the `where` object has been removed.');
     });
 
     it('should not fail with an include', async () => {
@@ -2756,7 +2751,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           validate: true,
           individualHooks: true
         })
-      ).to.be.rejectedWith(AggregateError);
+      ).rejects.toThrow(AggregateError);
     });
   });
 });

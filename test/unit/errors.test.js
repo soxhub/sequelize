@@ -1,5 +1,4 @@
-import { describe, it } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, expect } from 'vitest';
 import * as errors from '../../lib/errors.js';
 
 describe('errors', () => {

@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 
@@ -34,7 +33,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
     });
 
     it('should count rows', () => {
-      return expect(User.count()).to.eventually.equal(2);
+      return expect(User.count()).resolves.to.equal(2);
     });
 
     it('should support include', () => {
@@ -49,7 +48,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             }
           ]
         })
-      ).to.eventually.equal(1);
+      ).resolves.to.equal(1);
     });
 
     it('should return attributes', async () => {

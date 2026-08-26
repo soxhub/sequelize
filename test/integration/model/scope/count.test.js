@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Sequelize from '../../../../index.js';
 import Support from '../../support.js';
 
@@ -112,43 +111,43 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       it('should apply defaultScope', () => {
-        return expect(ScopeMe.count()).to.eventually.equal(2);
+        return expect(ScopeMe.count()).resolves.to.equal(2);
       });
 
       it('should be able to override default scope', () => {
-        return expect(ScopeMe.count({ where: { access_level: { gt: 5 } } })).to.eventually.equal(1);
+        return expect(ScopeMe.count({ where: { access_level: { gt: 5 } } })).resolves.to.equal(1);
       });
 
       it('should be able to unscope', () => {
-        return expect(ScopeMe.unscoped().count()).to.eventually.equal(4);
+        return expect(ScopeMe.unscoped().count()).resolves.to.equal(4);
       });
 
       it('should be able to apply other scopes', () => {
-        return expect(ScopeMe.scope('lowAccess').count()).to.eventually.equal(3);
+        return expect(ScopeMe.scope('lowAccess').count()).resolves.to.equal(3);
       });
 
       it('should be able to merge scopes with where', () => {
-        return expect(ScopeMe.scope('lowAccess').count({ where: { username: 'dan' } })).to.eventually.equal(1);
+        return expect(ScopeMe.scope('lowAccess').count({ where: { username: 'dan' } })).resolves.to.equal(1);
       });
 
       it('should be able to merge scopes with where on aliased fields', () => {
-        return expect(ScopeMe.scope('withAliasedField').count({ where: { aliasValue: 5 } })).to.eventually.equal(1);
+        return expect(ScopeMe.scope('withAliasedField').count({ where: { aliasValue: 5 } })).resolves.to.equal(1);
       });
 
       it('should ignore the order option if it is found within the scope', () => {
-        return expect(ScopeMe.scope('withOrder').count()).to.eventually.equal(4);
+        return expect(ScopeMe.scope('withOrder').count()).resolves.to.equal(4);
       });
 
       it('should be able to use where on include', () => {
-        return expect(ScopeMe.scope('withInclude').count()).to.eventually.equal(1);
+        return expect(ScopeMe.scope('withInclude').count()).resolves.to.equal(1);
       });
 
       it('should be able to use include with function scope', () => {
-        return expect(ScopeMe.scope('withIncludeFunction').count()).to.eventually.equal(1);
+        return expect(ScopeMe.scope('withIncludeFunction').count()).resolves.to.equal(1);
       });
 
       it('should be able to use include with function scope and string association', () => {
-        return expect(ScopeMe.scope('withIncludeFunctionAndStringAssociation').count()).to.eventually.equal(1);
+        return expect(ScopeMe.scope('withIncludeFunctionAndStringAssociation').count()).resolves.to.equal(1);
       });
     });
   });

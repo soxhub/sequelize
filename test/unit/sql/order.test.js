@@ -1,6 +1,5 @@
-import { describe, it } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { inspect } from 'node:util';
-import { expect } from 'chai';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import Model from '../../../lib/model.js';
@@ -369,7 +368,7 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
           Subtask.findAll({
             order: [[Project, 'createdAt', 'ASC']]
           })
-        ).to.eventually.be.rejectedWith(Error, "Unable to find a valid association for model, 'Project'");
+        ).rejects.toThrow("Unable to find a valid association for model, 'Project'");
       });
 
       it('Error on invalid structure', () => {
@@ -377,7 +376,7 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
           Subtask.findAll({
             order: [[Subtask.associations.Task, 'createdAt', Task.associations.Project, 'ASC']]
           })
-        ).to.eventually.be.rejectedWith(Error, 'Unknown structure passed to order / group: Project');
+        ).rejects.toThrow('Unknown structure passed to order / group: Project');
       });
 
       it('Error when the order is a string', () => {
@@ -385,7 +384,7 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
           Subtask.findAll({
             order: 'i am a silly string'
           })
-        ).to.eventually.be.rejectedWith(Error, 'Order must be type of array or instance of a valid sequelize method.');
+        ).rejects.toThrow('Order must be type of array or instance of a valid sequelize method.');
       });
 
       it('Error when the order contains a `{raw: "..."}` object', () => {
@@ -397,10 +396,7 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
               }
             ]
           })
-        ).to.eventually.be.rejectedWith(
-          Error,
-          'The `{raw: "..."}` syntax is no longer supported.  Use `sequelize.literal` instead.'
-        );
+        ).rejects.toThrow('The `{raw: "..."}` syntax is no longer supported.  Use `sequelize.literal` instead.');
       });
 
       it('Error when the order contains a `{raw: "..."}` object wrapped in an array', () => {
@@ -414,10 +410,7 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
               ]
             ]
           })
-        ).to.eventually.be.rejectedWith(
-          Error,
-          'The `{raw: "..."}` syntax is no longer supported.  Use `sequelize.literal` instead.'
-        );
+        ).rejects.toThrow('The `{raw: "..."}` syntax is no longer supported.  Use `sequelize.literal` instead.');
       });
     });
   });

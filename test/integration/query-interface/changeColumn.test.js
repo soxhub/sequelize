@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 
@@ -135,7 +134,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
     //SQlite navitely doesnt support ALTER Foreign key
 
     describe('should support foreign keys', () => {
-      beforeEach(async function () {
+      beforeEach(async () => {
         await queryInterface.createTable('users', {
           id: {
             type: DataTypes.INTEGER,

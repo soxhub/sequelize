@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import sinon from 'sinon';
@@ -91,7 +90,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           const project = await Projects.create({ title: 'New Project' });
           const task = await Tasks.create({ title: 'New Task' });
 
-          const err = await expect(project.setTask(task)).to.be.rejected;
+          const err = await Support.expectRejection(project.setTask(task));
           expect(err).to.be.instanceOf(Error);
         });
       });
@@ -167,7 +166,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
             const task = await Tasks.create({ title: 'New Task' });
 
             await project.setTask(task);
-            await expect(project.destroy()).to.eventually.be.rejectedWith(CustomErrorText);
+            await expect(project.destroy()).rejects.toThrow(CustomErrorText);
 
             expect(beforeProject).to.be.true;
             expect(afterProject).to.be.true;
@@ -219,7 +218,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           const project = await Projects.create({ title: 'New Project' });
           const task = await Tasks.create({ title: 'New Task' });
 
-          await expect(project.setTask(task)).to.be.rejected;
+          await expect(project.setTask(task)).rejects.toThrow();
         });
       });
 
@@ -368,7 +367,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
 
             await project.addTask(task);
 
-            const err = await expect(project.destroy()).to.be.rejected;
+            const err = await Support.expectRejection(project.destroy());
 
             expect(err).to.be.instanceOf(Error);
             expect(beforeProject).to.be.true;
@@ -752,7 +751,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
             ]);
 
             await project.addMiniTask(minitask);
-            await expect(project.destroy()).to.be.rejectedWith('Whoops!');
+            await expect(project.destroy()).rejects.toThrow('Whoops!');
 
             expect(beforeProject).to.be.true;
             expect(afterProject).to.be.true;
@@ -889,7 +888,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
             ]);
 
             await Promise.all([task.addMiniTask(minitask), project.addTask(task)]);
-            await expect(project.destroy()).to.eventually.be.rejectedWith(CustomErrorText);
+            await expect(project.destroy()).rejects.toThrow(CustomErrorText);
 
             expect(beforeProject).to.be.true;
             expect(afterProject).to.be.true;

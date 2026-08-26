@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'vitest';
-import { assert, expect } from 'chai';
+import { describe, it, beforeEach, afterEach, assert, expect } from 'vitest';
 import sinon from 'sinon';
 import defaultInflection from 'inflection';
 import Support from './support.js';
@@ -226,6 +225,7 @@ describe(Support.getTestDialectTeaser('Utils'), () => {
   });
 
   describe('stack', () => {
+    // oxlint-disable-next-line prefer-arrow-callback -- the function name is what the assertion looks for
     it('stack trace starts after call to Util.stack()', function this_here_test() {
       // We need a named function to be able to capture its trace
       function a() {

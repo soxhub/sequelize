@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Sequelize from '../../../index.js';
 import Support from '../support.js';
 
@@ -126,8 +125,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       await current.sync();
       await testSync.create({ name: 'test', age: '1' });
 
-      const error = await expect(testSync.create({ name: 'test', age: '1' })).to.be.rejected;
-      expect(error).to.be.ok;
+      await expect(testSync.create({ name: 'test', age: '1' })).rejects.toThrow();
     });
 
     it('should properly alter tables when there are foreign keys', async () => {

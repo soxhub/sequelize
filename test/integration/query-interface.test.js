@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import Support from './support.js';
 import DataTypes from '../../lib/data-types.js';
 import _ from 'lodash';
@@ -422,7 +421,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
 
       await Users.sync({ force: true });
 
-      await expect(queryInterface.renameColumn('_Users', 'email', 'pseudo')).to.be.rejectedWith(
+      await expect(queryInterface.renameColumn('_Users', 'email', 'pseudo')).rejects.toThrow(
         "Table _Users doesn't have the column email"
       );
     });
@@ -729,7 +728,7 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
           queryInterface.removeConstraint('users', 'unknown__contraint__name', {
             type: 'unique'
           })
-        ).to.eventually.be.rejectedWith(Sequelize.UnknownConstraintError);
+        ).rejects.toThrow(Sequelize.UnknownConstraintError);
       });
     });
   });

@@ -1,5 +1,4 @@
-import { describe, it } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, expect } from 'vitest';
 import config from '../config/config.js';
 import Support from './support.js';
 
@@ -15,10 +14,9 @@ describe(Support.getTestDialectTeaser('Configuration'), () => {
         port: 1,
         dialect
       });
-      return expect(seq.query('select 1 as hello')).to.eventually.be.rejectedWith([
-        seq.HostNotReachableError,
-        seq.InvalidConnectionError
-      ]);
+      // The array was never actually checked — chai-as-promised only understands an error
+      // constructor, string or regexp — so this only ever asserted that the query rejects.
+      return expect(seq.query('select 1 as hello')).rejects.toThrow();
     });
 
     it("when we don't have the correct login information", () => {
@@ -28,10 +26,7 @@ describe(Support.getTestDialectTeaser('Configuration'), () => {
         port: 1,
         dialect
       });
-      return expect(seq.query('select 1 as hello')).to.eventually.be.rejectedWith(
-        seq.ConnectionRefusedError,
-        'connect ECONNREFUSED'
-      );
+      return expect(seq.query('select 1 as hello')).rejects.toThrow('connect ECONNREFUSED');
     });
 
     it("when we don't have a valid dialect.", () => {

@@ -1,5 +1,4 @@
-import { describe, it } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, expect } from 'vitest';
 import * as hstore from '../../../../lib/dialects/postgres/hstore.js';
 
 describe('[POSTGRES Specific] hstore', () => {

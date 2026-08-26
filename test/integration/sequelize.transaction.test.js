@@ -1,6 +1,5 @@
-import { describe, it, beforeEach, afterEach } from 'vitest';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import { delay } from '../../lib/utils/promise-helpers.js';
-import { expect } from 'chai';
 import Support from './support.js';
 import Transaction from '../../lib/transaction.js';
 import sinon from 'sinon';
@@ -134,8 +133,7 @@ if (current.dialect.supports.transactions) {
           await Model.create({ name: 'omnom' }, { transaction: t1 });
 
           const conflicting = (async () => {
-            const err = await expect(Model.create({ name: 'omnom' }, { transaction: t2 })).to.be.rejected;
-            expect(err).to.be.ok;
+            await expect(Model.create({ name: 'omnom' }, { transaction: t2 })).rejects.toThrow();
             return t2.rollback();
           })();
 

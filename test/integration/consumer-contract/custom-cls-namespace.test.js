@@ -1,5 +1,4 @@
-import { describe, it, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeAll, afterAll, beforeEach, afterEach, expect } from 'vitest';
 import Support from '../support.js';
 import { CLSNamespace } from '../../../index.js';
 
@@ -325,7 +324,7 @@ describe(Support.getTestDialectTeaser('Consumer contract'), () => {
               await User.create({ name: 'doomed' });
               throw new Error('nope');
             })
-          ).to.be.rejectedWith('nope');
+          ).rejects.toThrow('nope');
 
           // The root transaction is still ambient and still usable — this is what lets the
           // consumer run a test that expects a rollback without poisoning the rest of the file.

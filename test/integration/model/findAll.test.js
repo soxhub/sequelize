@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import sinon from 'sinon';
 import Sequelize from '../../../index.js';
 import Support from '../support.js';
@@ -488,13 +487,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
 
         it('throws an error about unexpected input if include contains a non-object', async () => {
-          await expect(Worker.findAll({ include: [1] })).to.be.rejectedWith(
+          await expect(Worker.findAll({ include: [1] })).rejects.toThrow(
             'Include unexpected. Element has to be either a Model, an Association or an object.'
           );
         });
 
         it('throws an error if included DaoFactory is not associated', async () => {
-          await expect(Worker.findAll({ include: [Task] })).to.be.rejectedWith(
+          await expect(Worker.findAll({ include: [Task] })).rejects.toThrow(
             'TaskBelongsTo is not associated to Worker!'
           );
         });
@@ -540,9 +539,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
 
         it('throws an error if included DaoFactory is not associated', async () => {
-          await expect(Task.findAll({ include: [Worker] })).to.be.rejectedWith(
-            'Worker is not associated to TaskHasOne!'
-          );
+          await expect(Task.findAll({ include: [Worker] })).rejects.toThrow('Worker is not associated to TaskHasOne!');
         });
 
         it('returns the associated task via worker.task', async () => {
@@ -573,14 +570,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
 
         it('throws an error if included DaoFactory is not referenced by alias', async () => {
-          await expect(Worker.findAll({ include: [Task] })).to.be.rejectedWith(
+          await expect(Worker.findAll({ include: [Task] })).rejects.toThrow(
             'Task is associated to Worker using an alias. ' +
               "You must use the 'as' keyword to specify the alias within your include statement."
           );
         });
 
         it('throws an error if alias is not associated', async () => {
-          await expect(Worker.findAll({ include: [{ model: Task, as: 'Work' }] })).to.be.rejectedWith(
+          await expect(Worker.findAll({ include: [{ model: Task, as: 'Work' }] })).rejects.toThrow(
             'Task is associated to Worker using an alias. ' +
               "You've included an alias (Work), but it does not match the alias defined in your association."
           );
@@ -623,7 +620,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
 
         it('throws an error if included DaoFactory is not associated', async () => {
-          await expect(Task.findAll({ include: [Worker] })).to.be.rejectedWith('worker is not associated to task!');
+          await expect(Task.findAll({ include: [Worker] })).rejects.toThrow('worker is not associated to task!');
         });
 
         it('returns the associated tasks via worker.tasks', async () => {
@@ -754,14 +751,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
 
         it('throws an error if included DaoFactory is not referenced by alias', async () => {
-          await expect(Worker.findAll({ include: [Task] })).to.be.rejectedWith(
+          await expect(Worker.findAll({ include: [Task] })).rejects.toThrow(
             'Task is associated to Worker using an alias. ' +
               "You must use the 'as' keyword to specify the alias within your include statement."
           );
         });
 
         it('throws an error if alias is not associated', async () => {
-          await expect(Worker.findAll({ include: [{ model: Task, as: 'Work' }] })).to.be.rejectedWith(
+          await expect(Worker.findAll({ include: [{ model: Task, as: 'Work' }] })).rejects.toThrow(
             'Task is associated to Worker using an alias. ' +
               "You've included an alias (Work), but it does not match the alias defined in your association."
           );
@@ -1642,7 +1639,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             username: 'some-username-that-is-not-used-anywhere'
           }
         })
-      ).to.eventually.be.rejectedWith(Sequelize.EmptyResultError);
+      ).rejects.toThrow(Sequelize.EmptyResultError);
     });
 
     it('throws custom error with initialized', async () => {
@@ -1664,7 +1661,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             username: 'some-username-that-is-not-used-anywhere-for-sure-this-time'
           }
         })
-      ).to.eventually.be.rejectedWith(Sequelize.ConnectionError);
+      ).rejects.toThrow(Sequelize.ConnectionError);
     });
 
     it('throws custom error with instance', async () => {
@@ -1686,7 +1683,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             username: 'some-username-that-is-not-used-anywhere-for-sure-this-time'
           }
         })
-      ).to.eventually.be.rejectedWith(Sequelize.ConnectionError);
+      ).rejects.toThrow(Sequelize.ConnectionError);
     });
   });
 });

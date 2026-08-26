@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 
@@ -115,7 +114,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           throw new Error('Oops!');
         });
 
-        await expect(User.findOne({ where: { username: 'adam' } })).to.be.rejectedWith('Oops!');
+        await expect(User.findOne({ where: { username: 'adam' } })).rejects.toThrow('Oops!');
       });
 
       it('in beforeFindAfterExpandIncludeAll hook returns error', async () => {
@@ -123,7 +122,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           throw new Error('Oops!');
         });
 
-        await expect(User.findOne({ where: { username: 'adam' } })).to.be.rejectedWith('Oops!');
+        await expect(User.findOne({ where: { username: 'adam' } })).rejects.toThrow('Oops!');
       });
 
       it('in beforeFindAfterOptions hook returns error', async () => {
@@ -131,7 +130,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           throw new Error('Oops!');
         });
 
-        await expect(User.findOne({ where: { username: 'adam' } })).to.be.rejectedWith('Oops!');
+        await expect(User.findOne({ where: { username: 'adam' } })).rejects.toThrow('Oops!');
       });
 
       it('in afterFind hook returns error', async () => {
@@ -139,7 +138,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           throw new Error('Oops!');
         });
 
-        await expect(User.findOne({ where: { username: 'adam' } })).to.be.rejectedWith('Oops!');
+        await expect(User.findOne({ where: { username: 'adam' } })).rejects.toThrow('Oops!');
       });
     });
   });

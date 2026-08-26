@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Sequelize from '../../../index.js';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
@@ -286,11 +285,11 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       await Tasks.sync({ force: true });
 
-      const aggregate = await expect(
+      const aggregate = await Support.expectRejection(
         Tasks.bulkCreate([{ name: 'foo', code: '123' }, { code: '1234' }, { name: 'bar', code: '1' }], {
           validate: true
         })
-      ).to.be.rejected;
+      );
 
       const expectedValidationError = 'Validation len on code failed';
       const expectedNotNullError = 'notNull Violation: Task.name cannot be null';

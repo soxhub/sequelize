@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Sequelize from '../../../../index.js';
 import Support from '../../support.js';
 
@@ -78,25 +77,25 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       it('should apply defaultScope', () => {
-        return expect(ScopeMe.aggregate('*', 'count')).to.eventually.equal(2);
+        return expect(ScopeMe.aggregate('*', 'count')).resolves.to.equal(2);
       });
 
       it('should be able to override default scope', () => {
-        return expect(ScopeMe.aggregate('*', 'count', { where: { access_level: { gt: 5 } } })).to.eventually.equal(1);
+        return expect(ScopeMe.aggregate('*', 'count', { where: { access_level: { gt: 5 } } })).resolves.to.equal(1);
       });
 
       it('should be able to unscope', () => {
-        return expect(ScopeMe.unscoped().aggregate('*', 'count')).to.eventually.equal(4);
+        return expect(ScopeMe.unscoped().aggregate('*', 'count')).resolves.to.equal(4);
       });
 
       it('should be able to apply other scopes', () => {
-        return expect(ScopeMe.scope('lowAccess').aggregate('*', 'count')).to.eventually.equal(3);
+        return expect(ScopeMe.scope('lowAccess').aggregate('*', 'count')).resolves.to.equal(3);
       });
 
       it('should be able to merge scopes with where', () => {
         return expect(
           ScopeMe.scope('lowAccess').aggregate('*', 'count', { where: { username: 'dan' } })
-        ).to.eventually.equal(1);
+        ).resolves.to.equal(1);
       });
 
       it('should be able to use where on include', () => {
@@ -110,7 +109,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             order: null,
             attributes: []
           })
-        ).to.eventually.equal(1);
+        ).resolves.to.equal(1);
       });
     });
   });

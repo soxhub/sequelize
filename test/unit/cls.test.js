@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import { CLSContext, CLSNamespace, getClsTransactionFor } from '../../lib/cls.js';
 import { delay } from '../../lib/utils/promise-helpers.js';
 import Support from './support.js';
@@ -130,7 +129,7 @@ describe('CLSNamespace', () => {
 
     it('returns the promise of an async function', async () => {
       // oxlint-disable-next-line require-await
-      await expect(ns.runAndReturn(async () => 'value')).to.eventually.equal('value');
+      await expect(ns.runAndReturn(async () => 'value')).resolves.to.equal('value');
     });
   });
 
@@ -199,7 +198,7 @@ describe('CLSNamespace', () => {
           ns.set('transaction', 'inner');
           throw new Error('boom');
         })
-      ).to.be.rejectedWith('boom');
+      ).rejects.toThrow('boom');
 
       expect(ns.get('transaction')).to.be.undefined;
       expect(ns.active).to.be.null;

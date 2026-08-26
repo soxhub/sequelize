@@ -1,5 +1,4 @@
-import { describe, it, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeAll, afterAll, beforeEach, afterEach, expect } from 'vitest';
 import Sequelize from '../../index.js';
 import Support from './support.js';
 import DataTypes from '../../lib/data-types.js';
@@ -283,7 +282,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
       await user.increment('aNumber', { by: 1, silent: true });
 
-      await expect(User.findByPk(1)).to.eventually.have.property('updatedAt').equalTime(oldDate);
+      const updated = await User.findByPk(1);
+      expect(updated).to.have.property('updatedAt').equalTime(oldDate);
     });
   });
 
@@ -435,7 +435,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
       await user.decrement('aNumber', { by: 1 });
 
-      await expect(User.findByPk(1)).to.eventually.have.property('updatedAt').afterTime(oldDate);
+      const updated = await User.findByPk(1);
+      expect(updated).to.have.property('updatedAt').afterTime(oldDate);
     });
 
     it('with timestamps set to true and options.silent set to true', async () => {
@@ -456,7 +457,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
       await user.decrement('aNumber', { by: 1, silent: true });
 
-      await expect(User.findByPk(1)).to.eventually.have.property('updatedAt').equalTime(oldDate);
+      const updated = await User.findByPk(1);
+      expect(updated).to.have.property('updatedAt').equalTime(oldDate);
     });
   });
 
@@ -621,8 +623,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
       await user.destroy();
 
-      await expect(user.reload()).to.be.rejectedWith(
-        Sequelize.InstanceError,
+      await expect(user.reload()).rejects.toThrow(
         'Instance could not be reloaded because it does not exist anymore (find call returned null)'
       );
     });
@@ -864,12 +865,12 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       });
 
       it('should throw error when given value of incorrect type', async () => {
-        const err = await expect(
+        const err = await Support.expectRejection(
           SharedUser.build({
             username: 'a user',
             isSuperUser: 'INCORRECT_VALUE_TYPE'
           }).save()
-        ).to.be.rejected;
+        );
 
         expect(err.message).to.exist;
       });
@@ -878,7 +879,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
   describe('complete', () => {
     it('gets triggered if an error occurs', async () => {
-      const err = await expect(SharedUser.findOne({ where: ['asdasdasd'] })).to.be.rejected;
+      const err = await Support.expectRejection(SharedUser.findOne({ where: ['asdasdasd'] }));
 
       expect(err.message).to.exist;
     });
@@ -1069,7 +1070,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
               name: 'B'
             })
             .save()
-        ).to.be.rejectedWith(Sequelize.ValidationError);
+        ).rejects.toThrow(Sequelize.ValidationError);
 
         const user = await User.findOne({});
 
@@ -1107,7 +1108,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
               email: 'still.valid.email@gmail.com'
             })
             .save()
-        ).to.be.rejectedWith(Sequelize.ValidationError);
+        ).rejects.toThrow(Sequelize.ValidationError);
 
         const user = await User.findOne({});
 
@@ -1193,18 +1194,16 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
       clock.tick(1000);
 
-      await expect(
-        user.update(
-          {
-            username: 'userman'
-          },
-          {
-            silent: true
-          }
-        )
-      )
-        .to.eventually.have.property('updatedAt')
-        .equalTime(updatedAt);
+      const updated = await user.update(
+        {
+          username: 'userman'
+        },
+        {
+          silent: true
+        }
+      );
+
+      expect(updated).to.have.property('updatedAt').equalTime(updatedAt);
     });
 
     it('does not update timestamps when passing silent=true in a bulk update', async () => {
@@ -1262,7 +1261,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
         const user = await User.create({ name: 'John', bio: 'swag 1' });
 
-        await expect(user.update({ bio: 'swag 2' })).to.be.fulfilled;
+        await expect(user.update({ bio: 'swag 2' })).resolves.toBeDefined();
       });
     });
 
@@ -1371,7 +1370,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     });
 
     it('should fail a validation upon creating', async () => {
-      const err = await expect(SharedUser.create({ aNumber: 0, validateTest: 'hello' })).to.be.rejected;
+      const err = await Support.expectRejection(SharedUser.create({ aNumber: 0, validateTest: 'hello' }));
 
       expect(err).to.be.instanceof(Object);
       expect(err.get('validateTest')).to.be.instanceof(Array);
@@ -1380,8 +1379,9 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     });
 
     it('should fail a validation upon creating with hooks false', async () => {
-      const err = await expect(SharedUser.create({ aNumber: 0, validateTest: 'hello' }, { hooks: false })).to.be
-        .rejected;
+      const err = await Support.expectRejection(
+        SharedUser.create({ aNumber: 0, validateTest: 'hello' }, { hooks: false })
+      );
 
       expect(err).to.be.instanceof(Object);
       expect(err.get('validateTest')).to.be.instanceof(Array);
@@ -1390,8 +1390,9 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     });
 
     it('should fail a validation upon building', async () => {
-      const err = await expect(SharedUser.build({ aNumber: 0, validateCustom: 'aaaaaaaaaaaaaaaaaaaaaaaaaa' }).save()).to
-        .be.rejected;
+      const err = await Support.expectRejection(
+        SharedUser.build({ aNumber: 0, validateCustom: 'aaaaaaaaaaaaaaaaaaaaaaaaaa' }).save()
+      );
 
       expect(err).to.be.instanceof(Object);
       expect(err.get('validateCustom')).to.exist;
@@ -1403,7 +1404,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     it('should fail a validation when updating', async () => {
       const user = await SharedUser.create({ aNumber: 0 });
 
-      const err = await expect(user.update({ validateTest: 'hello' })).to.be.rejected;
+      const err = await Support.expectRejection(user.update({ validateTest: 'hello' }));
 
       expect(err).to.be.instanceof(Object);
       expect(err.get('validateTest')).to.exist;
@@ -2086,7 +2087,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     it('returns an error if the model is not paranoid', async () => {
       const user = await SharedUser.create({ username: 'Peter', secretValue: '42' });
 
-      await expect(user.restore()).to.be.rejectedWith(Error, 'Model is not paranoid');
+      await expect(user.restore()).rejects.toThrow('Model is not paranoid');
     });
 
     it('restores a previously deleted model', async () => {

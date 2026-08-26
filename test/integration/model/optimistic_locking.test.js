@@ -1,7 +1,6 @@
-import { describe, it, beforeEach } from 'vitest';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
-import { expect } from 'chai';
 
 const current = Support.sequelize;
 
@@ -58,7 +57,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         return accountB.save();
       };
 
-      await expect(staleSave()).to.eventually.be.rejectedWith(Support.Sequelize.OptimisticLockError);
+      await expect(staleSave()).rejects.toThrow(Support.Sequelize.OptimisticLockError);
     });
 
     it('increment() also increments the version', async () => {

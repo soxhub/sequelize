@@ -1,5 +1,4 @@
-import { describe, it } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, expect } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 
@@ -17,7 +16,7 @@ describe(Support.getTestDialectTeaser('hasOne'), () => {
     expect(Task.rawAttributes.ShabdaId).not.to.be.empty;
   });
 
-  it('should not override custom methods with association mixin', function () {
+  it('should not override custom methods with association mixin', () => {
     const methods = {
       getTask: 'get',
       setTask: 'set',

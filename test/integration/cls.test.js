@@ -1,6 +1,5 @@
-import { describe, it, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
+import { describe, it, beforeAll, afterAll, beforeEach, afterEach, expect } from 'vitest';
 import { delay } from '../../lib/utils/promise-helpers.js';
-import { expect } from 'chai';
 import Support from './support.js';
 import clsHooked from 'cls-hooked';
 
@@ -133,7 +132,7 @@ for (const [implementation, createNamespace] of implementations) {
 
             return Promise.reject(new Error('rollback the transaction'));
           })
-        ).to.be.rejectedWith('rollback the transaction');
+        ).rejects.toThrow('rollback the transaction');
 
         expect(ns.get('transaction')).not.to.be.ok;
       });
@@ -145,13 +144,13 @@ for (const [implementation, createNamespace] of implementations) {
 
             throw new Error('rollback the transaction');
           })
-        ).to.be.rejectedWith('rollback the transaction');
+        ).rejects.toThrow('rollback the transaction');
 
         // If the context leaked, this would run on the rolled back transaction and its
         // already released connection rather than on a fresh one.
         await User.create({ name: 'kept' });
 
-        await expect(User.findAll()).to.eventually.have.length(1);
+        await expect(User.findAll()).resolves.to.have.length(1);
       });
 
       it('does not leak outside findOrCreate', async () => {
@@ -216,11 +215,11 @@ for (const [implementation, createNamespace] of implementations) {
             sequelize.transaction(() => {
               return Person.create({ name: 'bob' });
             })
-          ).to.be.rejectedWith(Sequelize.UniqueConstraintError);
+          ).rejects.toThrow(Sequelize.UniqueConstraintError);
 
           // Would fail with `25P02: current transaction is aborted` on postgres if the failed
           // INSERT had run in the outer transaction rather than a savepoint.
-          await expect(Person.findAll()).to.eventually.have.length(1);
+          await expect(Person.findAll()).resolves.to.have.length(1);
         });
       });
 
@@ -234,9 +233,9 @@ for (const [implementation, createNamespace] of implementations) {
 
               throw new Error('rollback the savepoint');
             })
-          ).to.be.rejectedWith('rollback the savepoint');
+          ).rejects.toThrow('rollback the savepoint');
 
-          await expect(User.findAll()).to.eventually.have.length(1);
+          await expect(User.findAll()).resolves.to.have.length(1);
         });
       });
     });
@@ -278,7 +277,7 @@ for (const [implementation, createNamespace] of implementations) {
               'ROLLBACK TO SAVEPOINT ' + sequelize.getQueryInterface().quoteIdentifier(savepointName, true),
               { transaction: outer }
             )
-          ).to.be.rejected;
+          ).rejects.toThrow();
         });
       });
 
@@ -299,7 +298,7 @@ for (const [implementation, createNamespace] of implementations) {
 
               throw new Error('rollback the middle savepoint');
             })
-          ).to.be.rejectedWith('rollback the middle savepoint');
+          ).rejects.toThrow('rollback the middle savepoint');
 
           const users = await User.findAll();
           expect(users.map((user) => user.name)).to.deep.equal(['outer']);
@@ -334,7 +333,7 @@ for (const [implementation, createNamespace] of implementations) {
             })
           ]);
 
-          await expect(User.findAll()).to.eventually.have.length(2);
+          await expect(User.findAll()).resolves.to.have.length(2);
         });
       });
 
@@ -352,7 +351,7 @@ for (const [implementation, createNamespace] of implementations) {
 
           // One release per commit, so the subtransaction stack does not grow with the loop.
           expect(sql.filter((statement) => /RELEASE SAVEPOINT/.test(statement))).to.have.length(3);
-          await expect(User.findAll()).to.eventually.have.length(3);
+          await expect(User.findAll()).resolves.to.have.length(3);
         });
       });
     });
@@ -384,7 +383,7 @@ for (const [implementation, createNamespace] of implementations) {
               inner.afterCommit(() => fired.push('inner'));
               throw new Error('rollback the savepoint');
             })
-          ).to.be.rejectedWith('rollback the savepoint');
+          ).rejects.toThrow('rollback the savepoint');
         });
 
         expect(fired).to.deep.equal([]);
@@ -423,7 +422,7 @@ for (const [implementation, createNamespace] of implementations) {
 
             throw new Error('rollback the root');
           })
-        ).to.be.rejectedWith('rollback the root');
+        ).rejects.toThrow('rollback the root');
 
         expect(fired).to.deep.equal([]);
       });
@@ -493,8 +492,8 @@ for (const [implementation, createNamespace] of implementations) {
           await User.create({ name: 'bob' });
 
           await Promise.all([
-            expect(User.findAll({ transaction: null })).to.eventually.have.length(0),
-            expect(User.findAll({})).to.eventually.have.length(1)
+            expect(User.findAll({ transaction: null })).resolves.to.have.length(0),
+            expect(User.findAll({})).resolves.to.have.length(1)
           ]);
         });
       });

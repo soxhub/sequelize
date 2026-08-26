@@ -1,5 +1,4 @@
-import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeAll, afterAll, beforeEach, expect } from 'vitest';
 import sinon from 'sinon';
 import Sequelize from '../../../index.js';
 import Support from '../support.js';
@@ -301,7 +300,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
           created.update({
             name: 'B'
           })
-        ).to.be.rejectedWith(Sequelize.ValidationError);
+        ).rejects.toThrow(Sequelize.ValidationError);
 
         const user = await User.findOne({});
         expect(user.get('email')).to.equal('valid.email@gmail.com');
@@ -336,7 +335,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
             name: 'B',
             email: 'still.valid.email@gmail.com'
           })
-        ).to.be.rejectedWith(Sequelize.ValidationError);
+        ).rejects.toThrow(Sequelize.ValidationError);
 
         const user = await User.findOne({});
         expect(user.get('email')).to.equal('valid.email@gmail.com');

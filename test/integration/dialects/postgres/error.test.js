@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import DataTypes from '../../../../lib/data-types.js';
 import Support from '../../support.js';
 
@@ -54,6 +53,6 @@ describe('[POSTGRES Specific] ExclusionConstraintError', () => {
         guestName: 'Frequent Visitor',
         period: [new Date(2015, 0, 2), new Date(2015, 0, 5)]
       })
-    ).to.eventually.be.rejectedWith(Sequelize.ExclusionConstraintError);
+    ).rejects.toThrow(Sequelize.ExclusionConstraintError);
   });
 });

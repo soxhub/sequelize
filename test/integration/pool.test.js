@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import Support from './support.js';
 import sinon from 'sinon';
 
@@ -29,7 +28,7 @@ describe(Support.getTestDialectTeaser('Pooling'), () => {
 
     sandbox.stub(testInstance.connectionManager, '_connect').returns(new Sequelize.Promise(() => {}));
 
-    return expect(testInstance.authenticate()).to.eventually.be.rejectedWith('ResourceRequest timed out');
+    return expect(testInstance.authenticate()).rejects.toThrow('ResourceRequest timed out');
   });
 
   it('should not result in unhandled promise rejection when unable to acquire connection', async () => {
@@ -49,6 +48,6 @@ describe(Support.getTestDialectTeaser('Pooling'), () => {
       return testInstance.transaction();
     };
 
-    await expect(acquireTwice()).to.eventually.be.rejectedWith('ResourceRequest timed out');
+    await expect(acquireTwice()).rejects.toThrow('ResourceRequest timed out');
   });
 });

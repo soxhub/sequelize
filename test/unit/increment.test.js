@@ -1,5 +1,4 @@
-import { describe, it } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, expect } from 'vitest';
 import Support from '../support.js';
 
 const current = Support.sequelize;
@@ -18,13 +17,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       it('should reject if options are missing', () => {
-        return expect(Model.increment(['id', 'count'])).to.be.rejectedWith(
+        return expect(Model.increment(['id', 'count'])).rejects.toThrow(
           'Missing where attribute in the options parameter'
         );
       });
 
       it('should reject if options.where are missing', () => {
-        return expect(Model.increment(['id', 'count'], { by: 10 })).to.be.rejectedWith(
+        return expect(Model.increment(['id', 'count'], { by: 10 })).rejects.toThrow(
           'Missing where attribute in the options parameter'
         );
       });

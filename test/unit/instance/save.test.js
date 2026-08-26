@@ -1,5 +1,4 @@
-import { describe, it, beforeAll, afterAll } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import Support from '../support.js';
 import sinon from 'sinon';
 
@@ -12,7 +11,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       const Model = current.define('User', {}),
         instance = Model.build({}, { isNewRecord: false });
 
-      return expect(instance.save()).to.be.rejected;
+      return expect(instance.save()).rejects.toThrow();
     });
 
     describe('options tests', () => {

@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import moment from 'moment';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
@@ -653,11 +652,11 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             })
           ]);
 
-          await expect(Event.findAll(conditionSearch)).to.eventually.have.length(2);
+          await expect(Event.findAll(conditionSearch)).resolves.to.have.length(2);
 
           await Event.destroy(conditionSearch);
 
-          await expect(Event.findAll(conditionSearch)).to.eventually.have.length(0);
+          await expect(Event.findAll(conditionSearch)).resolves.to.have.length(0);
         });
       });
 
@@ -771,7 +770,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
               },
               order: [["data.name.first}'); INSERT INJECTION HERE! SELECT ('"]]
             })
-          ).to.eventually.be.rejectedWith(Error);
+          ).rejects.toThrow(Error);
         });
       });
     });

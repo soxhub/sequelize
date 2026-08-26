@@ -1,6 +1,5 @@
-import { describe, it } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { AssociationError } from '../../../lib/errors.js';
-import { expect } from 'chai';
 import Support from '../support.js';
 
 const current = Support.sequelize;

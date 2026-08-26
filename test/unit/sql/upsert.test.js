@@ -21,50 +21,81 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
       { timestamps: false }
     );
 
-    // The insert and the update both have to land their primary key in the function's `primary_key`
-    // OUT parameter -- a RETURNING clause without an INTO is a plpgsql error, so these assertions
-    // exist to catch the clause and the redirect drifting apart.
-    it('returns the primary key into the OUT parameter', () => {
+    it('assigns the updated columns from EXCLUDED', () => {
       expectsql(
-        sql.upsertQuery(User.tableName, { user_name: 'john' }, { user_name: 'jane' }, { id: 2 }, User, {
-          returning: true
+        sql.upsertQuery(User.tableName, { user_name: 'john' }, { user_name: 'jane' }, User, {
+          returning: false,
+          upsertKeys: ['id']
         }),
         {
           postgres:
-            'CREATE OR REPLACE FUNCTION pg_temp.sequelize_upsert(OUT created boolean, OUT primary_key text)  AS $func$ BEGIN ' +
-            'INSERT INTO "users" ("user_name") VALUES (\'john\') RETURNING "id" INTO primary_key; created := true; ' +
-            'EXCEPTION WHEN unique_violation THEN UPDATE "users" SET "user_name"=\'jane\' WHERE "id" = 2 RETURNING "id" INTO primary_key; created := false; ' +
-            'END; $func$ LANGUAGE plpgsql; SELECT * FROM pg_temp.sequelize_upsert();'
+            'INSERT INTO "users" ("user_name") VALUES (\'john\') ON CONFLICT ("id") ' +
+            'DO UPDATE SET "user_name"=EXCLUDED."user_name" RETURNING (xmax = 0) AS "_sequelize_upsert_created";'
         }
       );
     });
 
-    it('omits the returning clause entirely when returning is not requested', () => {
+    // Without a RETURNING clause there is no row to read `xmax` off, so the created flag is
+    // requested unconditionally -- `returning` only controls whether the model's own columns
+    // ride along with it.
+    it('returns the created flag even when returning is not requested', () => {
       expectsql(
-        sql.upsertQuery(User.tableName, { user_name: 'john' }, { user_name: 'jane' }, { id: 2 }, User, {
-          returning: false
+        sql.upsertQuery(User.tableName, { user_name: 'john' }, { user_name: 'jane' }, User, {
+          returning: true,
+          upsertKeys: ['id']
         }),
         {
           postgres:
-            'CREATE OR REPLACE FUNCTION pg_temp.sequelize_upsert(OUT created boolean, OUT primary_key text)  AS $func$ BEGIN ' +
-            'INSERT INTO "users" ("user_name") VALUES (\'john\'); created := true; ' +
-            'EXCEPTION WHEN unique_violation THEN UPDATE "users" SET "user_name"=\'jane\' WHERE "id" = 2; created := false; ' +
-            'END; $func$ LANGUAGE plpgsql; SELECT * FROM pg_temp.sequelize_upsert();'
+            'INSERT INTO "users" ("user_name") VALUES (\'john\') ON CONFLICT ("id") ' +
+            'DO UPDATE SET "user_name"=EXCLUDED."user_name" ' +
+            'RETURNING "id","user_name",(xmax = 0) AS "_sequelize_upsert_created";'
         }
       );
     });
 
-    it('ignores a caller supplied returning list', () => {
+    it('targets a composite conflict key', () => {
       expectsql(
-        sql.upsertQuery(User.tableName, { user_name: 'john' }, { user_name: 'jane' }, { id: 2 }, User, {
-          returning: ['user_name']
+        sql.upsertQuery(User.tableName, { user_name: 'john' }, { user_name: 'jane' }, User, {
+          returning: false,
+          upsertKeys: ['user_name', 'id']
         }),
         {
           postgres:
-            'CREATE OR REPLACE FUNCTION pg_temp.sequelize_upsert(OUT created boolean, OUT primary_key text)  AS $func$ BEGIN ' +
-            'INSERT INTO "users" ("user_name") VALUES (\'john\') RETURNING "id" INTO primary_key; created := true; ' +
-            'EXCEPTION WHEN unique_violation THEN UPDATE "users" SET "user_name"=\'jane\' WHERE "id" = 2 RETURNING "id" INTO primary_key; created := false; ' +
-            'END; $func$ LANGUAGE plpgsql; SELECT * FROM pg_temp.sequelize_upsert();'
+            'INSERT INTO "users" ("user_name") VALUES (\'john\') ON CONFLICT ("user_name","id") ' +
+            'DO UPDATE SET "user_name"=EXCLUDED."user_name" RETURNING (xmax = 0) AS "_sequelize_upsert_created";'
+        }
+      );
+    });
+
+    // A partial unique index is only usable as an arbiter if the statement repeats its predicate,
+    // so `conflictWhere` is spliced in between the conflict target and the DO UPDATE.
+    it('narrows the conflict target with conflictWhere', () => {
+      expectsql(
+        sql.upsertQuery(User.tableName, { user_name: 'john' }, { user_name: 'jane' }, User, {
+          returning: false,
+          upsertKeys: ['user_name'],
+          conflictWhere: { deletedAt: null }
+        }),
+        {
+          postgres:
+            'INSERT INTO "users" ("user_name") VALUES (\'john\') ON CONFLICT ("user_name") WHERE "deletedAt" IS NULL ' +
+            'DO UPDATE SET "user_name"=EXCLUDED."user_name" RETURNING (xmax = 0) AS "_sequelize_upsert_created";'
+        }
+      );
+    });
+
+    // Every supplied column is part of the conflict target, so there is nothing to assign from
+    // EXCLUDED. `DO NOTHING` would suppress the RETURNING row and lose the created flag with it.
+    it('self-assigns the conflict target when there is nothing else to update', () => {
+      expectsql(
+        sql.upsertQuery(User.tableName, { user_name: 'john' }, {}, User, {
+          returning: false,
+          upsertKeys: ['user_name']
+        }),
+        {
+          postgres:
+            'INSERT INTO "users" ("user_name") VALUES (\'john\') ON CONFLICT ("user_name") ' +
+            'DO UPDATE SET "user_name"=EXCLUDED."user_name" RETURNING (xmax = 0) AS "_sequelize_upsert_created";'
         }
       );
     });
@@ -88,20 +119,15 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
       );
 
       expectsql(
-        sql.upsertQuery(
-          CustomUser.tableName,
-          { user_name: 'john' },
-          { user_name: 'jane' },
-          { user_id: 2 },
-          CustomUser,
-          { returning: true }
-        ),
+        sql.upsertQuery(CustomUser.tableName, { user_name: 'john' }, { user_name: 'jane' }, CustomUser, {
+          returning: true,
+          upsertKeys: ['user_id']
+        }),
         {
           postgres:
-            'CREATE OR REPLACE FUNCTION pg_temp.sequelize_upsert(OUT created boolean, OUT primary_key text)  AS $func$ BEGIN ' +
-            'INSERT INTO "users" ("user_name") VALUES (\'john\') RETURNING "user_id" INTO primary_key; created := true; ' +
-            'EXCEPTION WHEN unique_violation THEN UPDATE "users" SET "user_name"=\'jane\' WHERE "user_id" = 2 RETURNING "user_id" INTO primary_key; created := false; ' +
-            'END; $func$ LANGUAGE plpgsql; SELECT * FROM pg_temp.sequelize_upsert();'
+            'INSERT INTO "users" ("user_name") VALUES (\'john\') ON CONFLICT ("user_id") ' +
+            'DO UPDATE SET "user_name"=EXCLUDED."user_name" ' +
+            'RETURNING "user_id","user_name",(xmax = 0) AS "_sequelize_upsert_created";'
         }
       );
     });

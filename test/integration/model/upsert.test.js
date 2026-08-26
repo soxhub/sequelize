@@ -258,6 +258,43 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(user.createdAt).to.deep.equal(originalCreatedAt);
       });
 
+      it('does not overwrite createdAt when supplied as an explicit insert value when using fields', async () => {
+        const originalCreatedAt = new Date('2010-01-01T12:00:00.000Z');
+
+        await SharedUser.upsert(
+          { id: 42, username: 'john', createdAt: originalCreatedAt },
+          { fields: ['id', 'username'] }
+        );
+
+        const user = await SharedUser.findByPk(42);
+        expect(user.createdAt).to.deep.equal(originalCreatedAt);
+      });
+
+      it('falls back to a noop if no update values are found in the upsert data', async () => {
+        const User = current.define(
+          'user',
+          {
+            username: DataTypes.STRING,
+            email: {
+              type: DataTypes.STRING,
+              field: 'email_address',
+              defaultValue: 'xxx@yyy.zzz'
+            }
+          },
+          { timestamps: false }
+        );
+
+        await User.sync({ force: true });
+
+        await User.upsert({ id: 42, username: 'jack' }, { fields: ['email'] });
+        await User.upsert({ id: 42, username: 'jill' }, { fields: ['email'] });
+
+        const user = await User.findByPk(42);
+        expect(user).to.be.ok;
+        // 'username' is outside `fields`, so the conflicting second upsert must not carry it over.
+        expect(user.username).to.equal('jack');
+      });
+
       it('does not update using default values', async () => {
         await SharedUser.create({ id: 42, username: 'john', baz: 'new baz value' });
 
@@ -426,6 +463,208 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(users).to.have.lengthOf(2);
       });
 
+      describe('conflictFields', () => {
+        let Memberships;
+
+        beforeEach(async () => {
+          Memberships = current.define('memberships', {
+            user_id: DataTypes.INTEGER,
+            group_id: DataTypes.INTEGER,
+            permissions: DataTypes.ENUM('admin', 'member')
+          });
+
+          await Memberships.sync({ force: true });
+
+          await current.getQueryInterface().addConstraint('memberships', ['user_id', 'group_id'], { type: 'unique' });
+        });
+
+        it('should insert with no other rows', async () => {
+          const [newRow] = await Memberships.upsert(
+            { user_id: 1, group_id: 1, permissions: 'member' },
+            { returning: true, conflictFields: ['user_id', 'group_id'] }
+          );
+
+          expect(newRow).to.not.eq(null);
+          expect(newRow.permissions).to.eq('member');
+        });
+
+        it('should use conflictFields as upsertKeys', async () => {
+          const [originalMembership] = await Memberships.upsert(
+            { user_id: 1, group_id: 1, permissions: 'member' },
+            { returning: true, conflictFields: ['user_id', 'group_id'] }
+          );
+
+          expect(originalMembership).to.not.eq(null);
+          expect(originalMembership.permissions).to.eq('member');
+
+          const [updatedMembership] = await Memberships.upsert(
+            { user_id: 1, group_id: 1, permissions: 'admin' },
+            { returning: true, conflictFields: ['user_id', 'group_id'] }
+          );
+
+          expect(updatedMembership).to.not.eq(null);
+          expect(updatedMembership.permissions).to.eq('admin');
+          expect(updatedMembership.id).to.eq(originalMembership.id);
+
+          const [otherMembership] = await Memberships.upsert(
+            { user_id: 2, group_id: 1, permissions: 'member' },
+            { returning: true, conflictFields: ['user_id', 'group_id'] }
+          );
+
+          expect(otherMembership).to.not.eq(null);
+          expect(otherMembership.permissions).to.eq('member');
+          expect(otherMembership.id).to.not.eq(originalMembership.id);
+        });
+
+        it('should map conflictFields to column names', async () => {
+          const Employees = current.define('employees', {
+            employeeId: {
+              type: DataTypes.INTEGER,
+              field: 'Employee_ID'
+            },
+            departmentId: {
+              type: DataTypes.INTEGER,
+              field: 'Department_ID'
+            },
+            position: DataTypes.ENUM('junior', 'senior')
+          });
+
+          await Employees.sync({ force: true });
+
+          await current
+            .getQueryInterface()
+            .addConstraint('employees', ['Employee_ID', 'Department_ID'], { type: 'unique' });
+
+          const [originalEmployee] = await Employees.upsert(
+            { employeeId: 1, departmentId: 1, position: 'junior' },
+            { returning: true, conflictFields: ['employeeId', 'departmentId'] }
+          );
+
+          expect(originalEmployee).to.not.eq(null);
+          expect(originalEmployee.position).to.eq('junior');
+
+          const [updatedEmployee] = await Employees.upsert(
+            { employeeId: 1, departmentId: 1, position: 'senior' },
+            { returning: true, conflictFields: ['employeeId', 'departmentId'] }
+          );
+
+          expect(updatedEmployee).to.not.eq(null);
+          expect(updatedEmployee.position).to.eq('senior');
+          expect(updatedEmployee.id).to.eq(originalEmployee.id);
+
+          const [otherEmployee] = await Employees.upsert(
+            { employeeId: 2, departmentId: 1, position: 'senior' },
+            { returning: true, conflictFields: ['employeeId', 'departmentId'] }
+          );
+
+          expect(otherEmployee).to.not.eq(null);
+          expect(otherEmployee.position).to.eq('senior');
+          expect(otherEmployee.id).to.not.eq(originalEmployee.id);
+        });
+      });
+
+      describe('conflictWhere', () => {
+        let PartiallyUniqueUser;
+
+        beforeEach(async () => {
+          PartiallyUniqueUser = current.define(
+            'users',
+            {
+              name: DataTypes.STRING,
+              bio: DataTypes.STRING,
+              isUnique: DataTypes.BOOLEAN
+            },
+            {
+              indexes: [
+                {
+                  unique: true,
+                  fields: ['name'],
+                  where: { isUnique: true }
+                }
+              ]
+            }
+          );
+
+          await PartiallyUniqueUser.sync({ force: true });
+        });
+
+        it('should insert with no other rows', async () => {
+          const [newRow] = await PartiallyUniqueUser.upsert(
+            { name: 'John', isUnique: true },
+            { returning: true, conflictWhere: { isUnique: true } }
+          );
+
+          expect(newRow).to.not.eq(null);
+          expect(newRow.name).to.eq('John');
+        });
+
+        it('should update with another unique user', async () => {
+          let [newRow] = await PartiallyUniqueUser.upsert(
+            { name: 'John', isUnique: true, bio: 'before' },
+            { returning: true, conflictWhere: { isUnique: true } }
+          );
+
+          expect(newRow).to.not.eq(null);
+          expect(newRow.name).to.eq('John');
+          expect(newRow.bio).to.eq('before');
+
+          [newRow] = await PartiallyUniqueUser.upsert(
+            { name: 'John', isUnique: true, bio: 'after' },
+            { returning: true, conflictWhere: { isUnique: true } }
+          );
+
+          expect(newRow).to.not.eq(null);
+          expect(newRow.name).to.eq('John');
+          expect(newRow.bio).to.eq('after');
+
+          expect(await PartiallyUniqueUser.count()).to.eq(1);
+        });
+
+        it('allows both unique and non-unique users with the same name', async () => {
+          let [newRow] = await PartiallyUniqueUser.upsert(
+            { name: 'John', isUnique: true, bio: 'first' },
+            { returning: true, conflictWhere: { isUnique: true } }
+          );
+
+          expect(newRow).to.not.eq(null);
+          expect(newRow.name).to.eq('John');
+          expect(newRow.bio).to.eq('first');
+
+          [newRow] = await PartiallyUniqueUser.upsert(
+            { name: 'John', isUnique: false, bio: 'second' },
+            { returning: true, conflictWhere: { isUnique: true } }
+          );
+
+          expect(newRow).to.not.eq(null);
+          expect(newRow.name).to.eq('John');
+          expect(newRow.bio).to.eq('second');
+
+          expect(await PartiallyUniqueUser.count()).to.eq(2);
+        });
+
+        it('allows for multiple unique users with different names', async () => {
+          let [newRow] = await PartiallyUniqueUser.upsert(
+            { name: 'John', isUnique: true, bio: 'first' },
+            { returning: true, conflictWhere: { isUnique: true } }
+          );
+
+          expect(newRow).to.not.eq(null);
+          expect(newRow.name).to.eq('John');
+          expect(newRow.bio).to.eq('first');
+
+          [newRow] = await PartiallyUniqueUser.upsert(
+            { name: 'Bob', isUnique: false, bio: 'second' },
+            { returning: true, conflictWhere: { isUnique: true } }
+          );
+
+          expect(newRow).to.not.eq(null);
+          expect(newRow.name).to.eq('Bob');
+          expect(newRow.bio).to.eq('second');
+
+          expect(await PartiallyUniqueUser.count()).to.eq(2);
+        });
+      });
+
       if (current.dialect.supports.returnValues) {
         describe('with returning option', () => {
           it('works with upsert on id', async () => {
@@ -464,6 +703,23 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             expect(user.get('id')).to.equal(42);
             expect(user.get('username')).to.equal('doe');
             expect(created).to.be.false;
+          });
+
+          it('should return default value set by the database', async () => {
+            const User = current.define('User', {
+              name: { type: DataTypes.STRING, primaryKey: true },
+              code: { type: DataTypes.INTEGER, defaultValue: Sequelize.literal(2020) }
+            });
+
+            await User.sync({ force: true });
+
+            const [user, created] = await User.upsert({ name: 'Test default value' }, { returning: true });
+
+            expect(user.name).to.equal('Test default value');
+            expect(user.code).to.equal(2020);
+            // Upstream reports null here for postgres; the RETURNING clause carries `xmax = 0`, so
+            // this fork can answer it properly.
+            expect(created).to.be.true;
           });
 
           it('works for non incrementing primaryKey', async () => {

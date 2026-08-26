@@ -125,30 +125,34 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
     });
 
     describe('runs all hooks on success', () => {
-      afterEach(() => {
+      const expectAllRan = () => {
         expect(hook1.calledOnce).to.be.true;
         expect(hook2.calledOnce).to.be.true;
         expect(hook3.calledOnce).to.be.true;
-      });
+      };
 
-      it('using addHook', () => {
+      it('using addHook', async () => {
         Model.addHook('beforeCreate', hook1);
         Model.addHook('beforeCreate', hook2);
         Model.addHook('beforeCreate', hook3);
 
-        return Model.runHooks('beforeCreate');
+        await Model.runHooks('beforeCreate');
+
+        expectAllRan();
       });
 
-      it('using function', () => {
+      it('using function', async () => {
         Model.beforeCreate(hook1);
         Model.beforeCreate(hook2);
         Model.beforeCreate(hook3);
 
-        return Model.runHooks('beforeCreate');
+        await Model.runHooks('beforeCreate');
+
+        expectAllRan();
       });
 
-      it('using define', () => {
-        return current
+      it('using define', async () => {
+        await current
           .define(
             'M',
             {},
@@ -159,9 +163,11 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
             }
           )
           .runHooks('beforeCreate');
+
+        expectAllRan();
       });
 
-      it('using a mixture', () => {
+      it('using a mixture', async () => {
         const MixtureModel = current.define(
           'M',
           {},
@@ -174,7 +180,9 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         MixtureModel.beforeCreate(hook2);
         MixtureModel.addHook('beforeCreate', hook3);
 
-        return MixtureModel.runHooks('beforeCreate');
+        await MixtureModel.runHooks('beforeCreate');
+
+        expectAllRan();
       });
     });
 
@@ -383,26 +391,30 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
       afterDelete = sinon.spy();
     });
 
-    afterEach(() => {
+    const expectAliasesRan = () => {
       expect(beforeDelete.calledOnce).to.be.true;
       expect(afterDelete.calledOnce).to.be.true;
-    });
+    };
 
     describe('direct method', () => {
-      it('#delete', () => {
+      it('#delete', async () => {
         Model.beforeDelete(beforeDelete);
         Model.afterDelete(afterDelete);
 
-        return Promise.all([Model.runHooks('beforeDestroy'), Model.runHooks('afterDestroy')]);
+        await Promise.all([Model.runHooks('beforeDestroy'), Model.runHooks('afterDestroy')]);
+
+        expectAliasesRan();
       });
     });
 
     describe('.hook() method', () => {
-      it('#delete', () => {
+      it('#delete', async () => {
         Model.hook('beforeDelete', beforeDelete);
         Model.hook('afterDelete', afterDelete);
 
-        return Promise.all([Model.runHooks('beforeDestroy'), Model.runHooks('afterDestroy')]);
+        await Promise.all([Model.runHooks('beforeDestroy'), Model.runHooks('afterDestroy')]);
+
+        expectAliasesRan();
       });
     });
   });

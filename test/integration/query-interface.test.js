@@ -6,6 +6,23 @@ import _ from 'lodash';
 const Sequelize = Support.Sequelize;
 const current = Support.sequelize;
 
+// `describeTable` only reports an enum column as USER-DEFINED, which would pass even if the enum type
+// were never created. Round-tripping a value proves the type exists and actually constrains the column.
+const expectEnumAccepts = async (tableName, columnName, schema) => {
+  const table = schema ? `"${schema}"."${tableName}"` : `"${tableName}"`;
+
+  await current.query(`INSERT INTO ${table} ("${columnName}") VALUES ('value1')`);
+
+  const rows = await current.query(`SELECT "${columnName}" FROM ${table}`, {
+    type: current.QueryTypes.SELECT
+  });
+  expect(rows[0][columnName]).to.equal('value1');
+
+  await expect(current.query(`INSERT INTO ${table} ("${columnName}") VALUES ('nope')`)).rejects.toThrow(
+    /invalid input value for enum/
+  );
+};
+
 describe(Support.getTestDialectTeaser('QueryInterface'), () => {
   let queryInterface;
 
@@ -236,29 +253,36 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       expect(response.table_id || (typeof response !== 'object' && response)).to.be.ok;
     });
 
-    it('should work with enums (1)', () => {
-      return queryInterface.createTable('SomeTable', {
+    it('should work with enums (1)', async () => {
+      await queryInterface.createTable('SomeTable', {
         someEnum: DataTypes.ENUM('value1', 'value2', 'value3')
       });
+
+      await expectEnumAccepts('SomeTable', 'someEnum');
     });
 
-    it('should work with enums (2)', () => {
-      return queryInterface.createTable('SomeTable', {
+    it('should work with enums (2)', async () => {
+      await queryInterface.createTable('SomeTable', {
         someEnum: {
           type: DataTypes.ENUM,
           values: ['value1', 'value2', 'value3']
         }
       });
+
+      await expectEnumAccepts('SomeTable', 'someEnum');
     });
 
-    it('should work with enums (3)', () => {
-      return queryInterface.createTable('SomeTable', {
+    it('should work with enums (3)', async () => {
+      await queryInterface.createTable('SomeTable', {
         someEnum: {
           type: DataTypes.ENUM,
           values: ['value1', 'value2', 'value3'],
           field: 'otherName'
         }
       });
+
+      // The attribute is `someEnum`, but the column it maps to is `otherName`.
+      await expectEnumAccepts('SomeTable', 'otherName');
     });
 
     it('should work with enums (4)', async () => {
@@ -274,6 +298,8 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
         },
         { schema: 'archive' }
       );
+
+      await expectEnumAccepts('SomeTable', 'otherName', 'archive');
     });
 
     it('should work with schemas', async () => {
@@ -495,15 +521,19 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       expect(table).to.have.property('level_id');
     });
 
-    it('should work with enums (1)', () => {
-      return queryInterface.addColumn('users', 'someEnum', DataTypes.ENUM('value1', 'value2', 'value3'));
+    it('should work with enums (1)', async () => {
+      await queryInterface.addColumn('users', 'someEnum', DataTypes.ENUM('value1', 'value2', 'value3'));
+
+      await expectEnumAccepts('users', 'someEnum');
     });
 
-    it('should work with enums (2)', () => {
-      return queryInterface.addColumn('users', 'someOtherEnum', {
+    it('should work with enums (2)', async () => {
+      await queryInterface.addColumn('users', 'someOtherEnum', {
         type: DataTypes.ENUM,
         values: ['value1', 'value2', 'value3']
       });
+
+      await expectEnumAccepts('users', 'someOtherEnum');
     });
   });
 

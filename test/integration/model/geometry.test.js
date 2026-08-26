@@ -212,8 +212,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         return current.sync({ force: true });
       });
 
-      it('should properly escape the single quotes', () => {
-        return Model.create({
+      it('should properly escape the single quotes', async () => {
+        const created = await Model.create({
           location: {
             type: 'Point',
             properties: {
@@ -222,12 +222,15 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             coordinates: [39.807222, -76.984722]
           }
         });
+
+        const reloaded = await created.reload();
+        expect(reloaded.location.coordinates).to.deep.equal([39.807222, -76.984722]);
       });
 
-      it('should properly escape the single quotes in coordinates', () => {
+      it('should properly escape the single quotes in coordinates', async () => {
         // MySQL 5.7, those guys finally fixed this
 
-        return Model.create({
+        const created = await Model.create({
           location: {
             type: 'Point',
             properties: {
@@ -236,6 +239,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             coordinates: [39.807222, "'); DELETE YOLO INJECTIONS; --"]
           }
         });
+
+        await expect(created.reload()).resolves.toBeDefined();
       });
     });
   }

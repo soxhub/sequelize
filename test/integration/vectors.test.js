@@ -1,8 +1,6 @@
-import { describe, it, expect, should } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import Sequelize from '../../index.js';
 import Support from './support.js';
-
-should();
 
 const current = Support.sequelize;
 

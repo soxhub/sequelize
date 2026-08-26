@@ -1,6 +1,5 @@
-import { describe, it, beforeEach } from 'vitest';
+import { describe, it, beforeEach, expect } from 'vitest';
 import { ValidationError as SequelizeValidationError } from '../../lib/errors.js';
-import { expect } from 'chai';
 import Support from './support.js';
 import InstanceValidator from '../../lib/instance-validator.js';
 import sinon from 'sinon';
@@ -55,14 +54,14 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
       const instanceValidator = new InstanceValidator(User.build());
       const result = instanceValidator.validate();
 
-      return expect(result).to.be.fulfilled;
+      return expect(result).resolves.toBeDefined();
     });
 
     it('rejects with a validation error when validation fails', () => {
       const instanceValidator = new InstanceValidator(User.build({ fails: true }));
       const result = instanceValidator.validate();
 
-      return expect(result).to.be.rejectedWith(SequelizeValidationError);
+      return expect(result).rejects.toThrow(SequelizeValidationError);
     });
 
     it('has a useful default error message for not null validation failures', () => {
@@ -76,7 +75,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
       const instanceValidator = new InstanceValidator(NotNullUser.build());
       const result = instanceValidator.validate();
 
-      return expect(result).to.be.rejectedWith(SequelizeValidationError, /user\.name cannot be null/);
+      return expect(result).rejects.toThrow(/user\.name cannot be null/);
     });
   });
 
@@ -94,7 +93,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
       User.beforeValidate(beforeValidate);
       User.afterValidate(afterValidate);
 
-      await expect(successfulInstanceValidator._validateAndRunHooks()).to.be.fulfilled;
+      await expect(successfulInstanceValidator._validateAndRunHooks()).resolves.toBeDefined();
       expect(beforeValidate.calledOnce).to.be.true;
       expect(afterValidate.calledOnce).to.be.true;
     });
@@ -109,7 +108,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
       User.beforeValidate(beforeValidate);
       User.afterValidate(afterValidate);
 
-      await expect(failingInstanceValidator._validateAndRunHooks()).to.be.rejected;
+      await expect(failingInstanceValidator._validateAndRunHooks()).rejects.toThrow();
       expect(beforeValidate.calledOnce).to.be.true;
       expect(afterValidate.called, 'afterValidate should not have been called').to.be.false;
     });
@@ -119,7 +118,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
         throw new Error('after validation error');
       });
 
-      return expect(successfulInstanceValidator._validateAndRunHooks()).to.be.rejectedWith('after validation error');
+      return expect(successfulInstanceValidator._validateAndRunHooks()).rejects.toThrow('after validation error');
     });
 
     describe('validatedFailed hook', () => {
@@ -131,7 +130,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
         const validationFailedHook = sinon.spy();
         User.validationFailed(validationFailedHook);
 
-        await expect(failingInstanceValidator._validateAndRunHooks()).to.be.rejected;
+        await expect(failingInstanceValidator._validateAndRunHooks()).rejects.toThrow();
         expect(validationFailedHook.calledOnce).to.be.true;
       });
 
@@ -143,8 +142,10 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
         const validationFailedHook = sinon.stub().returns(Promise.resolve());
         User.validationFailed(validationFailedHook);
 
-        const err = await expect(failingInstanceValidator._validateAndRunHooks()).to.be.rejected;
-        expect(err.name).to.equal('SequelizeValidationError');
+        await expect(failingInstanceValidator._validateAndRunHooks()).rejects.to.have.property(
+          'name',
+          'SequelizeValidationError'
+        );
       });
 
       it('should replace the validation error if validationFailed hook creates a new error', async () => {
@@ -155,8 +156,10 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
         const validationFailedHook = sinon.stub().throws(new Error('validation failed hook error'));
         User.validationFailed(validationFailedHook);
 
-        const err = await expect(failingInstanceValidator._validateAndRunHooks()).to.be.rejected;
-        expect(err.message).to.equal('validation failed hook error');
+        await expect(failingInstanceValidator._validateAndRunHooks()).rejects.to.have.property(
+          'message',
+          'validation failed hook error'
+        );
       });
     });
   });

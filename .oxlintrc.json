@@ -85,12 +85,22 @@
     // Every suite here is gated on `current.dialect.supports.*`, so a conditional around a test is
     // the norm rather than a smell.
     "vitest/no-conditional-tests": "off",
-    // Assertions come from chai, which the rule does not recognise: 301 false positives.
+    // 301 hits, and only some are false positives: 127 assert via the `expectsql()` helper and 23
+    // via `should`, but 144 tests genuinely assert nothing and only check that a call does not
+    // throw. Turning this on means giving those 144 real assertions first.
     "vitest/expect-expect": "off",
+    // Assertions use the chai chain that vitest's `expect` exposes, which this rule reads as an
+    // unknown modifier — `expect(x).to.equal(y)` is 5153 hits on its own.
+    "vitest/valid-expect": "off",
+    // Several suites assert inside `beforeEach` rather than in the test body.
+    "vitest/no-standalone-expect": "off",
+    // Assertions inside a `logging(sql)` callback read as conditional to the rule.
+    "vitest/no-conditional-expect": "off",
     // Titles are built by `Support.getTestDialectTeaser()`, not string literals.
     "vitest/valid-title": "off",
-    // Wants chai's `expect` imported from vitest.
-    "vitest/prefer-importing-vitest-globals": "off",
+    // A bare `rejects.toThrow()` is the faithful reading of chai-as-promised's `.to.be.rejected`:
+    // the assertion is that it rejects at all. Requiring a message would invent one.
+    "vitest/require-to-throw-message": "off",
     // 11 real duplicate titles predate the vitest migration; turn this on once they are renamed.
     "vitest/no-identical-title": "off"
   },
@@ -98,8 +108,7 @@
     {
       "files": ["test/**"],
       "rules": {
-        "no-unused-expressions": "off",
-        "prefer-arrow-callback": "off"
+        "no-unused-expressions": "off"
       }
     }
   ]

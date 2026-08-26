@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import sinon from 'sinon';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
@@ -106,9 +105,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           throw new Error('Whoops! Changed user.mood!');
         });
 
-        return expect(User.create({ username: 'Toni', mood: 'happy' })).to.be.rejectedWith(
-          'Whoops! Changed user.mood!'
-        );
+        return expect(User.create({ username: 'Toni', mood: 'happy' })).rejects.toThrow('Whoops! Changed user.mood!');
       });
 
       it('should call validationFailed hook', async () => {
@@ -116,7 +113,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
 
         User.validationFailed(validationFailedHook);
 
-        await expect(User.create({ mood: 'happy' })).to.be.rejected;
+        await expect(User.create({ mood: 'happy' })).rejects.toThrow();
         expect(validationFailedHook.calledOnce).to.be.true;
       });
 
@@ -125,7 +122,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
 
         User.validationFailed(validationFailedHook);
 
-        const err = await expect(User.create({ mood: 'happy' })).to.be.rejected;
+        const err = await Support.expectRejection(User.create({ mood: 'happy' }));
         expect(err.name).to.equal('SequelizeValidationError');
       });
 
@@ -134,7 +131,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
 
         User.validationFailed(validationFailedHook);
 
-        const err = await expect(User.create({ mood: 'happy' })).to.be.rejected;
+        const err = await Support.expectRejection(User.create({ mood: 'happy' }));
         expect(err.message).to.equal('Whoops!');
       });
     });

@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Sequelize from '../../../../index.js';
 import Support from '../../support.js';
 
@@ -173,7 +172,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
               where: { id: 1 },
               include: [UserAssociation]
             })
-          ).not.to.be.rejected;
+          ).resolves.toBeDefined();
         });
 
         it('should apply default scope when including an associations', async () => {
@@ -330,7 +329,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
 
         it('should scope columns properly', () => {
-          return expect(ScopeMe.scope('includeActiveProjects').findAll()).not.to.be.rejected;
+          return expect(ScopeMe.scope('includeActiveProjects').findAll()).resolves.toBeDefined();
         });
 
         it('should apply scope conditions', async () => {

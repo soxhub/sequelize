@@ -1,9 +1,8 @@
-import { describe, it, beforeEach, afterEach } from 'vitest';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import sinon from 'sinon';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import * as Utils from '../../../lib/utils.js';
-import { expect } from 'chai';
 import { format } from 'node:util';
 import * as uuid from 'uuid';
 

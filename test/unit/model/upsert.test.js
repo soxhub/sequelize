@@ -1,5 +1,4 @@
-import { describe, it, beforeAll, beforeEach, afterEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeAll, beforeEach, afterEach, expect } from 'vitest';
 import Support from '../support.js';
 import sinon from 'sinon';
 import DataTypes from '../../../lib/data-types.js';
@@ -56,12 +55,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         sandbox.restore();
       });
 
-      it('skip validations for missing fields', () => {
-        return expect(
+      it('skip validations for missing fields', async () => {
+        // Resolving at all is the assertion: a validation on the missing fields would reject.
+        await expect(
           User.upsert({
             name: 'Grumpy Cat'
           })
-        ).not.to.be.rejectedWith(current.ValidationError);
+        ).resolves.toBeDefined();
       });
 
       it('creates new record with correct field names', async () => {

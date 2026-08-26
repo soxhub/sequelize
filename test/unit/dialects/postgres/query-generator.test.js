@@ -1,5 +1,4 @@
-import { describe, it, afterEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, afterEach, expect } from 'vitest';
 import Operators from '../../../../lib/operators.js';
 import QueryGenerator from '../../../../lib/dialects/postgres/query-generator.js';
 import Support from '../../support.js';

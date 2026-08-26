@@ -1,5 +1,4 @@
-import { describe, it, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeAll, afterAll, beforeEach, afterEach, expect } from 'vitest';
 import Support from '../support.js';
 import sinon from 'sinon';
 import DataTypes from '../../../lib/data-types.js';
@@ -78,7 +77,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       it('Throws an error when the attributes option is formatted incorrectly', () => {
-        return expect(Model.findAll({ attributes: 'name' })).to.be.rejectedWith(sequelizeErrors.QueryError);
+        return expect(Model.findAll({ attributes: 'name' })).rejects.toThrow(sequelizeErrors.QueryError);
       });
     });
 

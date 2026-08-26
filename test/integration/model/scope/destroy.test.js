@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Sequelize from '../../../../index.js';
 import Support from '../../support.js';
 
@@ -70,7 +69,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       it('should be able to unscope destroy', async () => {
         await ScopeMe.unscoped().destroy({ where: {} });
 
-        await expect(ScopeMe.unscoped().findAll()).to.eventually.have.length(0);
+        await expect(ScopeMe.unscoped().findAll()).resolves.to.have.length(0);
       });
 
       it('should be able to apply other scopes', async () => {

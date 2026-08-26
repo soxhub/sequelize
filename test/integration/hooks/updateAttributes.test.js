@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import sinon from 'sinon';
@@ -63,7 +62,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         User.afterSave(afterSave);
 
         const user = await User.create({ username: 'Toni', mood: 'happy' });
-        await expect(user.update({ username: 'Chong' })).to.be.rejected;
+        await expect(user.update({ username: 'Chong' })).rejects.toThrow();
 
         expect(beforeHook.calledOnce).to.be.true;
         expect(beforeSave.calledOnce).to.be.true;
@@ -86,7 +85,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         User.afterSave(afterSave);
 
         const user = await User.create({ username: 'Toni', mood: 'happy' });
-        await expect(user.update({ username: 'Chong' })).to.be.rejected;
+        await expect(user.update({ username: 'Chong' })).rejects.toThrow();
 
         expect(beforeHook.calledOnce).to.be.true;
         expect(afterHook.calledOnce).to.be.true;

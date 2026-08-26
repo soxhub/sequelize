@@ -1,6 +1,5 @@
-import { describe, it, beforeEach, afterEach } from 'vitest';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import { UniqueConstraintError } from '../../../lib/errors.js';
-import { expect } from 'chai';
 import Support from '../support.js';
 import sinon from 'sinon';
 
@@ -28,7 +27,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         Model.findCreateFind({
           where
         })
-      ).to.eventually.eql([result, false]);
+      ).resolves.to.eql([result, false]);
 
       expect(findSpy.calledOnce).to.be.true;
       expect(findSpy.getCall(0).args[0].where).to.equal(where);
@@ -45,7 +44,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         Model.findCreateFind({
           where
         })
-      ).to.eventually.eql([result, true]);
+      ).resolves.to.eql([result, true]);
 
       expect(createSpy.calledWith(where), 'createSpy should have been called with expected arguments').to.be.true;
     });
@@ -66,7 +65,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         Model.findCreateFind({
           where
         })
-      ).to.eventually.eql([result, false]);
+      ).resolves.to.eql([result, false]);
 
       expect(findSpy.calledTwice).to.be.true;
       expect(findSpy.getCall(1).args[0].where).to.equal(where);

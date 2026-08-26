@@ -1,5 +1,4 @@
-import { describe, it } from 'vitest';
-import { expect, should } from 'chai';
+import { describe, it, expect, should } from 'vitest';
 import Sequelize from '../../index.js';
 import Support from './support.js';
 

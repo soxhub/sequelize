@@ -1,5 +1,4 @@
-import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeAll, afterAll, beforeEach, expect } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import sinon from 'sinon';
@@ -161,7 +160,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         clock.tick(1000);
         await User[method]('aNumber', { by: 1, where: {} });
 
-        await expect(User.findByPk(1)).to.eventually.have.property('updatedAt').afterTime(oldDate);
+        const updated = await User.findByPk(1);
+        expect(updated).to.have.property('updatedAt').afterTime(oldDate);
       });
 
       it('with timestamps set to true and options.silent set to true', async () => {
@@ -180,7 +180,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         clock.tick(1000);
         await User[method]('aNumber', { by: 1, silent: true, where: {} });
 
-        await expect(User.findByPk(1)).to.eventually.have.property('updatedAt').equalTime(oldDate);
+        const updated = await User.findByPk(1);
+        expect(updated).to.have.property('updatedAt').equalTime(oldDate);
       });
 
       it('should work with scopes', async () => {

@@ -1,5 +1,4 @@
-import { describe, it } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, expect } from 'vitest';
 import sinon from 'sinon';
 import * as errors from '../../lib/errors.js';
 import Support from './support.js';
@@ -362,10 +361,10 @@ describe(Support.getTestDialectTeaser('Sequelize Errors'), () => {
       await User.create({ name: 'jan' });
 
       // It should work even though the unique key is not defined in the model
-      await expect(User.create({ name: 'jan' })).to.be.rejectedWith(current.UniqueConstraintError);
+      await expect(User.create({ name: 'jan' })).rejects.toThrow(current.UniqueConstraintError);
 
       // And when the model is not passed at all
-      await expect(current.query("INSERT INTO users (name) VALUES ('jan')")).to.be.rejectedWith(
+      await expect(current.query("INSERT INTO users (name) VALUES ('jan')")).rejects.toThrow(
         current.UniqueConstraintError
       );
     });
@@ -385,7 +384,7 @@ describe(Support.getTestDialectTeaser('Sequelize Errors'), () => {
       await current.sync({ force: true });
       await User.create({ name: 'jan' });
 
-      const error = await expect(User.create({ name: 'jan' })).to.be.rejected;
+      const error = await Support.expectRejection(User.create({ name: 'jan' }));
       expect(error).to.be.instanceOf(current.UniqueConstraintError);
       expect(error).to.have.property('parent');
       expect(error).to.have.property('original');

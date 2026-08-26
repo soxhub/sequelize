@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import sinon from 'sinon';
@@ -51,7 +50,7 @@ if (current.dialect.supports.upserts) {
           });
           User.afterUpsert(afterHook);
 
-          await expect(User.upsert({ username: 'Toni', mood: 'happy' })).to.be.rejected;
+          await expect(User.upsert({ username: 'Toni', mood: 'happy' })).rejects.toThrow();
           expect(beforeHook.calledOnce).to.be.true;
           expect(afterHook.called, 'afterHook should not have been called').to.be.false;
         });
@@ -66,7 +65,7 @@ if (current.dialect.supports.upserts) {
             throw new Error('Whoops!');
           });
 
-          await expect(User.upsert({ username: 'Toni', mood: 'happy' })).to.be.rejected;
+          await expect(User.upsert({ username: 'Toni', mood: 'happy' })).rejects.toThrow();
           expect(beforeHook.calledOnce).to.be.true;
           expect(afterHook.calledOnce).to.be.true;
         });

@@ -1,5 +1,4 @@
-import { describe, it, afterAll, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, afterAll, beforeEach, expect } from 'vitest';
 import DataTypes from '../../../../lib/data-types.js';
 import _ from 'lodash';
 import Support from '../../support.js';
@@ -239,7 +238,7 @@ describe('[POSTGRES Specific] QueryInterface', () => {
       };
 
       // test that we did get the expected error indicating that droptest was properly removed.
-      await expect(dropAndCall()).to.be.rejectedWith(/.*function droptest.* does not exist/);
+      await expect(dropAndCall()).rejects.toThrow(/.*function droptest.* does not exist/);
     });
 
     it('produces an error when missing expected parameters', () => {

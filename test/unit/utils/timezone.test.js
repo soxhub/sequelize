@@ -1,5 +1,4 @@
-import { describe, it } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, expect } from 'vitest';
 import * as Timezone from '../../../lib/utils/timezone.js';
 
 describe('Utils.Timezone', () => {

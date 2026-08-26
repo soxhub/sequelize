@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import Sequelize from '../../../index.js';
@@ -67,7 +66,7 @@ describe(Support.getTestDialectTeaser('HasMany'), () => {
           ],
           group: current.col(Task.name.concat('.', Task.primaryKeyField))
         })
-      ).to.eventually.equal(1);
+      ).resolves.to.equal(1);
     });
   });
 
@@ -973,7 +972,7 @@ describe(Support.getTestDialectTeaser('HasMany'), () => {
       });
 
       it('should count all associations', () => {
-        return expect(seededUser.countTasks({})).to.eventually.equal(2);
+        return expect(seededUser.countTasks({})).resolves.to.equal(2);
       });
 
       it('should count filtered associations', () => {
@@ -983,7 +982,7 @@ describe(Support.getTestDialectTeaser('HasMany'), () => {
               active: true
             }
           })
-        ).to.eventually.equal(1);
+        ).resolves.to.equal(1);
       });
 
       it('should count scoped associations', () => {
@@ -995,7 +994,7 @@ describe(Support.getTestDialectTeaser('HasMany'), () => {
           }
         });
 
-        return expect(seededUser.countActiveTasks({})).to.eventually.equal(1);
+        return expect(seededUser.countActiveTasks({})).resolves.to.equal(1);
       });
     });
 
@@ -1122,7 +1121,7 @@ describe(Support.getTestDialectTeaser('HasMany'), () => {
 
           await user.setTasks([task]);
 
-          await expect(user.destroy()).to.be.rejectedWith(current.ForeignKeyConstraintError);
+          await expect(user.destroy()).rejects.toThrow(current.ForeignKeyConstraintError);
 
           // Should fail due to FK violation
           const tasks = await Task.findAll();
@@ -1149,7 +1148,7 @@ describe(Support.getTestDialectTeaser('HasMany'), () => {
           const tableName = user.sequelize.getQueryInterface().QueryGenerator.addSchema(user.constructor);
           await expect(
             user.sequelize.getQueryInterface().update(user, tableName, { id: 999 }, { id: user.id })
-          ).to.be.rejectedWith(current.ForeignKeyConstraintError);
+          ).rejects.toThrow(current.ForeignKeyConstraintError);
 
           // Should fail due to FK violation
           const tasks = await Task.findAll();

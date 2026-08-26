@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import Sequelize from '../../../index.js';
@@ -450,7 +449,7 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
     });
 
     it('should count all associations', () => {
-      return expect(user.countTasks({})).to.eventually.equal(2);
+      return expect(user.countTasks({})).resolves.to.equal(2);
     });
 
     it('should count filtered associations', () => {
@@ -460,7 +459,7 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
             active: true
           }
         })
-      ).to.eventually.equal(1);
+      ).resolves.to.equal(1);
     });
 
     it('should count scoped associations', () => {
@@ -472,7 +471,7 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
         }
       });
 
-      return expect(user.countActiveTasks({})).to.eventually.equal(1);
+      return expect(user.countActiveTasks({})).resolves.to.equal(1);
     });
 
     it('should count scoped through associations', async () => {
@@ -501,7 +500,7 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
         })()
       ]);
 
-      await expect(user.countStartedTasks({})).to.eventually.equal(2);
+      await expect(user.countStartedTasks({})).resolves.to.equal(2);
     });
   });
 
@@ -996,8 +995,8 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
       // Re-add user 0's object, this should be harmless
       // Re-add user 0's id, this should be harmless
       await Promise.all([
-        expect(task.addUsers([users[0]])).not.to.be.rejected,
-        expect(task.addUsers([users[0].id])).not.to.be.rejected
+        expect(task.addUsers([users[0]])).resolves.toBeDefined(),
+        expect(task.addUsers([users[0].id])).resolves.toBeDefined()
       ]);
 
       expect(await task.getUsers()).to.have.length(3);
@@ -1042,15 +1041,15 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
     });
 
     it('runs on add', () => {
-      return expect(project.addParticipant(employee, { through: { role: '' } })).to.be.rejected;
+      return expect(project.addParticipant(employee, { through: { role: '' } })).rejects.toThrow();
     });
 
     it('runs on set', () => {
-      return expect(project.setParticipants([employee], { through: { role: '' } })).to.be.rejected;
+      return expect(project.setParticipants([employee], { through: { role: '' } })).rejects.toThrow();
     });
 
     it('runs on create', () => {
-      return expect(project.createParticipant({ name: 'employee 2' }, { through: { role: '' } })).to.be.rejected;
+      return expect(project.createParticipant({ name: 'employee 2' }, { through: { role: '' } })).rejects.toThrow();
     });
   });
 
@@ -1973,8 +1972,8 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
         await Promise.all([user1.setTasks([task1]), task2.setUsers([user2])]);
 
         await Promise.all([
-          expect(user1.destroy()).to.have.been.rejectedWith(current.ForeignKeyConstraintError), // Fails because of RESTRICT constraint
-          expect(task2.destroy()).to.have.been.rejectedWith(current.ForeignKeyConstraintError)
+          expect(user1.destroy()).rejects.toThrow(current.ForeignKeyConstraintError), // Fails because of RESTRICT constraint
+          expect(task2.destroy()).rejects.toThrow(current.ForeignKeyConstraintError)
         ]);
       });
 
@@ -1994,7 +1993,7 @@ describe(Support.getTestDialectTeaser('BelongsToMany'), () => {
         await Promise.all([user1.setTasks([task1]), task2.setUsers([user2])]);
 
         await Promise.all([
-          expect(user1.destroy()).to.have.been.rejectedWith(current.ForeignKeyConstraintError), // Fails because of RESTRICT constraint
+          expect(user1.destroy()).rejects.toThrow(current.ForeignKeyConstraintError), // Fails because of RESTRICT constraint
           task2.destroy()
         ]);
 

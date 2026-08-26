@@ -1,5 +1,4 @@
-import { describe, it, beforeAll, afterAll } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import sinon from 'sinon';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';

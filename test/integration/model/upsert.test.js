@@ -1,5 +1,4 @@
-import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeAll, afterAll, beforeEach, expect } from 'vitest';
 import sinon from 'sinon';
 import Sequelize from '../../../index.js';
 import Support from '../support.js';
@@ -160,7 +159,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         });
 
-        return expect(User.upsert({ email: 'notanemail' })).to.eventually.be.rejectedWith(current.ValidationError);
+        return expect(User.upsert({ email: 'notanemail' })).rejects.toThrow(current.ValidationError);
       });
 
       it('supports skipping validations', async () => {

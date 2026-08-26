@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Sequelize from '../../index.js';
 import Support from './support.js';
 
@@ -49,9 +48,8 @@ describeTrigger(Support.getTestDialectTeaser('Model'), () => {
         username: 'triggertest'
       });
 
-      await expect(User.findOne({ username: 'triggertest' }))
-        .to.eventually.have.property('username')
-        .which.equals('triggertest');
+      const inserted = await User.findOne({ username: 'triggertest' });
+      expect(inserted).to.have.property('username').which.equals('triggertest');
     });
 
     it('should return output rows after instance update', async () => {
@@ -62,9 +60,8 @@ describeTrigger(Support.getTestDialectTeaser('Model'), () => {
       user.username = 'usernamechanged';
       await user.save();
 
-      await expect(User.findOne({ username: 'usernamechanged' }))
-        .to.eventually.have.property('username')
-        .which.equals('usernamechanged');
+      const updated = await User.findOne({ username: 'usernamechanged' });
+      expect(updated).to.have.property('username').which.equals('usernamechanged');
     });
 
     it('should return output rows after Model update', async () => {
@@ -83,9 +80,8 @@ describeTrigger(Support.getTestDialectTeaser('Model'), () => {
         }
       );
 
-      await expect(User.findOne({ username: 'usernamechanged' }))
-        .to.eventually.have.property('username')
-        .which.equals('usernamechanged');
+      const updated = await User.findOne({ username: 'usernamechanged' });
+      expect(updated).to.have.property('username').which.equals('usernamechanged');
     });
 
     it('should successfully delete with a trigger on the table', async () => {
@@ -95,7 +91,7 @@ describeTrigger(Support.getTestDialectTeaser('Model'), () => {
 
       await user.destroy();
 
-      await expect(User.findOne({ username: 'triggertest' })).to.eventually.be.null;
+      await expect(User.findOne({ username: 'triggertest' })).resolves.toBeNull();
     });
   });
 });

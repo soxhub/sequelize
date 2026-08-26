@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import sinon from 'sinon';
 import Sequelize from '../../../index.js';
 import moment from 'moment';
@@ -120,7 +119,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             where: { id: 1 },
             attributes: ['id', ['username']]
           })
-        ).to.be.rejectedWith(
+        ).rejects.toThrow(
           "[\"username\"] is not a valid attribute definition. Please use the following format: ['attribute definition', 'alias']"
         );
       });
@@ -271,13 +270,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       describe('belongsTo', () => {
         describe('generic', () => {
           it('throws an error about unexpected input if include contains a non-object', async () => {
-            await expect(Worker.findOne({ include: [1] })).to.be.rejectedWith(
+            await expect(Worker.findOne({ include: [1] })).rejects.toThrow(
               'Include unexpected. Element has to be either a Model, an Association or an object.'
             );
           });
 
           it('throws an error if included DaoFactory is not associated', async () => {
-            await expect(Worker.findOne({ include: [Task] })).to.be.rejectedWith('Task is not associated to Worker!');
+            await expect(Worker.findOne({ include: [Task] })).rejects.toThrow('Task is not associated to Worker!');
           });
 
           it('returns the associated worker via task.worker', async () => {
@@ -423,7 +422,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
 
         it('throws an error if included DaoFactory is not associated', async () => {
-          await expect(Task.findOne({ include: [Worker] })).to.be.rejectedWith('Worker is not associated to Task!');
+          await expect(Task.findOne({ include: [Worker] })).rejects.toThrow('Worker is not associated to Task!');
         });
 
         it('returns the associated task via worker.task', async () => {
@@ -471,7 +470,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       describe('hasOne with alias', () => {
         it('throws an error if included DaoFactory is not referenced by alias', async () => {
-          await expect(Worker.findOne({ include: [Task] })).to.be.rejectedWith('Task is not associated to Worker!');
+          await expect(Worker.findOne({ include: [Task] })).rejects.toThrow('Task is not associated to Worker!');
         });
 
         describe('alias', () => {
@@ -484,7 +483,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           });
 
           it("throws an error indicating an incorrect alias was entered if an association and alias exist but the alias doesn't match", async () => {
-            await expect(Worker.findOne({ include: [{ model: Task, as: 'Work' }] })).to.be.rejectedWith(
+            await expect(Worker.findOne({ include: [{ model: Task, as: 'Work' }] })).rejects.toThrow(
               "Task is associated to Worker using an alias. You've included an alias (Work), but it does not match the alias defined in your association."
             );
           });
@@ -534,7 +533,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
 
         it('throws an error if included DaoFactory is not associated', async () => {
-          await expect(Task.findOne({ include: [Worker] })).to.be.rejectedWith('Worker is not associated to Task!');
+          await expect(Task.findOne({ include: [Worker] })).rejects.toThrow('Worker is not associated to Task!');
         });
 
         it('returns the associated tasks via worker.tasks', async () => {
@@ -616,7 +615,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       describe('hasMany with alias', () => {
         it('throws an error if included DaoFactory is not referenced by alias', async () => {
-          await expect(Worker.findOne({ include: [Task] })).to.be.rejectedWith('Task is not associated to Worker!');
+          await expect(Worker.findOne({ include: [Task] })).rejects.toThrow('Task is not associated to Worker!');
         });
 
         describe('alias', () => {
@@ -629,7 +628,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           });
 
           it("throws an error indicating an incorrect alias was entered if an association and alias exist but the alias doesn't match", async () => {
-            await expect(Worker.findOne({ include: [{ model: Task, as: 'Work' }] })).to.be.rejectedWith(
+            await expect(Worker.findOne({ include: [{ model: Task, as: 'Work' }] })).rejects.toThrow(
               "Task is associated to Worker using an alias. You've included an alias (Work), but it does not match the alias defined in your association."
             );
           });
@@ -763,29 +762,27 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             products[4].setTags([tags[2]])
           ]);
 
+          const [tagWithProducts, productWithTags] = await Promise.all([
+            Tag.findOne({
+              where: {
+                id: seededTags[0].id
+              },
+              include: [{ model: Product, as: 'products' }]
+            }),
+            Product.findOne({
+              where: {
+                id: seededProducts[0].id
+              },
+              include: [{ model: Tag, as: 'tags' }]
+            })
+          ]);
+
+          expect(tagWithProducts).to.have.property('products').to.have.length(2);
+          expect(productWithTags).to.have.property('tags').to.have.length(2);
+
           await Promise.all([
-            expect(
-              Tag.findOne({
-                where: {
-                  id: seededTags[0].id
-                },
-                include: [{ model: Product, as: 'products' }]
-              })
-            )
-              .to.eventually.have.property('products')
-              .to.have.length(2),
-            expect(
-              Product.findOne({
-                where: {
-                  id: seededProducts[0].id
-                },
-                include: [{ model: Tag, as: 'tags' }]
-              })
-            )
-              .to.eventually.have.property('tags')
-              .to.have.length(2),
-            expect(seededTags[1].getProducts()).to.eventually.have.length(3),
-            expect(seededProducts[1].getTags()).to.eventually.have.length(1)
+            expect(seededTags[1].getProducts()).resolves.to.have.length(3),
+            expect(seededProducts[1].getTags()).resolves.to.have.length(1)
           ]);
         });
       });
@@ -836,7 +833,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             },
             rejectOnEmpty: true
           })
-        ).to.eventually.be.rejectedWith(Sequelize.EmptyResultError);
+        ).rejects.toThrow(Sequelize.EmptyResultError);
       });
 
       it('throws error when record not found by findById', () => {
@@ -844,7 +841,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           SharedUser.findByPk(4732322332323333, {
             rejectOnEmpty: true
           })
-        ).to.eventually.be.rejectedWith(Sequelize.EmptyResultError);
+        ).rejects.toThrow(Sequelize.EmptyResultError);
       });
 
       it('throws error when record not found by find', () => {
@@ -855,7 +852,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             },
             rejectOnEmpty: true
           })
-        ).to.eventually.be.rejectedWith(Sequelize.EmptyResultError);
+        ).rejects.toThrow(Sequelize.EmptyResultError);
       });
 
       it('works from model options', async () => {
@@ -877,7 +874,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
               username: 'some-username-that-is-not-used-anywhere'
             }
           })
-        ).to.eventually.be.rejectedWith(Sequelize.EmptyResultError);
+        ).rejects.toThrow(Sequelize.EmptyResultError);
       });
 
       it('resolve null when disabled', async () => {
@@ -893,7 +890,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
               username: 'some-username-that-is-not-used-anywhere-for-sure-this-time'
             }
           })
-        ).to.eventually.be.equal(null);
+        ).resolves.toBeNull();
       });
     });
 

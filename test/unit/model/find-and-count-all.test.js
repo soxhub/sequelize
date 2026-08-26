@@ -1,5 +1,4 @@
-import { describe, it, beforeAll, afterAll } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import Support from '../support.js';
 import sinon from 'sinon';
 import DataTypes from '../../../lib/data-types.js';
@@ -37,7 +36,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
 
       it('with errors in count and findAll both', async () => {
-        await expect(User.findAndCountAll({})).to.be.rejected;
+        await expect(User.findAndCountAll({})).rejects.toThrow();
         expect(unhandledSpy.callCount).to.eql(0);
       });
     });

@@ -2,15 +2,8 @@ import _ from 'lodash';
 import Sequelize from '../index.js';
 import DataTypes from '../lib/data-types.js';
 import Config from './config/config.js';
-import { config as chaiConfig, expect, should, use } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import { expect } from 'vitest';
 import PostgresQueryGenerator from '../lib/dialects/postgres/query-generator.js';
-import chaiDatetime from './support/chai-datetime.js';
-
-use(chaiDatetime);
-use(chaiAsPromised);
-chaiConfig.includeStack = true;
-should();
 
 // Make sure errors get thrown when testing
 process.on('uncaughtException', (err) => {
@@ -41,6 +34,19 @@ const Support = {
         options.onComplete(sequelize, DataTypes);
       }
     });
+  },
+
+  // Returns the rejection reason so a test can assert against it directly. `expect(...).rejects`
+  // feeds the error to a matcher and never hands it back, which does not work for the errors here:
+  // asserting on a `ValidationError` means calling `err.get('name')` and walking `err.errors`.
+  // Throwing on a resolved promise is the part a bare `.catch((e) => e)` would lose.
+  async expectRejection(promise) {
+    try {
+      await promise;
+    } catch (err) {
+      return err;
+    }
+    throw new Error('Expected promise to be rejected, but it resolved');
   },
 
   prepareTransactionTest(sequelize, callback) {

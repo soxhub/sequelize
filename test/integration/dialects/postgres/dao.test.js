@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import DataTypes from '../../../../lib/data-types.js';
 import sequelize from '../../../../lib/sequelize.js';
 import Support from '../../support.js';
@@ -423,7 +422,7 @@ describe('[POSTGRES Specific] DAO', () => {
             owners: ['userA', 'userB'],
             permissions: ['cosmic_ray_disk_access']
           })
-        ).to.be.rejectedWith(/invalid input value for enum "enum_UserEnums_permissions": "cosmic_ray_disk_access"/);
+        ).rejects.toThrow(/invalid input value for enum "enum_UserEnums_permissions": "cosmic_ray_disk_access"/);
       });
 
       it('should be able to find records', async () => {

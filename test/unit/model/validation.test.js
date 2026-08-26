@@ -1,5 +1,4 @@
-import { describe, it, beforeAll, afterAll } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import sinon from 'sinon';
 import Sequelize from '../../../index.js';
 import Support from '../support.js';
@@ -200,7 +199,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
 
             const failingUser = UserFail.build({ name: failingValue });
 
-            const _errors = await expect(failingUser.validate()).to.be.rejected;
+            const _errors = await Support.expectRejection(failingUser.validate());
             expect(_errors.get('name')[0].message).to.equal(message);
             expect(_errors.get('name')[0].value).to.equal(failingValue);
           }
@@ -236,7 +235,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
               }
             });
             const successfulUser = UserSuccess.build({ name: succeedingValue });
-            return expect(successfulUser.validate()).not.to.be.rejected;
+            return expect(successfulUser.validate()).resolves.toBeDefined();
           }
         );
       };
@@ -306,7 +305,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
             User.create({
               age: '12'
             })
-          ).not.to.be.rejected;
+          ).resolves.toBeDefined();
         });
 
         it('should allow decimal as a string', () => {
@@ -314,7 +313,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
             User.create({
               number: '12.6'
             })
-          ).not.to.be.rejected;
+          ).resolves.toBeDefined();
         });
 
         it('should allow dates as a string', () => {
@@ -324,7 +323,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
                 date: '2000-12-16'
               }
             })
-          ).not.to.be.rejected;
+          ).resolves.toBeDefined();
         });
 
         it('should allow decimal big numbers as a string', () => {
@@ -332,7 +331,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
             User.create({
               number: '2321312301230128391820831289123012'
             })
-          ).not.to.be.rejected;
+          ).resolves.toBeDefined();
         });
 
         it('should allow decimal as scientific notation', () => {
@@ -341,17 +340,17 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
               User.create({
                 number: '2321312301230128391820e219'
               })
-            ).not.to.be.rejected,
+            ).resolves.toBeDefined(),
             expect(
               User.create({
                 number: '2321312301230128391820e+219'
               })
-            ).not.to.be.rejected,
+            ).resolves.toBeDefined(),
             expect(
               User.create({
                 number: '2321312301230128391820f219'
               })
-            ).to.be.rejected
+            ).rejects.toThrow()
           ]);
         });
 
@@ -360,7 +359,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
             User.create({
               name: 12
             })
-          ).not.to.be.rejected;
+          ).resolves.toBeDefined();
         });
 
         it('should allow 0/1 as a boolean', () => {
@@ -368,7 +367,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
             User.create({
               awesome: 1
             })
-          ).not.to.be.rejected;
+          ).resolves.toBeDefined();
         });
 
         it('should allow 0/1 string as a boolean', () => {
@@ -376,7 +375,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
             User.create({
               awesome: '1'
             })
-          ).not.to.be.rejected;
+          ).resolves.toBeDefined();
         });
 
         it('should allow true/false string as a boolean', () => {
@@ -384,7 +383,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
             User.create({
               awesome: 'true'
             })
-          ).not.to.be.rejected;
+          ).resolves.toBeDefined();
         });
       });
 
@@ -400,7 +399,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
                 }
               }
             })
-          ).not.to.be.rejected;
+          ).resolves.toBeDefined();
         });
 
         it('should allow $like for uuid', () => {
@@ -412,7 +411,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
                 }
               }
             })
-          ).not.to.be.rejected;
+          ).resolves.toBeDefined();
         });
       });
     });
@@ -424,7 +423,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
             User.create({
               age: 'jan'
             })
-          ).to.be.rejectedWith(current.ValidationError);
+          ).rejects.toThrow(current.ValidationError);
         });
 
         it('should throw when passing decimal', () => {
@@ -432,7 +431,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
             User.create({
               age: 4.5
             })
-          ).to.be.rejectedWith(current.ValidationError);
+          ).rejects.toThrow(current.ValidationError);
         });
       });
 
@@ -445,7 +444,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
               },
               { where: {} }
             )
-          ).to.be.rejectedWith(current.ValidationError);
+          ).rejects.toThrow(current.ValidationError);
         });
 
         it('should throw when passing decimal', () => {
@@ -456,7 +455,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
               },
               { where: {} }
             )
-          ).to.be.rejectedWith(current.ValidationError);
+          ).rejects.toThrow(current.ValidationError);
         });
       });
     });
@@ -510,7 +509,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
               age: 1,
               name: 'noerror'
             })
-          ).not.to.be.rejected;
+          ).resolves.toBeDefined();
         });
       });
 
@@ -524,7 +523,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
               },
               { where: {} }
             )
-          ).not.to.be.rejected;
+          ).resolves.toBeDefined();
         });
       });
     });
@@ -536,7 +535,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
             User.create({
               age: -1
             })
-          ).to.be.rejectedWith(current.ValidationError);
+          ).rejects.toThrow(current.ValidationError);
         });
 
         it('custom model validation function fails', () => {
@@ -544,7 +543,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
             User.create({
               name: 'error'
             })
-          ).to.be.rejectedWith(current.ValidationError);
+          ).rejects.toThrow(current.ValidationError);
         });
       });
 
@@ -557,7 +556,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
               },
               { where: {} }
             )
-          ).to.be.rejectedWith(current.ValidationError);
+          ).rejects.toThrow(current.ValidationError);
         });
 
         it('when custom model validation function fails', () => {
@@ -568,7 +567,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
               },
               { where: {} }
             )
-          ).to.be.rejectedWith(current.ValidationError);
+          ).rejects.toThrow(current.ValidationError);
         });
       });
     });
@@ -609,7 +608,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
             User.create({
               name: 'noerror'
             })
-          ).not.to.be.rejected;
+          ).resolves.toBeDefined();
         });
       });
 
@@ -622,7 +621,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
               },
               { where: {} }
             )
-          ).not.to.be.rejected;
+          ).resolves.toBeDefined();
         });
       });
     });
@@ -634,7 +633,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
             User.create({
               name: 'error'
             })
-          ).to.be.rejectedWith(current.ValidationError);
+          ).rejects.toThrow(current.ValidationError);
         });
       });
 
@@ -647,7 +646,7 @@ describe(Support.getTestDialectTeaser('InstanceValidator'), () => {
               },
               { where: {} }
             )
-          ).to.be.rejectedWith(current.ValidationError);
+          ).rejects.toThrow(current.ValidationError);
         });
       });
     });

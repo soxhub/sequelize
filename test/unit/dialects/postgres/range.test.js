@@ -1,5 +1,4 @@
-import { describe, it } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, expect } from 'vitest';
 import DataTypes from '../../../../lib/data-types.js';
 import * as range from '../../../../lib/dialects/postgres/range.js';
 import _ from 'lodash';

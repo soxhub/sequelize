@@ -1,5 +1,4 @@
-import { describe, it, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeAll, afterAll, beforeEach, afterEach, expect } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import sinon from 'sinon';
@@ -328,7 +327,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         });
         SharedUser.afterSync(afterHook);
 
-        await expect(SharedUser.sync()).to.be.rejected;
+        await expect(SharedUser.sync()).rejects.toThrow();
 
         expect(beforeHook.calledOnce).to.be.true;
         expect(afterHook.called, 'afterHook should not have been called').to.be.false;
@@ -344,7 +343,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           throw new Error('Whoops!');
         });
 
-        await expect(SharedUser.sync()).to.be.rejected;
+        await expect(SharedUser.sync()).rejects.toThrow();
 
         expect(beforeHook.calledOnce).to.be.true;
         expect(afterHook.calledOnce).to.be.true;
@@ -407,7 +406,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         });
         current.afterBulkSync(afterHook);
 
-        await expect(current.sync()).to.be.rejected;
+        await expect(current.sync()).rejects.toThrow();
 
         expect(beforeHook.calledOnce).to.be.true;
         expect(afterHook.called, 'afterHook should not have been called').to.be.false;
@@ -423,7 +422,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           throw new Error('Whoops!');
         });
 
-        await expect(current.sync()).to.be.rejected;
+        await expect(current.sync()).rejects.toThrow();
 
         expect(beforeHook.calledOnce).to.be.true;
         expect(afterHook.calledOnce).to.be.true;

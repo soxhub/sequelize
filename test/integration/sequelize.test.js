@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'vitest';
-import { assert, expect } from 'chai';
+import { describe, it, beforeEach, afterEach, assert, expect } from 'vitest';
 import Support from './support.js';
 import DataTypes from '../../lib/data-types.js';
 import _ from 'lodash';
@@ -114,19 +113,17 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       });
 
       it('triggers the error event', async () => {
-        const err = await expect(sequelizeWithInvalidConnection.authenticate()).to.be.rejected;
-
-        expect(err).to.not.be.null;
+        await expect(sequelizeWithInvalidConnection.authenticate()).rejects.toThrow();
       });
 
       it('triggers an actual RangeError or ConnectionError', async () => {
-        const err = await expect(sequelizeWithInvalidConnection.authenticate()).to.be.rejected;
+        const err = await Support.expectRejection(sequelizeWithInvalidConnection.authenticate());
 
         expect(err instanceof RangeError || err instanceof Sequelize.ConnectionError).to.be.ok;
       });
 
       it('triggers the actual adapter error', async () => {
-        const err = await expect(sequelizeWithInvalidConnection.authenticate()).to.be.rejected;
+        const err = await Support.expectRejection(sequelizeWithInvalidConnection.authenticate());
 
         expect(
           err.message.match(/connect ECONNREFUSED/) ||
@@ -145,19 +142,15 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       });
 
       it('triggers the error event', async () => {
-        const err = await expect(sequelizeWithInvalidCredentials.authenticate()).to.be.rejected;
-
-        expect(err).to.not.be.null;
+        await expect(sequelizeWithInvalidCredentials.authenticate()).rejects.toThrow();
       });
 
       it('triggers an actual sequlize error', async () => {
-        const err = await expect(sequelizeWithInvalidCredentials.authenticate()).to.be.rejected;
-
-        expect(err).to.be.instanceof(Sequelize.Error);
+        await expect(sequelizeWithInvalidCredentials.authenticate()).rejects.toThrow(Sequelize.Error);
       });
 
       it('triggers the error event when using replication', async () => {
-        const err = await expect(
+        await expect(
           new Sequelize('sequelize', null, null, {
             dialect,
             replication: {
@@ -168,9 +161,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
               }
             }
           }).authenticate()
-        ).to.be.rejected;
-
-        expect(err).to.not.be.null;
+        ).rejects.toThrow();
       });
     });
   });
@@ -422,39 +413,42 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
     });
 
     it('reject if `values` and `options.replacements` are both passed', () => {
-      return current
-        .query({ query: 'select ? as foo, ? as bar', values: [1, 2] }, { raw: true, replacements: [1, 2] })
-        .should.be.rejectedWith(Error, 'Both `sql.values` and `options.replacements` cannot be set at the same time');
+      return expect(
+        current.query({ query: 'select ? as foo, ? as bar', values: [1, 2] }, { raw: true, replacements: [1, 2] })
+      ).rejects.toThrow('Both `sql.values` and `options.replacements` cannot be set at the same time');
     });
 
     it('reject if `sql.bind` and `options.bind` are both passed', () => {
-      return current
-        .query({ query: 'select $1 + ? as foo, $2 + ? as bar', bind: [1, 2] }, { raw: true, bind: [1, 2] })
-        .should.be.rejectedWith(Error, 'Both `sql.bind` and `options.bind` cannot be set at the same time');
+      return expect(
+        current.query({ query: 'select $1 + ? as foo, $2 + ? as bar', bind: [1, 2] }, { raw: true, bind: [1, 2] })
+      ).rejects.toThrow('Both `sql.bind` and `options.bind` cannot be set at the same time');
     });
 
     it('reject if `options.replacements` and `options.bind` are both passed', () => {
-      return current
-        .query('select $1 + ? as foo, $2 + ? as bar', { raw: true, bind: [1, 2], replacements: [1, 2] })
-        .should.be.rejectedWith(Error, 'Both `replacements` and `bind` cannot be set at the same time');
+      return expect(
+        current.query('select $1 + ? as foo, $2 + ? as bar', { raw: true, bind: [1, 2], replacements: [1, 2] })
+      ).rejects.toThrow('Both `replacements` and `bind` cannot be set at the same time');
     });
 
     it('reject if `sql.bind` and `sql.values` are both passed', () => {
-      return current
-        .query({ query: 'select $1 + ? as foo, $2 + ? as bar', bind: [1, 2], values: [1, 2] }, { raw: true })
-        .should.be.rejectedWith(Error, 'Both `replacements` and `bind` cannot be set at the same time');
+      return expect(
+        current.query({ query: 'select $1 + ? as foo, $2 + ? as bar', bind: [1, 2], values: [1, 2] }, { raw: true })
+      ).rejects.toThrow('Both `replacements` and `bind` cannot be set at the same time');
     });
 
     it('reject if `sql.bind` and `options.replacements`` are both passed', () => {
-      return current
-        .query({ query: 'select $1 + ? as foo, $2 + ? as bar', bind: [1, 2] }, { raw: true, replacements: [1, 2] })
-        .should.be.rejectedWith(Error, 'Both `replacements` and `bind` cannot be set at the same time');
+      return expect(
+        current.query(
+          { query: 'select $1 + ? as foo, $2 + ? as bar', bind: [1, 2] },
+          { raw: true, replacements: [1, 2] }
+        )
+      ).rejects.toThrow('Both `replacements` and `bind` cannot be set at the same time');
     });
 
     it('reject if `options.bind` and `sql.replacements` are both passed', () => {
-      return current
-        .query({ query: 'select $1 + ? as foo, $1 _ ? as bar', values: [1, 2] }, { raw: true, bind: [1, 2] })
-        .should.be.rejectedWith(Error, 'Both `replacements` and `bind` cannot be set at the same time');
+      return expect(
+        current.query({ query: 'select $1 + ? as foo, $1 _ ? as bar', values: [1, 2] }, { raw: true, bind: [1, 2] })
+      ).rejects.toThrow('Both `replacements` and `bind` cannot be set at the same time');
     });
 
     it('properly adds and escapes replacement value', async () => {
@@ -616,36 +610,36 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
     });
 
     it('reject when key is missing in the passed object', () => {
-      return current
-        .query('select :one as foo, :two as bar, :three as baz', { raw: true, replacements: { one: 1, two: 2 } })
-        .should.be.rejectedWith(Error, 'Named replacement ":three" has no entry in the replacement map.');
+      return expect(
+        current.query('select :one as foo, :two as bar, :three as baz', {
+          raw: true,
+          replacements: { one: 1, two: 2 }
+        })
+      ).rejects.toThrow('Named replacement ":three" has no entry in the replacement map.');
     });
 
     it('reject with the passed number', () => {
-      return current
-        .query('select :one as foo, :two as bar', { raw: true, replacements: 2 })
-        .should.be.rejectedWith(Error, '"replacements" must be an array or a plain object, but received 2 instead');
+      return expect(current.query('select :one as foo, :two as bar', { raw: true, replacements: 2 })).rejects.toThrow(
+        '"replacements" must be an array or a plain object, but received 2 instead'
+      );
     });
 
     it('reject with the passed empty object', () => {
-      return current
-        .query('select :one as foo, :two as bar', { raw: true, replacements: {} })
-        .should.be.rejectedWith(Error, 'Named replacement ":one" has no entry in the replacement map.');
+      return expect(current.query('select :one as foo, :two as bar', { raw: true, replacements: {} })).rejects.toThrow(
+        'Named replacement ":one" has no entry in the replacement map.'
+      );
     });
 
     it('reject with the passed string', () => {
-      return current
-        .query('select :one as foo, :two as bar', { raw: true, replacements: 'foobar' })
-        .should.be.rejectedWith(
-          Error,
-          '"replacements" must be an array or a plain object, but received "foobar" instead.'
-        );
+      return expect(
+        current.query('select :one as foo, :two as bar', { raw: true, replacements: 'foobar' })
+      ).rejects.toThrow('"replacements" must be an array or a plain object, but received "foobar" instead.');
     });
 
     it('reject with the passed date', () => {
-      return current
-        .query('select :one as foo, :two as bar', { raw: true, replacements: new Date() })
-        .should.be.rejectedWith(Error, '"replacements" must be an array or a plain object');
+      return expect(
+        current.query('select :one as foo, :two as bar', { raw: true, replacements: new Date() })
+      ).rejects.toThrow('"replacements" must be an array or a plain object');
     });
 
     it('binds token with the passed array', async () => {
@@ -754,70 +748,70 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
 
     it('reject when binds passed with object and numeric $1 is also present', () => {
       const typeCast = '::int';
-      return current
-        .query('select $one' + typeCast + ' as foo, $two' + typeCast + " as bar, '$1' as baz", {
+      return expect(
+        current.query('select $one' + typeCast + ' as foo, $two' + typeCast + " as bar, '$1' as baz", {
           raw: true,
           bind: { one: 1, two: 2 }
         })
-        .should.be.rejectedWith(Error, /Named bind parameter "\$\w+" has no value in the given object\./g);
+      ).rejects.toThrow(/Named bind parameter "\$\w+" has no value in the given object\./);
     });
 
     it('reject when binds passed as array and $alpha is also present', () => {
       const typeCast = '::int';
-      return current
-        .query('select $1' + typeCast + ' as foo, $2' + typeCast + " as bar, '$foo' as baz", {
+      return expect(
+        current.query('select $1' + typeCast + ' as foo, $2' + typeCast + " as bar, '$foo' as baz", {
           raw: true,
           bind: [1, 2]
         })
-        .should.be.rejectedWith(Error, /Named bind parameter "\$\w+" has no value in the given object\./g);
+      ).rejects.toThrow(/Named bind parameter "\$\w+" has no value in the given object\./);
     });
 
     it('reject when bind key is $0 with the passed array', () => {
-      return current
-        .query('select $1 as foo, $0 as bar, $3 as baz', { raw: true, bind: [1, 2] })
-        .should.be.rejectedWith(Error, /Named bind parameter "\$\w+" has no value in the given object\./g);
+      return expect(
+        current.query('select $1 as foo, $0 as bar, $3 as baz', { raw: true, bind: [1, 2] })
+      ).rejects.toThrow(/Named bind parameter "\$\w+" has no value in the given object\./);
     });
 
     it('reject when bind key is $01 with the passed array', () => {
-      return current
-        .query('select $1 as foo, $01 as bar, $3 as baz', { raw: true, bind: [1, 2] })
-        .should.be.rejectedWith(Error, /Named bind parameter "\$\w+" has no value in the given object\./g);
+      return expect(
+        current.query('select $1 as foo, $01 as bar, $3 as baz', { raw: true, bind: [1, 2] })
+      ).rejects.toThrow(/Named bind parameter "\$\w+" has no value in the given object\./);
     });
 
     it('reject when bind key is missing in the passed array', () => {
-      return current
-        .query('select $1 as foo, $2 as bar, $3 as baz', { raw: true, bind: [1, 2] })
-        .should.be.rejectedWith(Error, /Named bind parameter "\$\w+" has no value in the given object\./g);
+      return expect(
+        current.query('select $1 as foo, $2 as bar, $3 as baz', { raw: true, bind: [1, 2] })
+      ).rejects.toThrow(/Named bind parameter "\$\w+" has no value in the given object\./);
     });
 
     it('reject when bind key is missing in the passed object', () => {
-      return current
-        .query('select $one as foo, $two as bar, $three as baz', { raw: true, bind: { one: 1, two: 2 } })
-        .should.be.rejectedWith(Error, /Named bind parameter "\$\w+" has no value in the given object\./g);
+      return expect(
+        current.query('select $one as foo, $two as bar, $three as baz', { raw: true, bind: { one: 1, two: 2 } })
+      ).rejects.toThrow(/Named bind parameter "\$\w+" has no value in the given object\./);
     });
 
     it('reject with the passed number for bind', () => {
-      return current
-        .query('select $one as foo, $two as bar', { raw: true, bind: 2 })
-        .should.be.rejectedWith(Error, /Named bind parameter "\$\w+" has no value in the given object\./g);
+      return expect(current.query('select $one as foo, $two as bar', { raw: true, bind: 2 })).rejects.toThrow(
+        /Named bind parameter "\$\w+" has no value in the given object\./
+      );
     });
 
     it('reject with the passed empty object for bind', () => {
-      return current
-        .query('select $one as foo, $two as bar', { raw: true, bind: {} })
-        .should.be.rejectedWith(Error, /Named bind parameter "\$\w+" has no value in the given object\./g);
+      return expect(current.query('select $one as foo, $two as bar', { raw: true, bind: {} })).rejects.toThrow(
+        /Named bind parameter "\$\w+" has no value in the given object\./
+      );
     });
 
     it('reject with the passed string for bind', () => {
-      return current
-        .query('select $one as foo, $two as bar', { raw: true, bind: 'foobar' })
-        .should.be.rejectedWith(Error, /Named bind parameter "\$\w+" has no value in the given object\./g);
+      return expect(current.query('select $one as foo, $two as bar', { raw: true, bind: 'foobar' })).rejects.toThrow(
+        /Named bind parameter "\$\w+" has no value in the given object\./
+      );
     });
 
     it('reject with the passed date for bind', () => {
-      return current
-        .query('select $one as foo, $two as bar', { raw: true, bind: new Date() })
-        .should.be.rejectedWith(Error, /Named bind parameter "\$\w+" has no value in the given object\./g);
+      return expect(current.query('select $one as foo, $two as bar', { raw: true, bind: new Date() })).rejects.toThrow(
+        /Named bind parameter "\$\w+" has no value in the given object\./
+      );
     });
 
     it('handles AS in conjunction with functions just fine', async () => {
@@ -1058,7 +1052,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       sequelize.define('Project', { title: Sequelize.STRING });
       sequelize.define('Task', { title: Sequelize.STRING });
 
-      return expect(sequelize.sync({ force: true, match: /$phoenix/ })).to.be.rejectedWith(
+      return expect(sequelize.sync({ force: true, match: /$phoenix/ })).rejects.toThrow(
         'Database "cyber_bird" does not match sync match parameter "/$phoenix/"'
       );
     });
@@ -1076,7 +1070,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
         bio: DataTypes.TEXT
       });
 
-      const err = await expect(User2.sync()).to.be.rejected;
+      const err = await Support.expectRejection(User2.sync());
 
       const validMessages = [
         'fe_sendauth: no password supplied',
@@ -1099,9 +1093,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       sequelize.define('Project', { title: Sequelize.STRING });
       sequelize.define('Task', { title: Sequelize.STRING });
 
-      const err = await expect(sequelize.sync({ force: true })).to.be.rejected;
-
-      expect(err).to.be.ok;
+      await expect(sequelize.sync({ force: true })).rejects.toThrow();
     });
 
     it('fails with incorrect database credentials (3)', async () => {
@@ -1113,9 +1105,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       sequelize.define('Project', { title: Sequelize.STRING });
       sequelize.define('Task', { title: Sequelize.STRING });
 
-      const err = await expect(sequelize.sync({ force: true })).to.be.rejected;
-
-      expect(err).to.be.ok;
+      await expect(sequelize.sync({ force: true })).rejects.toThrow();
     });
 
     it('fails with incorrect database credentials (4)', async () => {
@@ -1128,9 +1118,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       sequelize.define('Project', { title: Sequelize.STRING });
       sequelize.define('Task', { title: Sequelize.STRING });
 
-      const err = await expect(sequelize.sync({ force: true })).to.be.rejected;
-
-      expect(err).to.be.ok;
+      await expect(sequelize.sync({ force: true })).rejects.toThrow();
     });
 
     it('returns an error correctly if unable to sync a foreign key referenced model', async () => {
@@ -1138,9 +1126,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
         authorID: { type: Sequelize.BIGINT, allowNull: false, references: { model: 'User', key: 'id' } }
       });
 
-      const error = await expect(current.sync()).to.be.rejected;
-
-      assert.ok(error);
+      await expect(current.sync()).rejects.toThrow();
     });
 
     it('handles self dependant foreign key constraints', () => {
@@ -1239,7 +1225,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
             force: true,
             match: /alibabaizshaek/
           })
-        ).to.be.rejected;
+        ).rejects.toThrow();
       });
     });
   });
@@ -1315,7 +1301,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
         });
 
         it("doesn't save an instance if value is not in the range of enums", async () => {
-          const err = await expect(Review.create({ status: 'fnord' })).to.be.rejected;
+          const err = await Support.expectRejection(Review.create({ status: 'fnord' }));
 
           expect(err).to.be.instanceOf(Error);
           expect(err.message).to.equal('"fnord" is not a valid choice in ["scheduled","active","finished"]');
@@ -1403,15 +1389,15 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
             { transaction: t2 }
           );
 
-          await expect(count()).to.eventually.equal(0);
-          await expect(count(t1)).to.eventually.equal(1);
-          await expect(count(t2)).to.eventually.equal(1);
+          await expect(count()).resolves.to.equal(0);
+          await expect(count(t1)).resolves.to.equal(1);
+          await expect(count(t2)).resolves.to.equal(1);
 
           await t2.rollback();
-          await expect(count()).to.eventually.equal(0);
+          await expect(count()).resolves.to.equal(0);
 
           await t1.commit();
-          await expect(count()).to.eventually.equal(1);
+          await expect(count()).resolves.to.equal(1);
         });
 
         it('supports nested transactions using savepoints', async () => {
@@ -1498,7 +1484,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
             // Releasing sp1 discards sp2 along with it, so closing sp2 afterwards is invalid.
             await sp1.commit();
 
-            await expect(sp2.commit()).to.be.rejectedWith(/was already discarded/);
+            await expect(sp2.commit()).rejects.toThrow(/was already discarded/);
             await transaction.rollback();
           });
 
@@ -1508,7 +1494,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
             const sp2 = await sequelizeWithTransaction.transaction({ transaction });
 
             await sp1.commit();
-            await expect(sp2.rollback()).to.be.rejectedWith(/was already discarded/);
+            await expect(sp2.rollback()).rejects.toThrow(/was already discarded/);
 
             // The guard throws before issuing SQL, so the parent is still good.
             const [rows] = await sequelizeWithTransaction.query('SELECT 1 AS ok', { transaction });
@@ -1550,7 +1536,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
 
             // Postgres permits ROLLBACK TO on a non-innermost savepoint; sp2 goes with it.
             await sp1.rollback();
-            await expect(sp2.commit()).to.be.rejectedWith(/was already discarded/);
+            await expect(sp2.commit()).rejects.toThrow(/was already discarded/);
 
             await transaction.rollback();
           });

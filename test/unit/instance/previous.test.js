@@ -1,5 +1,4 @@
-import { describe, it } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, expect } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 
@@ -7,7 +6,7 @@ const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser('Instance'), () => {
   describe('previous', () => {
-    it('should return correct previous value', function () {
+    it('should return correct previous value', () => {
       const Model = current.define('Model', {
         text: DataTypes.STRING,
         textCustom: {

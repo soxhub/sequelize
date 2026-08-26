@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 
@@ -114,7 +113,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       return [User, { where: { id: 1 }, lock: true }];
     });
 
-    it('does not mutate the options it is given', function () {
+    it('does not mutate the options it is given', () => {
       const options = { where: { id: 1 }, attributes: ['name'] };
       const snapshot = JSON.stringify(options);
 
@@ -123,7 +122,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(JSON.stringify(options)).to.equal(snapshot);
     });
 
-    it('runs no hooks and issues no query', function () {
+    it('runs no hooks and issues no query', () => {
       const fired = [];
       for (const name of ['beforeFind', 'beforeFindAfterExpandIncludeAll', 'beforeFindAfterOptions', 'afterFind']) {
         User.addHook(name, () => fired.push(name));
@@ -136,16 +135,16 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(queried, 'no query should be issued').to.be.false;
     });
 
-    it('rejects a non-object argument like findAll does', function () {
+    it('rejects a non-object argument like findAll does', () => {
       expect(() => User.buildFindAllQuery(1)).to.throw(/must be an options object/);
     });
 
-    it('rejects a malformed attributes option like findAll does', function () {
+    it('rejects a malformed attributes option like findAll does', () => {
       expect(() => User.buildFindAllQuery({ attributes: 'name' })).to.throw(/attributes option must be an array/);
     });
 
     describe('findAll still drives its hooks around the shared steps', () => {
-      it('fires the find hooks in order', async function () {
+      it('fires the find hooks in order', async () => {
         const fired = [];
         for (const name of ['beforeFind', 'beforeFindAfterExpandIncludeAll', 'beforeFindAfterOptions', 'afterFind']) {
           User.addHook(name, () => fired.push(name));
@@ -161,7 +160,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         ]);
       });
 
-      it('applies a where set by beforeFind', async function () {
+      it('applies a where set by beforeFind', async () => {
         await User.create({ name: 'kept' });
         User.addHook('beforeFind', (options) => {
           options.where = { name: 'absent' };
@@ -170,7 +169,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(await User.findAll()).to.have.length(0);
       });
 
-      it('applies an attribute list set by beforeFindAfterOptions', async function () {
+      it('applies an attribute list set by beforeFindAfterOptions', async () => {
         await User.create({ name: 'a', age: 3 });
         User.addHook('beforeFindAfterOptions', (options) => {
           options.attributes = ['name'];
@@ -180,7 +179,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(Object.keys(user.dataValues)).to.deep.equal(['name']);
       });
 
-      it('skips the hooks when hooks is false', async function () {
+      it('skips the hooks when hooks is false', async () => {
         const fired = [];
         User.addHook('beforeFind', () => fired.push('beforeFind'));
 

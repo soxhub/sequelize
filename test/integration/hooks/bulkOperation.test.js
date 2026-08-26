@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, expect } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import sinon from 'sinon';
@@ -69,7 +68,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
             { username: 'Cheech', mood: 'sad' },
             { username: 'Chong', mood: 'sad' }
           ])
-        ).to.be.rejected;
+        ).rejects.toThrow();
       });
 
       it('should return an error from after', () => {
@@ -82,7 +81,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
             { username: 'Cheech', mood: 'sad' },
             { username: 'Chong', mood: 'sad' }
           ])
-        ).to.be.rejected;
+        ).rejects.toThrow();
       });
     });
 
@@ -166,12 +165,12 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           return Promise.resolve();
         });
 
-        const err = await expect(
+        const err = await Support.expectRejection(
           User.bulkCreate([{ aNumber: 5 }, { aNumber: 7 }, { aNumber: 3 }], {
             fields: ['aNumber'],
             individualHooks: true
           })
-        ).to.be.rejected;
+        );
 
         expect(err).to.be.instanceOf(Error);
         expect(beforeBulkCreate).to.be.true;
@@ -212,7 +211,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           { username: 'Chong', mood: 'sad' }
         ]);
 
-        await expect(User.update({ mood: 'happy' }, { where: { mood: 'sad' } })).to.be.rejected;
+        await expect(User.update({ mood: 'happy' }, { where: { mood: 'sad' } })).rejects.toThrow();
       });
 
       it('should return an error from after', async () => {
@@ -225,7 +224,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           { username: 'Chong', mood: 'sad' }
         ]);
 
-        await expect(User.update({ mood: 'happy' }, { where: { mood: 'sad' } })).to.be.rejected;
+        await expect(User.update({ mood: 'happy' }, { where: { mood: 'sad' } })).rejects.toThrow();
       });
     });
 
@@ -313,8 +312,9 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
 
         await User.bulkCreate([{ aNumber: 1 }, { aNumber: 1 }, { aNumber: 1 }], { fields: ['aNumber'] });
 
-        const err = await expect(User.update({ aNumber: 10 }, { where: { aNumber: 1 }, individualHooks: true })).to.be
-          .rejected;
+        const err = await Support.expectRejection(
+          User.update({ aNumber: 10 }, { where: { aNumber: 1 }, individualHooks: true })
+        );
 
         expect(err).to.be.instanceOf(Error);
         expect(err.message).to.be.equal('You shall not pass!');
@@ -346,7 +346,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           throw new Error('Whoops!');
         });
 
-        return expect(User.destroy({ where: { username: 'Cheech', mood: 'sad' } })).to.be.rejected;
+        return expect(User.destroy({ where: { username: 'Cheech', mood: 'sad' } })).rejects.toThrow();
       });
 
       it('should return an error from after', () => {
@@ -354,7 +354,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           throw new Error('Whoops!');
         });
 
-        return expect(User.destroy({ where: { username: 'Cheech', mood: 'sad' } })).to.be.rejected;
+        return expect(User.destroy({ where: { username: 'Cheech', mood: 'sad' } })).rejects.toThrow();
       });
     });
 
@@ -441,7 +441,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
 
         await User.bulkCreate([{ aNumber: 1 }, { aNumber: 1 }, { aNumber: 1 }], { fields: ['aNumber'] });
 
-        const err = await expect(User.destroy({ where: { aNumber: 1 }, individualHooks: true })).to.be.rejected;
+        const err = await Support.expectRejection(User.destroy({ where: { aNumber: 1 }, individualHooks: true }));
 
         expect(err).to.be.instanceOf(Error);
         expect(beforeBulk).to.be.true;
@@ -483,7 +483,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           throw new Error('Whoops!');
         });
 
-        return expect(ParanoidUser.restore({ where: { username: 'adam', mood: 'happy' } })).to.be.rejected;
+        return expect(ParanoidUser.restore({ where: { username: 'adam', mood: 'happy' } })).rejects.toThrow();
       });
 
       it('should return an error from after', () => {
@@ -491,7 +491,7 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
           throw new Error('Whoops!');
         });
 
-        return expect(ParanoidUser.restore({ where: { username: 'adam', mood: 'happy' } })).to.be.rejected;
+        return expect(ParanoidUser.restore({ where: { username: 'adam', mood: 'happy' } })).rejects.toThrow();
       });
     });
 
@@ -552,7 +552,9 @@ describe(Support.getTestDialectTeaser('Hooks'), () => {
         await ParanoidUser.bulkCreate([{ aNumber: 1 }, { aNumber: 1 }, { aNumber: 1 }], { fields: ['aNumber'] });
         await ParanoidUser.destroy({ where: { aNumber: 1 } });
 
-        const err = await expect(ParanoidUser.restore({ where: { aNumber: 1 }, individualHooks: true })).to.be.rejected;
+        const err = await Support.expectRejection(
+          ParanoidUser.restore({ where: { aNumber: 1 }, individualHooks: true })
+        );
 
         expect(err).to.be.instanceOf(Error);
         expect(beforeBulk.calledOnce).to.be.true;

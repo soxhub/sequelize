@@ -1,5 +1,4 @@
-import { describe, it } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, expect } from 'vitest';
 import Support from '../support.js';
 import Sequelize from '../../../index.js';
 import config from '../../config/config.js';
@@ -54,7 +53,7 @@ describeDeferrable(Support.getTestDialectTeaser('Sequelize'), () => {
 
     describe('NOT', () => {
       it('does not allow the violation of the foreign key constraint', () => {
-        return expect(run(Sequelize.Deferrable.NOT)).to.eventually.be.rejectedWith(Sequelize.ForeignKeyConstraintError);
+        return expect(run(Sequelize.Deferrable.NOT)).rejects.toThrow(Sequelize.ForeignKeyConstraintError);
       });
     });
 
@@ -70,7 +69,7 @@ describeDeferrable(Support.getTestDialectTeaser('Sequelize'), () => {
           run(Sequelize.Deferrable.INITIALLY_IMMEDIATE, {
             deferrable: undefined
           })
-        ).to.eventually.be.rejectedWith(Sequelize.ForeignKeyConstraintError);
+        ).rejects.toThrow(Sequelize.ForeignKeyConstraintError);
       });
 
       it('allows the violation of the foreign key constraint if the transaction deferres only the foreign key constraint', async () => {

@@ -1,5 +1,4 @@
-import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeAll, afterAll, beforeEach, expect } from 'vitest';
 import Support from '../support.js';
 import sinon from 'sinon';
 import DataTypes from '../../../lib/data-types.js';
@@ -34,7 +33,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         this.secretValue = '1';
       };
 
-      return expect(User.destroy({ where: new Where() })).to.be.rejected;
+      return expect(User.destroy({ where: new Where() })).rejects.toThrow();
     });
   });
 });

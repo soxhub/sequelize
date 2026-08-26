@@ -15,7 +15,7 @@ export default defineConfig({
     sequence: { sequencer: AlphabeticalSequencer },
     globals: false,
     include: ['test/integration/**/*.test.js'],
-    setupFiles: ['test/integration/setup.js'],
+    setupFiles: ['test/setup.js', 'test/integration/setup.js'],
     testTimeout: 30000,
     hookTimeout: 30000,
     // The whole suite shares one database and `test/integration/support.js` drops every table in a

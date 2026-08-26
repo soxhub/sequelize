@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import sinon from 'sinon';
 import Support from './support.js';
 import ConnectionManager from '../../lib/dialects/postgres/base/connection-manager.js';
@@ -33,7 +32,7 @@ describe('connection manager', () => {
 
       const config = {};
 
-      await expect(connectionManager._connect(config)).to.eventually.equal(dialectConnection);
+      await expect(connectionManager._connect(config)).resolves.to.equal(dialectConnection);
 
       expect(
         dialect.connectionManager.connect.calledWith(config),
@@ -115,13 +114,13 @@ describe('connection manager', () => {
       sandbox.stub(cm.pool, 'acquire').returns(Promise.resolve(pooledConnection));
 
       // First acquisition fails while detecting the DB version.
-      await expect(cm.getConnection()).to.be.rejectedWith(connectError);
+      await expect(cm.getConnection()).rejects.toThrow(connectError);
 
       // The failed detection must not stay cached.
       expect(cm.versionPromise).to.equal(null);
 
       // The next acquisition retries the connect and succeeds.
-      await expect(cm.getConnection()).to.eventually.equal(pooledConnection);
+      await expect(cm.getConnection()).resolves.to.equal(pooledConnection);
 
       expect(connectStub.calledTwice).to.be.true;
       expect(sequelize.options.databaseVersion).to.equal('9.6.0');

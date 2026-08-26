@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'vitest';
-import { expect } from 'chai';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import sinon from 'sinon';
 import Sequelize from '../../../index.js';
 import Support from '../support.js';
@@ -96,7 +95,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             username: 'gottlieb'
           }
         })
-      ).to.eventually.be.rejectedWith(Sequelize.UniqueConstraintError);
+      ).rejects.toThrow(Sequelize.UniqueConstraintError);
     });
 
     it('should error correctly when defaults contain a unique key and the where clause is complex', async () => {
@@ -114,7 +113,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       await User.sync({ force: true });
       await User.create({ username: 'gottlieb' });
 
-      const error = await expect(
+      const error = await Support.expectRejection(
         User.findOrCreate({
           where: {
             $or: [
@@ -130,7 +129,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             username: 'gottlieb'
           }
         })
-      ).to.be.rejected;
+      );
 
       expect(error).to.be.instanceof(Sequelize.UniqueConstraintError);
       expect(error.errors[0].path).to.be.a('string', 'username');
@@ -560,7 +559,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
         // Concurrent on purpose: both calls must fail the same way.
         const [firstError, secondError] = await Promise.all([
-          expect(
+          Support.expectRejection(
             User.findOrCreate({
               where: {
                 objectId: 'asdasdasd'
@@ -569,8 +568,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
                 username: 'gottlieb'
               }
             })
-          ).to.be.rejected,
-          expect(
+          ),
+          Support.expectRejection(
             User.findOrCreate({
               where: {
                 objectId: 'asdasdasd'
@@ -579,7 +578,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
                 username: 'gottlieb'
               }
             })
-          ).to.be.rejected
+          )
         ]);
 
         for (const err of [firstError, secondError]) {
@@ -678,10 +677,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       await sequelize.sync({ force: true });
       await User.create({ email: 'hello@sequelize.com' });
 
-      const err = await expect(User.create({ email: 'hello@sequelize.com' })).to.be.rejected;
-
-      expect(err).to.be.ok;
-      expect(err).to.be.an.instanceof(Error);
+      await expect(User.create({ email: 'hello@sequelize.com' })).rejects.toThrow(Error);
     });
 
     it('works without any primary key', async () => {
@@ -1004,7 +1000,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       await User.sync({ force: true });
       await User.create({ username: 'foo' });
 
-      const err = await expect(User.create({ username: 'foo' })).to.be.rejected;
+      const err = await Support.expectRejection(User.create({ username: 'foo' }));
 
       if (!(err instanceof sequelize.UniqueConstraintError)) {
         throw err;
@@ -1022,7 +1018,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       await UserNull.sync({ force: true });
 
-      const err = await expect(UserNull.create({ username: 'foo2', smth: null })).to.be.rejected;
+      const err = await Support.expectRejection(UserNull.create({ username: 'foo2', smth: null }));
 
       expect(err).to.exist;
 
@@ -1042,7 +1038,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       await UserNull.sync({ force: true });
       await UserNull.create({ username: 'foo', smth: 'foo' });
 
-      const err = await expect(UserNull.create({ username: 'foo', smth: 'bar' })).to.be.rejected;
+      const err = await Support.expectRejection(UserNull.create({ username: 'foo', smth: 'bar' }));
 
       if (!(err instanceof sequelize.UniqueConstraintError)) {
         throw err;
@@ -1065,7 +1061,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       const str2 = await StringIsNullOrUrl.create({ str: 'http://sequelizejs.org' });
       expect(str2.str).to.equal('http://sequelizejs.org');
 
-      const err = await expect(StringIsNullOrUrl.create({ str: '' })).to.be.rejected;
+      const err = await Support.expectRejection(StringIsNullOrUrl.create({ str: '' }));
 
       expect(err).to.exist;
       expect(err.get('str')[0].message).to.match(/Validation isURL on str failed/);

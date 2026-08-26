@@ -1,9 +1,8 @@
-import { describe, it, beforeAll, afterAll } from 'vitest';
+import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import Support from '../support.js';
 import DataTypes from '../../../lib/data-types.js';
 import Model from '../../../lib/model.js';
 import { inspect } from 'node:util';
-import { expect } from 'chai';
 
 const expectsql = Support.expectsql;
 const current = Support.sequelize;

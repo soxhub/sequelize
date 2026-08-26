@@ -10,7 +10,7 @@ describe('QueryGenerator', () => {
     it('should generate correct query using array placeholder', () => {
       const QG = getQueryGenerator(current);
 
-      QG.selectQuery('foo', { where: { bar: { [Op.like]: { [Op.any]: ['a', 'b'] } } } }).should.be.equal(
+      expect(QG.selectQuery('foo', { where: { bar: { [Op.like]: { [Op.any]: ['a', 'b'] } } } })).to.equal(
         "SELECT * FROM foo WHERE foo.bar LIKE ANY (ARRAY['a','b']);"
       );
     });
@@ -19,19 +19,19 @@ describe('QueryGenerator', () => {
   describe('whereItemQuery', () => {
     it('should generate correct query for Symbol operators', () => {
       const QG = getQueryGenerator(current);
-      QG.whereItemQuery(Op.or, [
-        { test: { [Op.gt]: 5 } },
-        { test: { [Op.lt]: 3 } },
-        { test: { [Op.in]: [4] } }
-      ]).should.be.equal('(test > 5 OR test < 3 OR test IN (4))');
+      expect(
+        QG.whereItemQuery(Op.or, [{ test: { [Op.gt]: 5 } }, { test: { [Op.lt]: 3 } }, { test: { [Op.in]: [4] } }])
+      ).to.equal('(test > 5 OR test < 3 OR test IN (4))');
 
-      QG.whereItemQuery(Op.and, [
-        { test: { [Op.between]: [2, 5] } },
-        { test: { [Op.ne]: 3 } },
-        { test: { [Op.not]: 4 } }
-      ]).should.be.equal('(test BETWEEN 2 AND 5 AND test != 3 AND test != 4)');
+      expect(
+        QG.whereItemQuery(Op.and, [
+          { test: { [Op.between]: [2, 5] } },
+          { test: { [Op.ne]: 3 } },
+          { test: { [Op.not]: 4 } }
+        ])
+      ).to.equal('(test BETWEEN 2 AND 5 AND test != 3 AND test != 4)');
 
-      QG.whereItemQuery(Op.or, [{ test: { [Op.is]: null } }, { testSame: { [Op.eq]: null } }]).should.be.equal(
+      expect(QG.whereItemQuery(Op.or, [{ test: { [Op.is]: null } }, { testSame: { [Op.eq]: null } }])).to.equal(
         '(test IS NULL OR testSame IS NULL)'
       );
     });
@@ -63,17 +63,13 @@ describe('QueryGenerator', () => {
 
       QG.setOperatorsAliases(aliases);
 
-      QG.whereItemQuery('OR', [
-        { test: { '^^': 5 } },
-        { test: { '!': 3 } },
-        { test: { [Op.in]: [4] } }
-      ]).should.be.equal('(test > 5 OR test != 3 OR test IN (4))');
+      expect(
+        QG.whereItemQuery('OR', [{ test: { '^^': 5 } }, { test: { '!': 3 } }, { test: { [Op.in]: [4] } }])
+      ).to.equal('(test > 5 OR test != 3 OR test IN (4))');
 
-      QG.whereItemQuery(Op.and, [
-        { test: { [Op.between]: [2, 5] } },
-        { test: { '!': 3 } },
-        { test: { '^^': 4 } }
-      ]).should.be.equal('(test BETWEEN 2 AND 5 AND test != 3 AND test > 4)');
+      expect(
+        QG.whereItemQuery(Op.and, [{ test: { [Op.between]: [2, 5] } }, { test: { '!': 3 } }, { test: { '^^': 4 } }])
+      ).to.equal('(test BETWEEN 2 AND 5 AND test != 3 AND test > 4)');
 
       expect(() =>
         QG.whereItemQuery('OR', [{ test: { '^^': 5 } }, { test: { $not: 3 } }, { test: { [Op.in]: [4] } }])

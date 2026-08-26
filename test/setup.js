@@ -1,4 +1,4 @@
-import { chai, should } from 'vitest';
+import { chai } from 'vitest';
 import chaiDatetime from './support/chai-datetime.js';
 
 // Vitest's `expect` is chai, so the local datetime matchers register the same way they did when the
@@ -7,4 +7,3 @@ import chaiDatetime from './support/chai-datetime.js';
 // than one that always exists.
 chai.use(chaiDatetime);
 chai.config.includeStack = true;
-should();

@@ -207,6 +207,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         it('should support instance.destroy()', async () => {
           const user = await SharedUser.create();
           await user.destroy();
+
+          expect(await SharedUser.findByPk(user.get('id'))).to.be.null;
         });
 
         it('should support Model.destroy()', async () => {
@@ -217,6 +219,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
               id: user.get('id')
             }
           });
+
+          expect(await SharedUser.findByPk(user.get('id'))).to.be.null;
         });
       });
 
@@ -239,7 +243,9 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
         it('reload should work', async () => {
           const comment = await Comment.findByPk(1);
-          await comment.reload();
+          const reloaded = await comment.reload();
+
+          expect(reloaded.notes).to.equal('Number one');
         });
 
         it('save should work', async () => {
@@ -410,7 +416,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       it('should work with increment', async () => {
         const user = await SharedUser.create();
-        await user.increment('taskCount');
+        const incremented = await user.increment('taskCount');
+        const reloaded = await incremented.reload();
+
+        expect(reloaded.get('taskCount')).to.equal(1);
       });
 
       it('should work with a simple where', async () => {

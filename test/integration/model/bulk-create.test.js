@@ -115,6 +115,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       await Beer.sync({ force: true });
 
+      let sql;
+
       await Beer.bulkCreate(
         [
           {
@@ -122,12 +124,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }
         ],
         {
-          logging(sql) {
-            expect(
-              sql.indexOf('INSERT INTO "Beers" ("id","style","createdAt","updatedAt") VALUES (DEFAULT')
-            ).not.be.equal(-1);
+          logging(logged) {
+            sql = logged;
           }
         }
+      );
+
+      expect(sql.indexOf('INSERT INTO "Beers" ("id","style","createdAt","updatedAt") VALUES (DEFAULT')).not.be.equal(
+        -1
       );
     });
 

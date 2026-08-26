@@ -49,10 +49,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       });
     }
 
-    it('should not crash on an empty where array', () => {
-      return SharedUser.findAll({
-        where: []
-      });
+    it('should not crash on an empty where array', async () => {
+      await expect(
+        SharedUser.findAll({
+          where: []
+        })
+      ).resolves.toBeInstanceOf(Array);
     });
 
     describe('special where conditions/smartWhere object', () => {
@@ -76,12 +78,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(users).to.have.length(2);
       });
 
-      it('should not break when trying to find rows using an array of primary keys', () => {
-        return SharedUser.findAll({
-          where: {
-            id: [1, 2, 3]
-          }
-        });
+      it('should not break when trying to find rows using an array of primary keys', async () => {
+        await expect(
+          SharedUser.findAll({
+            where: {
+              id: [1, 2, 3]
+            }
+          })
+        ).resolves.toBeInstanceOf(Array);
       });
 
       it('should not break when using smart syntax on binary fields', async () => {

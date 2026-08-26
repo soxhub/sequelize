@@ -4,6 +4,23 @@ import DataTypes from '../../../lib/data-types.js';
 
 const current = Support.sequelize;
 
+// `describeTable` only reports an enum column as USER-DEFINED, which would pass even if the column had
+// not really been converted. Round-tripping a value proves the enum type exists and constrains the column.
+const expectEnumAccepts = async (tableName, columnName, schema) => {
+  const table = schema ? `"${schema}"."${tableName}"` : `"${tableName}"`;
+
+  await current.query(`INSERT INTO ${table} ("${columnName}") VALUES ('value1')`);
+
+  const rows = await current.query(`SELECT "${columnName}" FROM ${table}`, {
+    type: current.QueryTypes.SELECT
+  });
+  expect(rows[0][columnName]).to.equal('value1');
+
+  await expect(current.query(`INSERT INTO ${table} ("${columnName}") VALUES ('nope')`)).rejects.toThrow(
+    /invalid input value for enum/
+  );
+};
+
 let count = 0;
 function log() {
   // sqlite fires a lot more querys than the other dbs. this is just a simple hack, since i'm lazy
@@ -104,6 +121,8 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
       await queryInterface.changeColumn('users', 'firstName', {
         type: DataTypes.ENUM(['value1', 'value2', 'value3'])
       });
+
+      await expectEnumAccepts('users', 'firstName');
     });
 
     it('should work with enums with schemas', async () => {
@@ -129,6 +148,8 @@ describe(Support.getTestDialectTeaser('QueryInterface'), () => {
           type: DataTypes.ENUM(['value1', 'value2', 'value3'])
         }
       );
+
+      await expectEnumAccepts('users', 'firstName', 'archive');
     });
 
     //SQlite navitely doesnt support ALTER Foreign key

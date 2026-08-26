@@ -68,28 +68,34 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         });
 
         if (current.dialect.supports['ORDER NULLS']) {
-          it('should not throw with on NULLS LAST/NULLS FIRST', () => {
-            return User.findAll({
-              include: [Group],
-              order: [
-                ['id', 'ASC NULLS LAST'],
-                [Group, 'id', 'DESC NULLS FIRST']
-              ]
-            });
+          it('should not throw with on NULLS LAST/NULLS FIRST', async () => {
+            await expect(
+              User.findAll({
+                include: [Group],
+                order: [
+                  ['id', 'ASC NULLS LAST'],
+                  [Group, 'id', 'DESC NULLS FIRST']
+                ]
+              })
+            ).resolves.toBeInstanceOf(Array);
           });
         }
 
-        it('should not throw on a literal', () => {
-          return User.findAll({
-            order: [['id', current.literal('ASC, name DESC')]]
-          });
+        it('should not throw on a literal', async () => {
+          await expect(
+            User.findAll({
+              order: [['id', current.literal('ASC, name DESC')]]
+            })
+          ).resolves.toBeInstanceOf(Array);
         });
 
-        it('should not throw with include when last order argument is a field', () => {
-          return User.findAll({
-            include: [Group],
-            order: [[Group, 'id']]
-          });
+        it('should not throw with include when last order argument is a field', async () => {
+          await expect(
+            User.findAll({
+              include: [Group],
+              order: [[Group, 'id']]
+            })
+          ).resolves.toBeInstanceOf(Array);
         });
       });
     });

@@ -670,8 +670,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           return current.sync({ force: true });
         });
 
-        it('should properly escape the single quotes', () => {
-          return Model.create({
+        it('should properly escape the single quotes', async () => {
+          const created = await Model.create({
             data: {
               type: 'Point',
               properties: {
@@ -679,23 +679,31 @@ describe(Support.getTestDialectTeaser('Model'), () => {
               }
             }
           });
+
+          const reloaded = await created.reload();
+          expect(reloaded.data.properties.exploit).to.equal("'); DELETE YOLO INJECTIONS; -- ");
         });
 
-        it('should properly escape path keys with sequelize.json', () => {
-          return Model.findAll({
-            raw: true,
-            attributes: ['id'],
-            where: current.json("data.id')) AS DECIMAL) = 1 DELETE YOLO INJECTIONS; -- ", '1')
-          });
+        it('should properly escape path keys with sequelize.json', async () => {
+          await expect(
+            Model.findAll({
+              raw: true,
+              attributes: ['id'],
+              where: current.json("data.id')) AS DECIMAL) = 1 DELETE YOLO INJECTIONS; -- ", '1')
+            })
+          ).resolves.toBeInstanceOf(Array);
         });
 
-        it('should properly escape the single quotes in array', () => {
-          return Model.create({
+        it('should properly escape the single quotes in array', async () => {
+          const created = await Model.create({
             data: {
               type: 'Point',
               coordinates: [39.807222, "'); DELETE YOLO INJECTIONS; --"]
             }
           });
+
+          const reloaded = await created.reload();
+          expect(reloaded.data.coordinates[1]).to.equal("'); DELETE YOLO INJECTIONS; --");
         });
 
         it('should be possible to find with properly escaped select query', async () => {

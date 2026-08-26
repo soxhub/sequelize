@@ -39,18 +39,22 @@ describe('[POSTGRES Specific] DAO', () => {
     current.options.quoteIdentifiers = true;
   });
 
-  it('should be able to search within an array', () => {
-    return SharedUser.findAll({
+  it('should be able to search within an array', async () => {
+    let sql;
+
+    await SharedUser.findAll({
       where: {
         email: ['hello', 'world']
       },
       attributes: ['id', 'username', 'email', 'settings', 'document', 'phones', 'emergency_contact', 'friends'],
-      logging(sql) {
-        expect(sql).to.equal(
-          'Executing (default): SELECT "id", "username", "email", "settings", "document", "phones", "emergency_contact", "friends" FROM "Users" AS "User" WHERE "User"."email" = ARRAY[\'hello\',\'world\']::TEXT[];'
-        );
+      logging(logged) {
+        sql = logged;
       }
     });
+
+    expect(sql).to.equal(
+      'Executing (default): SELECT "id", "username", "email", "settings", "document", "phones", "emergency_contact", "friends" FROM "Users" AS "User" WHERE "User"."email" = ARRAY[\'hello\',\'world\']::TEXT[];'
+    );
   });
 
   it('should be able to update a field with type ARRAY(JSON)', async () => {
@@ -185,21 +189,24 @@ describe('[POSTGRES Specific] DAO', () => {
       expect(table.document.type).to.equal('HSTORE');
     });
 
-    it('should stringify hstore with insert', () => {
-      return SharedUser.create(
+    it('should stringify hstore with insert', async () => {
+      let sql;
+
+      await SharedUser.create(
         {
           username: 'bob',
           email: ['myemail@email.com'],
           settings: { mailing: false, push: 'facebook', frequency: 3 }
         },
         {
-          logging(sql) {
-            const expected =
-              '\'"mailing"=>"false","push"=>"facebook","frequency"=>"3"\',\'"default"=>"\'\'value\'\'"\'';
-            expect(sql.indexOf(expected)).not.to.equal(-1);
+          logging(logged) {
+            sql = logged;
           }
         }
       );
+
+      const expected = '\'"mailing"=>"false","push"=>"facebook","frequency"=>"3"\',\'"default"=>"\'\'value\'\'"\'';
+      expect(sql.indexOf(expected)).not.to.equal(-1);
     });
 
     it('should not rename hstore fields', async () => {
@@ -214,18 +221,23 @@ describe('[POSTGRES Specific] DAO', () => {
       });
 
       await Equipment.sync({ force: true });
+
+      let sql;
+
       await Equipment.findAll({
         where: {
           utilityBelt: {
             grapplingHook: true
           }
         },
-        logging(sql) {
-          expect(sql).to.equal(
-            'Executing (default): SELECT "id", "grappling_hook" AS "grapplingHook", "utilityBelt", "createdAt", "updatedAt" FROM "Equipment" AS "Equipment" WHERE "Equipment"."utilityBelt" = \'"grapplingHook"=>"true"\';'
-          );
+        logging(logged) {
+          sql = logged;
         }
       });
+
+      expect(sql).to.equal(
+        'Executing (default): SELECT "id", "grappling_hook" AS "grapplingHook", "utilityBelt", "createdAt", "updatedAt" FROM "Equipment" AS "Equipment" WHERE "Equipment"."utilityBelt" = \'"grapplingHook"=>"true"\';'
+      );
     });
 
     it('should not rename json fields', async () => {
@@ -240,18 +252,23 @@ describe('[POSTGRES Specific] DAO', () => {
       });
 
       await Equipment.sync({ force: true });
+
+      let sql;
+
       await Equipment.findAll({
         where: {
           utilityBelt: {
             grapplingHook: true
           }
         },
-        logging(sql) {
-          expect(sql).to.equal(
-            'Executing (default): SELECT "id", "grappling_hook" AS "grapplingHook", "utilityBelt", "createdAt", "updatedAt" FROM "Equipment" AS "Equipment" WHERE CAST(("Equipment"."utilityBelt"#>>\'{grapplingHook}\') AS BOOLEAN) = true;'
-          );
+        logging(logged) {
+          sql = logged;
         }
       });
+
+      expect(sql).to.equal(
+        'Executing (default): SELECT "id", "grappling_hook" AS "grapplingHook", "utilityBelt", "createdAt", "updatedAt" FROM "Equipment" AS "Equipment" WHERE CAST(("Equipment"."utilityBelt"#>>\'{grapplingHook}\') AS BOOLEAN) = true;'
+      );
     });
   });
 
@@ -271,7 +288,7 @@ describe('[POSTGRES Specific] DAO', () => {
       });
 
       await User.sync({ force: true });
-      await User.sync();
+      await expect(User.sync()).resolves.toBeDefined();
     });
 
     it('should be able to create/drop enums multiple times', async () => {
@@ -280,7 +297,7 @@ describe('[POSTGRES Specific] DAO', () => {
       });
 
       await User.sync({ force: true });
-      await User.sync({ force: true });
+      await expect(User.sync({ force: true })).resolves.toBeDefined();
     });
 
     it('should be able to create/drop multiple enums multiple times', async () => {
@@ -300,7 +317,7 @@ describe('[POSTGRES Specific] DAO', () => {
       // now sync one more time:
       await DummyModel.sync({ force: true });
       // sync without dropping
-      await DummyModel.sync();
+      await expect(DummyModel.sync()).resolves.toBeDefined();
     });
 
     it('should be able to create/drop multiple enums multiple times with field name (#7812)', async () => {
@@ -323,6 +340,11 @@ describe('[POSTGRES Specific] DAO', () => {
       await DummyModel.sync({ force: true });
       // sync without dropping
       await DummyModel.sync();
+
+      const enums = await current.getQueryInterface().pgListEnums(DummyModel.getTableName());
+
+      expect(enums).to.have.length(2);
+      expect(enums.map((e) => e.enum_value).sort()).to.deep.equal(['{four,five,six}', '{one,two,three}'].sort());
     });
 
     it('should be able to add values to enum types', async () => {
@@ -352,6 +374,11 @@ describe('[POSTGRES Specific] DAO', () => {
 
         await User.sync({ force: true });
         await User.sync();
+
+        const enums = await current.getQueryInterface().pgListEnums(User.getTableName());
+
+        expect(enums).to.have.length(1);
+        expect(enums[0].enum_value).to.equal('{access,write,check,delete}');
       });
 
       it('should be able to create/drop enums multiple times', async () => {
@@ -361,6 +388,11 @@ describe('[POSTGRES Specific] DAO', () => {
 
         await User.sync({ force: true });
         await User.sync({ force: true });
+
+        const enums = await current.getQueryInterface().pgListEnums(User.getTableName());
+
+        expect(enums).to.have.length(1);
+        expect(enums[0].enum_value).to.equal('{access,write,check,delete}');
       });
 
       it('should be able to add values to enum types', async () => {
@@ -532,17 +564,21 @@ describe('[POSTGRES Specific] DAO', () => {
       await SharedUser.sync({ force: true });
     });
 
-    it('should use postgres "TIMESTAMP WITH TIME ZONE" instead of "DATETIME"', () => {
-      return SharedUser.create(
+    it('should use postgres "TIMESTAMP WITH TIME ZONE" instead of "DATETIME"', async () => {
+      let sql;
+
+      await SharedUser.create(
         {
           dates: []
         },
         {
-          logging(sql) {
-            expect(sql.indexOf('TIMESTAMP WITH TIME ZONE')).to.be.greaterThan(0);
+          logging(logged) {
+            sql = logged;
           }
         }
       );
+
+      expect(sql.indexOf('TIMESTAMP WITH TIME ZONE')).to.be.greaterThan(0);
     });
   });
 

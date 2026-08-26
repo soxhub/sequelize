@@ -3436,7 +3436,19 @@ declare namespace sequelize {
   /**
    * Options for Model.upsert method
    */
-  interface UpsertOptions extends FieldsOptions, LoggingOptions, SearchPathOptions, ReturningOptions {}
+  interface UpsertOptions extends FieldsOptions, LoggingOptions, SearchPathOptions, ReturningOptions {
+    /**
+     * Attributes to use as the `ON CONFLICT` target, instead of letting Sequelize pick the arbiter
+     * index. Named as attributes; they are mapped to column names before being put in the query.
+     */
+    conflictFields?: string[] | undefined;
+
+    /**
+     * Predicate identifying a partial unique index to use as the `ON CONFLICT` target. Must match the
+     * index's own `where` for Postgres to accept it as an arbiter.
+     */
+    conflictWhere?: AnyWhereOptions | undefined;
+  }
 
   /**
    * Options for Model.bulkCreate method

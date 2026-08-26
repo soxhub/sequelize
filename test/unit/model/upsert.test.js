@@ -48,7 +48,9 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         sandbox = sinon.createSandbox();
 
         sandbox.stub(current, 'query').returns(Promise.resolve());
-        upsertStub = sandbox.stub(current.getQueryInterface(), 'upsert').returns(Promise.resolve([true, undefined]));
+        // `[instance, created]` -- the instance is populated in place from the statement's own
+        // RETURNING clause, so the stub stands in for it with null.
+        upsertStub = sandbox.stub(current.getQueryInterface(), 'upsert').returns(Promise.resolve([null, true]));
       });
 
       afterEach(() => {

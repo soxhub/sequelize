@@ -4070,15 +4070,18 @@ declare namespace sequelize {
      *
      * **Implementation details:**
      *
-     * Implemented as a temporary function with exception handling: INSERT EXCEPTION WHEN
-     * unique_constraint UPDATE
+     * Implemented as a single `INSERT ... ON CONFLICT (...) DO UPDATE`. The conflict target is
+     * inferred from the model's unique keys and indexes, or given outright via `conflictFields`.
      */
-    upsert(values: TAttributes, options?: UpsertOptions & { returning?: false | undefined }): Promise<boolean>;
-    upsert(values: TAttributes, options?: UpsertOptions & { returning: true }): Promise<[TInstance, boolean]>;
+    upsert<TOptions extends UpsertOptions = UpsertOptions>(
+      values: TAttributes,
+      options?: TOptions
+    ): Promise<TOptions extends { returning: true | string[] } ? [TInstance, boolean] : boolean>;
     /** @deprecated Use {@link Model.upsert} instead. */
-    insertOrUpdate(values: TAttributes, options?: UpsertOptions & { returning: false | undefined }): Promise<boolean>;
-    /** @deprecated Use {@link Model.upsert} instead. */
-    insertOrUpdate(values: TAttributes, options?: UpsertOptions & { returning: true }): Promise<[TInstance, boolean]>;
+    insertOrUpdate<TOptions extends UpsertOptions = UpsertOptions>(
+      values: TAttributes,
+      options?: TOptions
+    ): Promise<TOptions extends { returning: true | string[] } ? [TInstance, boolean] : boolean>;
 
     /**
      * Create and insert multiple instances in bulk.

@@ -42,7 +42,7 @@
   },
   "scripts": {
     "lint": "oxlint --report-unused-disable-directives-severity=error lib test",
-    "test:types": "tsc --noEmit -p tsconfig.json",
+    "test:types": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p test/types/tsconfig.json",
     "fmt": "oxfmt --write lib test",
     "fmt:check": "oxfmt --check lib test",
     "test": "pnpm run teaser && pnpm run test-unit && pnpm run test-integration",

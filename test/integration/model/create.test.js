@@ -98,6 +98,34 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       ).rejects.toThrow(Sequelize.UniqueConstraintError);
     });
 
+    // The insert is skipped rather than raised, so "was a row written?" has to be read off the row
+    // count. Reading it off the primary key instead only works when the database assigned one --
+    // here the caller supplies it, so the built instance carries a primary key either way and a
+    // conflict would otherwise be reported as a successful create.
+    it('should error correctly when defaults contain a caller supplied primary key', async () => {
+      const User = sequelize.define(
+        'user',
+        {
+          id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true
+          },
+          username: DataTypes.STRING
+        },
+        { timestamps: false }
+      );
+
+      await User.sync({ force: true });
+      await User.create({ id: 7, username: 'gottlieb' });
+
+      await expect(
+        User.findOrCreate({
+          where: { username: 'nobody' },
+          defaults: { id: 7 }
+        })
+      ).rejects.toThrow(Sequelize.UniqueConstraintError);
+    });
+
     it('should error correctly when defaults contain a unique key and the where clause is complex', async () => {
       const User = sequelize.define('user', {
         objectId: {

@@ -705,6 +705,29 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             expect(created).to.be.false;
           });
 
+          it('narrows the returned columns to a supplied attribute list', async () => {
+            const User = current.define(
+              'User',
+              {
+                username: { type: DataTypes.STRING, field: 'user_name' },
+                secret: DataTypes.STRING
+              },
+              { timestamps: false }
+            );
+
+            await User.sync({ force: true });
+
+            const [inserted, wasCreated] = await User.upsert(
+              { id: 42, username: 'john', secret: 'shh' },
+              { returning: ['id', 'username'] }
+            );
+
+            expect(wasCreated).to.be.true;
+            expect(inserted.get('id')).to.equal(42);
+            // Named as an attribute, returned as the column it is stored under.
+            expect(inserted.get('username')).to.equal('john');
+          });
+
           it('should return default value set by the database', async () => {
             const User = current.define('User', {
               name: { type: DataTypes.STRING, primaryKey: true },

@@ -39,6 +39,9 @@ importers:
         specifier: ^0.5.0
         version: 0.5.0
     devDependencies:
+      '@opentelemetry/api':
+        specifier: 1.9.1
+        version: 1.9.1
       '@types/cls-hooked':
         specifier: 4.3.9
         version: 4.3.9
@@ -92,7 +95,7 @@ importers:
         version: 7.0.2
       vitest:
         specifier: 5.0.0
-        version: 5.0.0(@types/node@20.19.43)(vite@8.2.2(@types/node@20.19.43))
+        version: 5.0.0(@opentelemetry/api@1.9.1)(@types/node@20.19.43)(vite@8.2.2(@types/node@20.19.43))
 
 packages:
 
@@ -113,6 +116,10 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@opentelemetry/api@1.9.1':
+    resolution: {integrity: sha512-gLyJlPHPZYdAk1JENA9LeHejZe1Ti77/pTeFm/nMXmQH/HFZlcS/O2XJB+L8fkbrNSqhdtlvjBVjxwUYanNH5Q==}
+    engines: {node: '>=8.0.0'}
 
   '@oxc-project/types@0.146.0':
     resolution: {integrity: sha512-XC0QsnnhVe7sLIWmYmdPw7x5P0h4W8vUU3Nv1ySgWXtvCz8NizoAEpGXA0sOYoJQV2Rl13LgURAHQ5cI5ILCSA==}
@@ -1137,6 +1144,8 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  '@opentelemetry/api@1.9.1': {}
+
   '@oxc-project/types@0.146.0': {}
 
   '@oxfmt/binding-android-arm-eabi@0.66.0':
@@ -1775,7 +1784,7 @@ snapshots:
       '@types/node': 20.19.43
       fsevents: 2.3.3
 
-  vitest@5.0.0(@types/node@20.19.43)(vite@8.2.2(@types/node@20.19.43)):
+  vitest@5.0.0(@opentelemetry/api@1.9.1)(@types/node@20.19.43)(vite@8.2.2(@types/node@20.19.43)):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/mocker': 5.0.0(vite@8.2.2(@types/node@20.19.43))
@@ -1792,6 +1801,7 @@ snapshots:
       vite: 8.2.2(@types/node@20.19.43)
       why-is-node-running: 2.3.0
     optionalDependencies:
+      '@opentelemetry/api': 1.9.1
       '@types/node': 20.19.43
     transitivePeerDependencies:
       - msw

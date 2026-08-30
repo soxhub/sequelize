@@ -78,6 +78,7 @@
     "wkx": "^0.5.0"
   },
   "devDependencies": {
+    "@opentelemetry/api": "1.9.1",
     "@types/cls-hooked": "4.3.9",
     "@types/lodash": "4.17.25",
     "@types/node": "20.19.43",
@@ -98,7 +99,13 @@
     "vitest": "5.0.0"
   },
   "peerDependencies": {
+    "@opentelemetry/api": "^1.9.0",
     "pg": "^8.19.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentelemetry/api": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=20.20.0"

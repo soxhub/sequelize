@@ -3,7 +3,7 @@ import Support from '../../support.js';
 import sinon from 'sinon';
 import Config from '../../../config/config.js';
 import ConnectionManager from '../../../../lib/dialects/postgres/base/connection-manager.js';
-import Pooling from 'generic-pool';
+import { InstrumentedPool } from '../../../../lib/dialects/postgres/base/instrumented-pool.js';
 import _ from 'lodash';
 
 const baseConf = Config[Support.getTestDialect()];
@@ -31,9 +31,10 @@ describe('Connection Manager', () => {
     const sequelize = Support.createSequelizeInstance(options);
     const connectionManager = new ConnectionManager(Support.getTestDialect(), sequelize);
 
-    const poolSpy = sandbox.spy(Pooling, 'createPool');
     connectionManager.initPools();
-    expect(poolSpy.calledOnce).to.be.true;
+
+    expect(connectionManager.pools).to.have.length(1);
+    expect(connectionManager.pool).to.be.an.instanceOf(InstrumentedPool);
   });
 
   it('should initialize a multiple pools with replication', () => {
@@ -46,9 +47,12 @@ describe('Connection Manager', () => {
     const sequelize = Support.createSequelizeInstance(options);
     const connectionManager = new ConnectionManager(Support.getTestDialect(), sequelize);
 
-    const poolSpy = sandbox.spy(Pooling, 'createPool');
     connectionManager.initPools();
-    expect(poolSpy.calledTwice).to.be.true;
+
+    // One pool per role: the read replicas share the read pool, round robin.
+    expect(connectionManager.pools).to.have.length(2);
+    expect(connectionManager.pool.read).to.be.an.instanceOf(InstrumentedPool);
+    expect(connectionManager.pool.write).to.be.an.instanceOf(InstrumentedPool);
   });
 
   it('should round robin calls to the read pool', async () => {

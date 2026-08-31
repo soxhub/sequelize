@@ -207,6 +207,73 @@ describe('telemetry', () => {
       expect(meter.recorded('db.client.connection.wait_time')).to.have.length(1);
     });
 
+    it('records how long a connection was checked out, in seconds', async () => {
+      const pool = createPool();
+      const resource = await pool.acquire();
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, 20);
+      });
+
+      expect(meter.recorded('db.client.connection.use_time')).to.have.length(0);
+
+      await pool.release(resource);
+
+      const records = meter.recorded('db.client.connection.use_time');
+
+      expect(records).to.have.length(1);
+      expect(records[0].attributes).to.equal(attributes);
+      expect(records[0].value).to.be.within(0.015, 5);
+    });
+
+    it('times the checkout that Pool#use makes on the caller behalf', async () => {
+      const pool = createPool();
+
+      await pool.use(() => Promise.resolve('done'));
+
+      expect(meter.recorded('db.client.connection.use_time')).to.have.length(1);
+    });
+
+    it('records a checkout that ended in the connection being destroyed', async () => {
+      const pool = createPool();
+      const resource = await pool.acquire();
+
+      await pool.destroy(resource);
+
+      expect(meter.recorded('db.client.connection.use_time')).to.have.length(1);
+    });
+
+    it('records a checkout once, however many times the resource is handed back', async () => {
+      const pool = createPool();
+      const resource = await pool.acquire();
+
+      await pool.release(resource);
+      await expect(pool.release(resource)).rejects.toThrow('Resource not currently part of this pool');
+
+      expect(meter.recorded('db.client.connection.use_time')).to.have.length(1);
+    });
+
+    it('times each checkout of a connection separately', async () => {
+      const pool = createPool({ max: 1 });
+
+      const first = await pool.acquire();
+      await pool.release(first);
+
+      const second = await pool.acquire();
+      await pool.release(second);
+
+      expect(second).to.equal(first); // the pool only has the one connection to hand out
+      expect(meter.recorded('db.client.connection.use_time')).to.have.length(2);
+    });
+
+    it('does not record a use time for a resource it never handed out', async () => {
+      const pool = createPool();
+
+      await expect(pool.release({})).rejects.toThrow('Resource not currently part of this pool');
+
+      expect(meter.recorded('db.client.connection.use_time')).to.have.length(0);
+    });
+
     it('counts an acquire timeout instead of recording it as a wait', async () => {
       const pool = createPool({ max: 1, acquireTimeoutMillis: 30 });
 

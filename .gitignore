@@ -18,3 +18,4 @@ coverage
 package-lock.json
 yarn.lock
 *.code-workspace
+.vitest/

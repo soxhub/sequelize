@@ -268,6 +268,29 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       expect(rows[1].username).to.be.equal('michael');
     });
 
+    it('returns the affected row for a hand-written upsert', async () => {
+      const upsertQuery =
+        `INSERT INTO ${qq(User.tableName)} (id, username, email_address, ` +
+        `${qq('createdAt')}, ${qq('updatedAt')}) ` +
+        `VALUES (1, $username, 'john@gmail.com', '2012-01-01 10:10:10', '2012-01-01 10:10:10') ` +
+        'ON CONFLICT (id) DO UPDATE SET username = EXCLUDED.username ' +
+        'RETURNING id, username;';
+
+      const inserted = await current.query(upsertQuery, {
+        type: current.QueryTypes.UPSERT,
+        bind: { username: 'john' }
+      });
+
+      expect(inserted).to.deep.equal({ id: 1, username: 'john' });
+
+      const updated = await current.query(upsertQuery, {
+        type: current.QueryTypes.UPSERT,
+        bind: { username: 'michael' }
+      });
+
+      expect(updated).to.deep.equal({ id: 1, username: 'michael' });
+    });
+
     describe('logging', () => {
       it('executes a query with global benchmarking option and default logger', async () => {
         const logger = sinon.spy(console, 'log');

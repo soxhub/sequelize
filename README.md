@@ -19,7 +19,7 @@ $ npm install --save sequelize
 $ npm install --save pg pg-hstore
 ```
 
-Requires Node v20.20.0 or above.
+Requires Node v24.19.0 or above.
 
 ## Features
 

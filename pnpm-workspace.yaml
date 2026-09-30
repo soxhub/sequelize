@@ -1,9 +1,10 @@
-# pnpm blocks dependency build scripts by default. This one compiles native
-# bindings and is silently non-functional without an approved build:
+# pnpm blocks dependency build scripts by default, and fails the install when an
+# unapproved package has one. This one compiles native bindings:
 #   libpq -> addon.node   (transitive via pg-native, postgres-native dialect)
-#
-# Note: pnpm 11 renamed this key to `allowBuilds` (a bool map). Do not migrate to it
-# without also reading the pnpm version note in CONTRIBUTING.md -- we are held on
-# pnpm 10 deliberately.
-onlyBuiltDependencies:
-  - libpq
+allowBuilds:
+  libpq: true
+
+minimumReleaseAgeExclude:
+  - vitest@5.0.3
+  - '@vitest/mocker@5.0.3'
+  - '@vitest/spy@5.0.3'

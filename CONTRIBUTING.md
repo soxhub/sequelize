@@ -39,21 +39,17 @@ Still interested? Coolio! Here is how to get started:
 
 Here comes a little surprise: You need [Node.JS](http://nodejs.org).
 
-This repository uses [pnpm](https://pnpm.io), and pins both Node and pnpm with
-[Volta](https://volta.sh):
+The development Node version is pinned in `.node-version`, which fnm, nvm, mise and
+asdf all read. CI's non-matrix jobs use the same file. Any Node satisfying `engines` in
+`package.json` works.
 
-```json
-"volta": { "node": "24.18.1", "pnpm": "10.34.5" }
-```
+This repository uses [pnpm](https://pnpm.io), pinned by the `packageManager` field in
+`package.json`. Install any pnpm 12 (for example `npm install -g pnpm@12`) and it will
+switch itself to the pinned version inside the repo.
 
-With Volta installed, `cd`-ing into the repo gives you the right Node and pnpm
-automatically — nothing else to do. Without Volta, the same pnpm version is also in the
-`packageManager` field, which `corepack enable` and pnpm itself both honour; you will
-just have to get Node 24 yourself.
-
-Keep `volta.pnpm` and `packageManager` in sync. pnpm self-switches to whatever
-`packageManager` says, so if they disagree the `packageManager` value silently wins and
-your Volta pin does nothing.
+pnpm does not resolve packages published less than a day ago (its default
+`minimumReleaseAge`). That is deliberate supply-chain protection, so a version you just
+saw announced may not install yet.
 
 ### 2. Install the dependencies
 
@@ -69,9 +65,9 @@ If you change anything in `package.json`, commit the updated lockfile alongside 
 CI installs with `--frozen-lockfile` and will fail if the two disagree.
 
 The `libpq` package (via `pg-native`) compiles native bindings. pnpm only runs its build
-script because it is listed under `onlyBuiltDependencies` in `pnpm-workspace.yaml`; if you
-add another dependency that needs a build step, it has to be added there too or it will
-install silently broken.
+script because it is listed under `allowBuilds` in `pnpm-workspace.yaml`; if you add
+another dependency that needs a build step, it has to be added there too or
+`pnpm install` will fail.
 
 ### 3. Database
 
@@ -179,6 +175,7 @@ This package ships raw `lib/` — there is deliberately no `prepare`, `prepack`,
 `build` script, and adding one is a breaking change for consumers. Because the package
 is fetched as a GitHub tarball, a build script forces pnpm off that fast path into
 clone-and-build, _and_ trips pnpm's build gate: every consuming repo would have to add
-`sequelize` to its own `onlyBuiltDependencies` before it would install at all.
+`sequelize` to its own `allowBuilds` (`onlyBuiltDependencies` on pnpm 10) before it
+would install at all.
 
 If a build step ever becomes genuinely necessary, publish to a private registry instead.

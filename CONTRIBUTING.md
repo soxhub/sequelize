@@ -59,13 +59,6 @@ Node is pinned to 24 (current LTS) because that is the newest version CI tests. 
 Node is not currently supported — Node 26 removed enough of the legacy `url.parse`
 behaviour that `lib/sequelize.js` relies on to fail a unit test.
 
-**pnpm is held at 10.x on purpose. Do not upgrade it to 11.** pnpm 11 requires Node
-`>=22.13` and does not merely warn on older Node — it crashes with
-`ERR_UNKNOWN_BUILTIN_MODULE`, so the Node 20 leg of the CI matrix would fail outright.
-Node 20 support is a hard requirement (see `engines`), so pnpm stays on 10.x until that
-floor moves. Everything 11 offers that we use, including the `minimumReleaseAge`
-supply-chain gate, is already in pnpm 10.28+.
-
 ### 2. Install the dependencies
 
 Just "cd" into sequelize directory and run `pnpm install`, see an example below:

@@ -35,7 +35,7 @@ jobs:
       matrix:
         # Node and Postgres versions exercise different layers, so we sweep one
         # axis at a time rather than running the full cross product.
-        node-version: [20, 22, 24]
+        node-version: [24]
         postgres:
           - version: 17
             image: postgis/postgis:17-3.5

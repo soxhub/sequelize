@@ -55,10 +55,6 @@ Keep `volta.pnpm` and `packageManager` in sync. pnpm self-switches to whatever
 `packageManager` says, so if they disagree the `packageManager` value silently wins and
 your Volta pin does nothing.
 
-Node is pinned to 24 (current LTS) because that is the newest version CI tests. Newer
-Node is not currently supported — Node 26 removed enough of the legacy `url.parse`
-behaviour that `lib/sequelize.js` relies on to fail a unit test.
-
 ### 2. Install the dependencies
 
 Just "cd" into sequelize directory and run `pnpm install`, see an example below:

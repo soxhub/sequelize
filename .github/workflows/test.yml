@@ -8,18 +8,22 @@ on:
   workflow_dispatch:
 
 jobs:
-  # The unit suite needs no database, it only exercises SQL generation and
-  # in-memory model behaviour so it runs once here rather than four times
-  # inside the matrix below.
   test-unit:
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [24, 26]
+
+    name: test-unit (node ${{ matrix.node-version }})
 
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: ${{ matrix.node-version }}
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
@@ -33,9 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Node and Postgres versions exercise different layers, so we sweep one
-        # axis at a time rather than running the full cross product.
-        node-version: [24]
+        node-version: [24, 26]
         postgres:
           - version: 17
             image: postgis/postgis:17-3.5
@@ -77,7 +79,6 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Integration only — the unit suite is covered once by the test-unit job.
       - name: Run integration tests
         env:
           DIALECT: postgres

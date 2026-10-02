@@ -467,6 +467,81 @@ for (const [implementation, createNamespace] of implementations) {
         expect(fired).to.deep.equal(['savepoint']);
       });
 
+      it('runs hooks from an unmanaged savepoint that is never committed when the root commits', async () => {
+        const fired = [];
+        const root = await sequelize.transaction();
+        const savepoint = await sequelize.transaction({ transaction: root });
+
+        savepoint.afterCommit((transaction) => fired.push(transaction));
+        await root.commit();
+
+        expect(fired).to.have.lengthOf(1);
+        expect(fired[0]).to.equal(savepoint);
+      });
+
+      it('runs hooks from an unmanaged savepoint nested via CLS that is never committed', async () => {
+        const fired = [];
+
+        await sequelize.transaction(async () => {
+          const savepoint = await sequelize.transaction();
+
+          savepoint.afterCommit(() => fired.push('savepoint'));
+        });
+
+        expect(fired).to.deep.equal(['savepoint']);
+      });
+
+      it('runs hooks from open savepoints nested in an open savepoint in registration order', async () => {
+        const fired = [];
+        const root = await sequelize.transaction();
+        const outer = await sequelize.transaction({ transaction: root });
+        const inner = await sequelize.transaction({ transaction: outer });
+
+        root.afterCommit(() => fired.push('root'));
+        outer.afterCommit(() => fired.push('outer'));
+        inner.afterCommit(() => fired.push('inner'));
+        await root.commit();
+
+        expect(fired).to.deep.equal(['root', 'outer', 'inner']);
+      });
+
+      it('runs hooks from an open savepoint nested in a savepoint that committed', async () => {
+        const fired = [];
+        const root = await sequelize.transaction();
+        const outer = await sequelize.transaction({ transaction: root });
+        const inner = await sequelize.transaction({ transaction: outer });
+
+        inner.afterCommit(() => fired.push('inner'));
+        await outer.commit();
+        await root.commit();
+
+        expect(fired).to.deep.equal(['inner']);
+      });
+
+      it('drops hooks from an open savepoint nested in a savepoint that rolled back', async () => {
+        const fired = [];
+        const root = await sequelize.transaction();
+        const outer = await sequelize.transaction({ transaction: root });
+        const inner = await sequelize.transaction({ transaction: outer });
+
+        inner.afterCommit(() => fired.push('inner'));
+        await outer.rollback();
+        await root.commit();
+
+        expect(fired).to.deep.equal([]);
+      });
+
+      it('drops hooks from an open savepoint when the root rolls back', async () => {
+        const fired = [];
+        const root = await sequelize.transaction();
+        const savepoint = await sequelize.transaction({ transaction: root });
+
+        savepoint.afterCommit(() => fired.push('savepoint'));
+        await root.rollback();
+
+        expect(fired).to.deep.equal([]);
+      });
+
       it('calls a deferred hook with the transaction it was registered on', async () => {
         let received, savepoint;
 

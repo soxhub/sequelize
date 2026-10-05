@@ -1,6 +1,6 @@
 {
   "name": "sequelize",
-  "version": "400.54.0",
+  "version": "400.54.1",
   "description": "PostgreSQL ORM for Node.JS",
   "keywords": [
     "nodejs",

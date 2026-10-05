@@ -3099,25 +3099,91 @@ declare namespace sequelize {
    * typesafety, but there is no way to pass the tests if we just remove it.
    */
   type Primitives = string | number | boolean | Buffer;
-  type WhereOptions<T> = {
+  type WhereOptions<T> = WhereAttributeHash<T> & WhereGroup;
+
+  type WhereAttributeHash<T> = {
     [P in keyof T]?:
       | Primitives
       | Primitives[]
       | WhereLogic
-      | (T[P] extends Primitives ? null : WhereOptions<T[P]>)
+      | WhereOperators
+      | (T[P] extends Primitives ? null : WhereAttributeHash<T[P]>)
       | col
       | and
       | or
       | WhereGeometryOptions
       | WhereNested
       | where
-      | null;
+      | null
+      // Symbol keys inferred from `where` literals (`[Op.and]`, ...) are typed by `WhereGroup`.
+      | (P extends symbol ? unknown : never);
+  };
+
+  /**
+   * A value an operator can compare an attribute against.
+   */
+  type WhereOperatorValue = Primitives | Date | null | literal | fn | col;
+
+  /**
+   * `{ [Op.any]: [...] }` / `{ [Op.all]: [...] }` wrappers accepted by the comparison operators.
+   */
+  type WhereAnyAll<T> = {
+    [Op.any]?: readonly T[] | literal;
+    [Op.all]?: readonly T[] | literal;
+  };
+
+  /**
+   * Symbol-keyed operators applied to a single attribute, e.g. `{ id: { [Op.in]: [1, 2] } }`.
+   */
+  type WhereOperators = {
+    [Op.eq]?: WhereOperatorValue | readonly WhereOperatorValue[] | WhereAnyAll<WhereOperatorValue>;
+    [Op.ne]?: WhereOperatorValue | readonly WhereOperatorValue[] | WhereAnyAll<WhereOperatorValue>;
+    [Op.is]?: boolean | null | literal;
+    [Op.not]?: WhereOperatorValue | readonly WhereOperatorValue[] | WhereOperators;
+    [Op.gt]?: WhereOperatorValue | WhereAnyAll<WhereOperatorValue>;
+    [Op.gte]?: WhereOperatorValue | WhereAnyAll<WhereOperatorValue>;
+    [Op.lt]?: WhereOperatorValue | WhereAnyAll<WhereOperatorValue>;
+    [Op.lte]?: WhereOperatorValue | WhereAnyAll<WhereOperatorValue>;
+    [Op.in]?: readonly WhereOperatorValue[] | literal;
+    [Op.notIn]?: readonly WhereOperatorValue[] | literal;
+    [Op.like]?: string | literal | WhereAnyAll<string>;
+    [Op.notLike]?: string | literal | WhereAnyAll<string>;
+    [Op.iLike]?: string | literal | WhereAnyAll<string>;
+    [Op.notILike]?: string | literal | WhereAnyAll<string>;
+    [Op.regexp]?: string | literal;
+    [Op.notRegexp]?: string | literal;
+    [Op.iRegexp]?: string | literal;
+    [Op.notIRegexp]?: string | literal;
+    [Op.between]?: readonly [WhereOperatorValue, WhereOperatorValue] | literal;
+    [Op.notBetween]?: readonly [WhereOperatorValue, WhereOperatorValue] | literal;
+    [Op.overlap]?: readonly unknown[] | literal;
+    [Op.contains]?: unknown;
+    [Op.contained]?: unknown;
+    [Op.adjacent]?: unknown;
+    [Op.strictLeft]?: unknown;
+    [Op.strictRight]?: unknown;
+    [Op.noExtendLeft]?: unknown;
+    [Op.noExtendRight]?: unknown;
+    [Op.col]?: string;
+    [Op.and]?: ReadonlyArray<WhereOperators | WhereOperatorValue> | WhereOperators;
+    [Op.or]?: ReadonlyArray<WhereOperators | WhereOperatorValue> | WhereOperators;
+  };
+
+  type WhereGroupMember = WhereOptions<any> | AnyWhereOptions | literal | where | fn;
+
+  /**
+   * Symbol-keyed logical groups at the top level of a where, e.g. `{ [Op.or]: [{ a: 1 }, { b: 2 }] }`.
+   */
+  type WhereGroup = {
+    [Op.and]?: ReadonlyArray<WhereGroupMember> | WhereGroupMember;
+    [Op.or]?: ReadonlyArray<WhereGroupMember> | WhereGroupMember;
+    [Op.not]?: WhereGroupMember;
   };
 
   /**
    * A hash of attributes to describe your search, accepting any field names. See `WhereOptions` for details.
    */
-  interface AnyWhereOptions {
+  interface AnyWhereOptions extends WhereGroup {
     [field: string]: Array<WhereOptions<any>> | Object | null;
   }
 
@@ -5734,43 +5800,43 @@ declare namespace sequelize {
    * Operator symbols to be used when querying data
    */
   interface Operators {
-    eq: symbol;
-    ne: symbol;
-    gte: symbol;
-    gt: symbol;
-    lte: symbol;
-    lt: symbol;
-    not: symbol;
-    is: symbol;
-    in: symbol;
-    notIn: symbol;
-    like: symbol;
-    notLike: symbol;
-    iLike: symbol;
-    notILike: symbol;
-    regexp: symbol;
-    notRegexp: symbol;
-    iRegexp: symbol;
-    notIRegexp: symbol;
-    between: symbol;
-    notBetween: symbol;
-    overlap: symbol;
-    contains: symbol;
-    contained: symbol;
-    adjacent: symbol;
-    strictLeft: symbol;
-    strictRight: symbol;
-    noExtendRight: symbol;
-    noExtendLeft: symbol;
-    and: symbol;
-    or: symbol;
-    any: symbol;
-    all: symbol;
-    values: symbol;
-    col: symbol;
-    placeholder: symbol;
-    join: symbol;
-    raw: symbol; // deprecated remove by v5.0
+    readonly eq: unique symbol;
+    readonly ne: unique symbol;
+    readonly gte: unique symbol;
+    readonly gt: unique symbol;
+    readonly lte: unique symbol;
+    readonly lt: unique symbol;
+    readonly not: unique symbol;
+    readonly is: unique symbol;
+    readonly in: unique symbol;
+    readonly notIn: unique symbol;
+    readonly like: unique symbol;
+    readonly notLike: unique symbol;
+    readonly iLike: unique symbol;
+    readonly notILike: unique symbol;
+    readonly regexp: unique symbol;
+    readonly notRegexp: unique symbol;
+    readonly iRegexp: unique symbol;
+    readonly notIRegexp: unique symbol;
+    readonly between: unique symbol;
+    readonly notBetween: unique symbol;
+    readonly overlap: unique symbol;
+    readonly contains: unique symbol;
+    readonly contained: unique symbol;
+    readonly adjacent: unique symbol;
+    readonly strictLeft: unique symbol;
+    readonly strictRight: unique symbol;
+    readonly noExtendRight: unique symbol;
+    readonly noExtendLeft: unique symbol;
+    readonly and: unique symbol;
+    readonly or: unique symbol;
+    readonly any: unique symbol;
+    readonly all: unique symbol;
+    readonly values: unique symbol;
+    readonly col: unique symbol;
+    readonly placeholder: unique symbol;
+    readonly join: unique symbol;
+    readonly raw: unique symbol; // deprecated remove by v5.0
     Aliases: OperatorsAliases;
     LegacyAliases: OperatorsAliases; // deprecated remove by v5.0
   }
@@ -7317,6 +7383,11 @@ export import WhereGeometryOptions = sequelize.WhereGeometryOptions;
 export import WhereLogic = sequelize.WhereLogic;
 export import WhereNested = sequelize.WhereNested;
 export import WhereOptions = sequelize.WhereOptions;
+export import WhereAttributeHash = sequelize.WhereAttributeHash;
+export import WhereOperators = sequelize.WhereOperators;
+export import WhereOperatorValue = sequelize.WhereOperatorValue;
+export import WhereAnyAll = sequelize.WhereAnyAll;
+export import WhereGroup = sequelize.WhereGroup;
 export import WherePGStatement = sequelize.WherePGStatement;
 export import andStatic = sequelize.andStatic;
 export import castStatic = sequelize.castStatic;

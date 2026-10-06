@@ -10,8 +10,6 @@ test/tmp/*
 coverage-*
 site
 docs/api/tmp.md
-ssce.js
-sscce.js
 coverage
 .vscode/
 *.sublime*

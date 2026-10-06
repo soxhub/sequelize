@@ -118,10 +118,10 @@ $ DIALECT=dialect SEQ_DB=database SEQ_USER=user SEQ_PW=password pnpm test
 For docker users you can use these commands instead
 
 ```sh
-$ DIALECT=mysql pnpm run test-docker # Or DIALECT=postgres for Postgres SQL
+$ pnpm run test-postgres-docker
 
 # Only integration tests
-$ DIALECT=mysql pnpm run test-docker-integration
+$ pnpm run test-integration-postgres-docker
 ```
 
 ### 5. Commit

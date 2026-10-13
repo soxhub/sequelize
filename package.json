@@ -87,7 +87,7 @@
     "pg-types": "2.2.0",
     "sinon": "22.1.0",
     "typescript": "7.0.2",
-    "vitest": "5.0.3"
+    "vitest": "5.0.4"
   },
   "peerDependencies": {
     "pg": "^8.19.0"

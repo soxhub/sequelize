@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/npm/l/sequelize.svg?maxAge=2592000?style=plastic)](https://github.com/sequelize/sequelize/blob/master/LICENSE)
 
-Sequelize is a promise-based Node.js ORM. This fork supports Postgres only — the MySQL, SQLite and MSSQL dialects have been removed. It features solid transaction support, relations, read replication and more.
+Sequelize is a Node.js ORM. This fork supports Postgres only — the MySQL, SQLite and MSSQL dialects have been removed.
 
 ## Table of Contents
 
@@ -18,8 +18,6 @@ $ npm install --save sequelize
 # And the Postgres driver:
 $ npm install --save pg pg-hstore
 ```
-
-Requires Node v24.19.0 or above.
 
 ## Features
 

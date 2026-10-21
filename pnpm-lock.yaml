@@ -244,7 +244,7 @@ importers:
         version: 7.0.2
       vitest:
         specifier: 5.0.5
-        version: 5.0.5(@types/node@24.19.2)(vite@8.3.2(@types/node@24.19.2))
+        version: 5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2))
 
 packages:
 
@@ -1127,8 +1127,8 @@ packages:
     resolution: {integrity: sha512-TQ5pAGhd5whStmqWvYF4OjQROlmv9SMFVt37qoCBdqRffuuklWYQlCNnEs2ZaIBD1kZRNnikiZOS1eqgkar0iw==}
     engines: {node: '>= 0.10'}
 
-  vite@8.3.2:
-    resolution: {integrity: sha512-SQr1x6W5vVSbROg7vsyXIaxK9b0G7zsT68acdWWRmnBUsgDieLCRG+Rep9WdZgcposvv/GSnr4GUUBqB3vXq6w==}
+  vite@8.3.4:
+    resolution: {integrity: sha512-IftLE8phJhdNRIGNEV4JCCvfNScoZQVfcXaN8TQropWGJtOHcu+iAB9pHcuGvmEb/kddw0LBe/jS8ztdC6xdiQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -1493,14 +1493,14 @@ snapshots:
   '@typescript/typescript-win32-x64@7.0.2':
     optional: true
 
-  '@vitest/mocker@5.0.5(vite@8.3.2(@types/node@24.19.2))':
+  '@vitest/mocker@5.0.5(vite@8.3.4(@types/node@24.19.2))':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       '@vitest/spy': 5.0.5
       estree-walker: 3.0.3
       magic-string: 1.4.3
     optionalDependencies:
-      vite: 8.3.2(@types/node@24.19.2)
+      vite: 8.3.4(@types/node@24.19.2)
 
   '@vitest/spy@5.0.5': {}
 
@@ -1828,7 +1828,7 @@ snapshots:
 
   validator@13.15.35: {}
 
-  vite@8.3.2(@types/node@24.19.2):
+  vite@8.3.4(@types/node@24.19.2):
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.7
@@ -1839,10 +1839,10 @@ snapshots:
       '@types/node': 24.19.2
       fsevents: 2.3.3
 
-  vitest@5.0.5(@types/node@24.19.2)(vite@8.3.2(@types/node@24.19.2)):
+  vitest@5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)):
     dependencies:
       '@types/chai': 5.2.3
-      '@vitest/mocker': 5.0.5(vite@8.3.2(@types/node@24.19.2))
+      '@vitest/mocker': 5.0.5(vite@8.3.4(@types/node@24.19.2))
       chai: 6.3.0
       es-module-lexer: 2.3.2
       expect-type: 1.4.0
@@ -1853,7 +1853,7 @@ snapshots:
       tinybench: 6.2.2
       tinyexec: 1.3.1
       tinyglobby: 0.2.17
-      vite: 8.3.2(@types/node@24.19.2)
+      vite: 8.3.4(@types/node@24.19.2)
       why-is-node-running: 3.2.1
     optionalDependencies:
       '@types/node': 24.19.2
